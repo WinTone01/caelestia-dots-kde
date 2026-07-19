@@ -142,4 +142,16 @@ fi
 update-desktop-database "$HOME/.local/share/applications/" 2>/dev/null || true
 echo "  [OK]  Bridge files deployed."
 
+echo "  Configuring KDE Lock Screen to use Caelestia..."
+if command -v kwriteconfig6 >/dev/null 2>&1; then
+    kwriteconfig6 --file kscreenlockerrc --group Greeter --key WallpaperPlugin net.dosowisko.PlasmaApplicationWallpaper
+    kwriteconfig6 --file kscreenlockerrc --group Greeter --group Wallpaper --group net.dosowisko.PlasmaApplicationWallpaper --group General --key command "quickshell -p $HOME/.config/quickshell/caelestia/lockscreen.qml"
+    kwriteconfig6 --file kscreenlockerrc --group Greeter --group Wallpaper --group net.dosowisko.PlasmaApplicationWallpaper --group General --key fps 1
+    kwriteconfig6 --file kscreenlockerrc --group Greeter --group LnF --group General --key alwaysShowClock false
+    kwriteconfig6 --file kscreenlockerrc --group Greeter --group LnF --group General --key showMediaControls false
+    echo "  [OK]  KDE Lock Screen configured."
+else
+    echo "  [WARN] kwriteconfig6 not found. Skipping KDE Lock Screen configuration."
+fi
+
 echo "[OK]  Config deployment complete."

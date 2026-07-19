@@ -95,6 +95,12 @@
           "default": true
         },
         {
+          "id": "APPLY_LOCKSCREEN",
+          "type": "boolean",
+          "title": "Enable Lockscreen Wallpaper plugin",
+          "default": true
+        },
+        {
           "id": "POLONIUM_ENABLED",
           "type": "boolean",
           "title": "Enable Polonium (tiling window manager plugin)",

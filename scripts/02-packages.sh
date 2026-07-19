@@ -58,6 +58,20 @@ if [[ "${POLONIUM_ENABLED:-false}" == "true" ]]; then
 fi
 
 echo
+
+echo "--- Installing plasma-wallpaper-application ---"
+if [[ "${APPLY_LOCKSCREEN:-true}" != "false" ]]; then
+    if [[ -d "$BUNDLE_DIR/src/plasma-wallpaper-application/package" ]]; then
+        kpackagetool6 -t Plasma/Wallpaper -u "$BUNDLE_DIR/src/plasma-wallpaper-application/package" || echo "[WARN] plasma-wallpaper-application installation failed"
+    else
+        echo "[WARN] plasma-wallpaper-application not found, Skipping installation"
+    fi
+else
+    echo "[WARN] Lockscreen wallpaper not enabled, Skipping installation"
+fi
+
+echo
+
 echo "--- Ensuring Python tooling for konsave backups ---"
 if ! command -v python3 >/dev/null 2>&1 || ! python3 -m pip --version >/dev/null 2>&1; then
     if [[ "$BASE_DISTRO" == "arch" ]]; then

@@ -16,14 +16,29 @@ err()  { echo -e "${RED}[ERR]   $*${RST}"; }
 BUNDLE_DIR="${BUNDLE_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 SHELL_DIR="$BUNDLE_DIR/shell"
 
-# If the installer is not running, we are likely running an update via caelestia-update
-# Make sure we configure services as well so we don't miss service deployment logic
+
+# UPDATER ONLY BLOCK START
+
+# This is a temp fix, BREAKS REVERTING TO OLDER VERSIONS
+# ANYTHING EXTRA THAT NEEDS TO BE INSTALLED WHEN MAJOR CHANGES HAPPEN,
+# RUN THE REQUIRED UPDATE
+
 if [[ "${CAELESTIA_SETUP_RUNNING:-0}" == "0" ]]; then
     info "Running standalone update mode... deploying services first."
     if [[ -f "$BUNDLE_DIR/scripts/06-services.sh" ]]; then
         bash "$BUNDLE_DIR/scripts/06-services.sh" || warn "06-services.sh failed"
     fi
+
+    info "Installing plasma-wallpaper-application"
+    if [[ -d "$BUNDLE_DIR/src/plasma-wallpaper-application/package" ]]; then
+        kpackagetool6 -t Plasma/Wallpaper -u "$BUNDLE_DIR/src/plasma-wallpaper-application/package" || warn "plasma-wallpaper-application installation failed"
+    else
+        warn "plasma-wallpaper-application not found, Skipping installation"
+    fi
+
 fi
+
+# UPDATER ONLY BLOCK END
 
 info "Patching Recorder.qml to wait for portal selection..."
 sed -i 's/command: \["pidof", "gpu-screen-recorder"\]/command: \["sh", "-c", "pidof gpu-screen-recorder >\\\/dev\\\/null \&\& test -f $HOME\\\/.local\\\/state\\\/caelestia\\\/record\\\/recording.mp4"\]/g' "$HOME/.local/share/caelestia-shell/services/Recorder.qml" 2>/dev/null || true
