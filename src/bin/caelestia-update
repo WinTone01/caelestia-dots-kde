@@ -148,7 +148,7 @@ fi
 # Initialize submodules
 if [[ -f "$UPD_DIR/repo/.gitmodules" ]]; then
     info "Initializing all submodule..."
-    git submodule sync >/dev/null 2>&1 || true
+    git submodule sync --recursive >/dev/null 2>&1 || true
     git submodule update --init --recursive --force >/dev/null 2>&1 || die "Failed to initialize all submodules"
 fi
 
