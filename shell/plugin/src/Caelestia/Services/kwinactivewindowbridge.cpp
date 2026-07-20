@@ -216,13 +216,22 @@ void KWinActiveWindowBridge::focusWindow(const QString& address) {
     tempFile.write(scriptSource.toUtf8());
     tempFile.close();
 
-    QProcess::startDetached("bash", { "-c", QString(
-        "qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.loadScript %1 %2 > /dev/null && "
-        "script_id=$(qdbus6 org.kde.KWin | grep '/Scripting/Script' | tail -n 1) && "
-        "if [ ! -z \"$script_id\" ]; then qdbus6 org.kde.KWin $script_id org.kde.kwin.Script.run; fi; "
-        "qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript %2; "
-        "rm -f %1").arg(fileName).arg(scriptName)
-    });
+    QDBusConnection bus = QDBusConnection::sessionBus();
+    QDBusMessage loadMsg = QDBusMessage::createMethodCall("org.kde.KWin", "/Scripting", "org.kde.kwin.Scripting", "loadScript");
+    loadMsg << fileName << scriptName;
+    QDBusReply<int> reply = bus.call(loadMsg);
+    
+    if (reply.isValid()) {
+        int scriptId = reply.value();
+        QDBusMessage runMsg = QDBusMessage::createMethodCall("org.kde.KWin", QString("/Scripting/Script%1").arg(scriptId), "org.kde.kwin.Script", "run");
+        bus.call(runMsg);
+        
+        QDBusMessage unloadMsg = QDBusMessage::createMethodCall("org.kde.KWin", "/Scripting", "org.kde.kwin.Scripting", "unloadScript");
+        unloadMsg << scriptName;
+        bus.call(unloadMsg, QDBus::NoBlock);
+    }
+    
+    QFile::remove(fileName);
 }
 
 void KWinActiveWindowBridge::closeWindow(const QString& address) {
@@ -249,13 +258,24 @@ void KWinActiveWindowBridge::closeWindow(const QString& address) {
     tempFile.write(scriptSource.toUtf8());
     tempFile.close();
 
-    QProcess::startDetached("bash", { "-c", QString(
-        "qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.loadScript %1 %2 > /dev/null && "
-        "script_id=$(qdbus6 org.kde.KWin | grep '/Scripting/Script' | tail -n 1) && "
-        "if [ ! -z \"$script_id\" ]; then qdbus6 org.kde.KWin $script_id org.kde.kwin.Script.run; fi; "
-        "qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript %2; "
-        "rm -f %1").arg(fileName).arg(scriptName)
-    });
+    QDBusConnection bus = QDBusConnection::sessionBus();
+    QDBusMessage loadMsg = QDBusMessage::createMethodCall("org.kde.KWin", "/Scripting", "org.kde.kwin.Scripting", "loadScript");
+    loadMsg << fileName << scriptName;
+    QDBusReply<int> reply = bus.call(loadMsg);
+    
+    if (reply.isValid()) {
+        int scriptId = reply.value();
+        QDBusMessage runMsg = QDBusMessage::createMethodCall("org.kde.KWin", QString("/Scripting/Script%1").arg(scriptId), "org.kde.kwin.Script", "run");
+        bus.call(runMsg);
+        
+        QDBusMessage unloadMsg = QDBusMessage::createMethodCall("org.kde.KWin", "/Scripting", "org.kde.kwin.Scripting", "unloadScript");
+        unloadMsg << scriptName;
+        bus.call(unloadMsg, QDBus::NoBlock);
+    } else {
+        qWarning() << "Failed to load script:" << reply.error().message();
+    }
+    
+    QFile::remove(fileName);
 }
 
 void KWinActiveWindowBridge::updateWindowList(const QString& windowsJson) {
