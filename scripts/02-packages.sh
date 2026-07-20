@@ -62,7 +62,7 @@ echo
 echo "--- Installing plasma-wallpaper-application ---"
 if [[ "${APPLY_LOCKSCREEN:-true}" != "false" ]]; then
     if [[ -d "$BUNDLE_DIR/src/plasma-wallpaper-application/package" ]]; then
-        kpackagetool6 -t Plasma/Wallpaper -u "$BUNDLE_DIR/src/plasma-wallpaper-application/package" || echo "[WARN] plasma-wallpaper-application installation failed"
+        kpackagetool6 -t Plasma/Wallpaper -i "$BUNDLE_DIR/src/plasma-wallpaper-application/package" >/dev/null 2>&1 || kpackagetool6 -t Plasma/Wallpaper -u "$BUNDLE_DIR/src/plasma-wallpaper-application/package" || echo "[WARN] plasma-wallpaper-application installation failed"
     else
         echo "[WARN] plasma-wallpaper-application not found, Skipping installation"
     fi

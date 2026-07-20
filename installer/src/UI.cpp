@@ -9,6 +9,7 @@
 #include <fstream>
 #include <thread>
 #include <chrono>
+#include <unordered_map>
 #include <vector>
 
 using namespace std;
@@ -469,6 +470,14 @@ namespace UI {
 
 namespace UI {
     bool render_menu(const json& menu_items, const std::string& title) {
+        struct MenuItemMeta {
+            string type;
+            string title;
+            string id;
+            vector<string> options;
+            unordered_map<string, int> option_index;
+        };
+
         int selected = 0;
         int num_items = menu_items.size();
         if (num_items == 0) return true;
@@ -501,26 +510,90 @@ namespace UI {
         };
         init_defaults(menu_items);
 
+        vector<MenuItemMeta> meta;
+        meta.reserve(static_cast<size_t>(num_items));
+        for (int i = 0; i < num_items; ++i) {
+            auto& item = menu_items[i];
+            MenuItemMeta m;
+            m.type = item.contains("type") ? item["type"].get<string>() : "action";
+            m.title = item.contains("title") ? item["title"].get<string>() : "Unknown";
+            m.id = item.contains("id") ? item["id"].get<string>() : "";
+
+            if (m.type == "select" && item.contains("options") && item["options"].is_array()) {
+                auto& opts = item["options"];
+                m.options.reserve(opts.size());
+                for (size_t oi = 0; oi < opts.size(); ++oi) {
+                    string opt = opts[oi].get<string>();
+                    m.option_index[opt] = static_cast<int>(oi);
+                    m.options.push_back(opt);
+                }
+                if (!m.id.empty() && !m.options.empty() && g_answers[m.id].empty()) {
+                    g_answers[m.id] = m.options[0];
+                }
+            }
+
+            meta.push_back(std::move(m));
+        }
+
         bool typing_mode = false;
+        bool needs_full_redraw = true;
+        int last_selected = selected;
+        bool last_typing_mode = false;
+        int last_left = -1;
+        int last_top = -1;
+        int last_w = -1;
+        int last_h = -1;
+
+        auto build_display = [&](int index, int max_len) {
+            const auto& m = meta[index];
+            string display = m.title;
+
+            if (m.type == "submenu") {
+                display += " ->";
+            } else if (m.type == "boolean") {
+                bool val = (g_answers[m.id] == "true");
+                display = (val ? "[x] " : "[ ] ") + m.title;
+            } else if (m.type == "select") {
+                display = m.title + ": < " + g_answers[m.id] + " >";
+            } else if (m.type == "text") {
+                display = m.title + ": [" + g_answers[m.id];
+                if (typing_mode && index == selected) display += "_";
+                display += "]";
+            }
+
+            if (static_cast<int>(display.length()) > max_len && max_len >= 3) {
+                display = display.substr(0, static_cast<size_t>(max_len - 3)) + "...";
+            }
+
+            string line = (index == selected ? "> " : "  ") + display;
+            if (static_cast<int>(line.length()) < max_len + 2) {
+                line.append(static_cast<size_t>(max_len + 2 - static_cast<int>(line.length())), ' ');
+            }
+            return line;
+        };
+
+        auto draw_row = [&](int index, int left, int start_y, int top, int h, int max_len, const string& box_color, const string& text_color) {
+            if (index < 0 || index >= num_items) return;
+            if (start_y + index >= top + h - 1) return;
+            string color_name = (index == selected) ? ("bold_" + box_color) : text_color;
+            Draw::text(left + 4, start_y + index, build_display(index, max_len), color_name);
+        };
 
         while (!g_quit) {
             if (g_resized) { Term::get_size(); g_resized = false; }
             
             int w = 60;
             for (int i = 0; i < num_items; ++i) {
-                auto& item = menu_items[i];
-                string type = item.contains("type") ? item["type"].get<string>() : "action";
-                string item_title = item.contains("title") ? item["title"].get<string>() : "Unknown";
-                string id = item.contains("id") ? item["id"].get<string>() : "";
-                int len = item_title.length();
-                if (type == "submenu") {
+                const auto& m = meta[i];
+                int len = static_cast<int>(m.title.length());
+                if (m.type == "submenu") {
                     len += 3;
-                } else if (type == "boolean") {
+                } else if (m.type == "boolean") {
                     len += 6;
-                } else if (type == "select") {
-                    len += 5 + g_answers[id].length();
-                } else if (type == "text") {
-                    len += 3 + g_answers[id].length() + 2;
+                } else if (m.type == "select") {
+                    len += 5 + static_cast<int>(g_answers[m.id].length());
+                } else if (m.type == "text") {
+                    len += 3 + static_cast<int>(g_answers[m.id].length()) + 2;
                 }
                 if (len + 8 > w) w = len + 8;
             }
@@ -530,76 +603,88 @@ namespace UI {
             if (h > g_term_height - 4) h = g_term_height - 4;
             int left = (g_term_width - w) / 2;
             int top = (g_term_height - h) / 2;
-            
-            cout << Draw::sync_start() << Draw::clear();
-            Draw::box(left, top, w, h, box_title, box_color, title_color);
-
-            string inst = "Arrow keys to navigate, Enter/Space to select/toggle";
-            if ((int)inst.length() > w - 4) {
-                inst = inst.substr(0, w - 7) + "...";
-            }
-            Draw::text(left + 2, top + 2, inst, text_color);
-            
             int start_y = top + 4;
-            for (int i = 0; i < num_items; ++i) {
-                if (start_y + i >= top + h - 1) break;
-                auto& item = menu_items[i];
-                string type = item.contains("type") ? item["type"].get<string>() : "action";
-                string item_title = item.contains("title") ? item["title"].get<string>() : "Unknown";
-                string id = item.contains("id") ? item["id"].get<string>() : "";
-                
-                string display = item_title;
-                if (type == "submenu") {
-                    display += " ->";
-                } else if (type == "boolean") {
-                    bool val = (g_answers[id] == "true");
-                    display = (val ? "[x] " : "[ ] ") + item_title;
-                } else if (type == "select") {
-                    display = item_title + ": < " + g_answers[id] + " >";
-                } else if (type == "text") {
-                    display = item_title + ": [" + g_answers[id];
-                    if (typing_mode && i == selected) display += "_";
-                    display += "]";
-                }
+            int max_len = w - 8;
 
-                int max_len = w - 8;
-                if ((int)display.length() > max_len) {
-                    display = display.substr(0, max_len - 3) + "...";
-                }
+            bool geometry_changed = left != last_left || top != last_top || w != last_w || h != last_h;
+            bool mode_changed = typing_mode != last_typing_mode;
 
-                if (i == selected) {
-                    Draw::text(left + 4, start_y + i, "> " + display, "bold_" + box_color);
-                } else {
-                    Draw::text(left + 4, start_y + i, "  " + display, text_color);
+            cout << Draw::sync_start();
+            if (needs_full_redraw || geometry_changed || mode_changed) {
+                cout << Draw::clear();
+                Draw::box(left, top, w, h, box_title, box_color, title_color);
+
+                string inst = "Arrow keys to navigate, Enter/Space to select/toggle";
+                if (static_cast<int>(inst.length()) > w - 4) {
+                    inst = inst.substr(0, static_cast<size_t>(w - 7)) + "...";
                 }
+                Draw::text(left + 2, top + 2, inst, text_color);
+
+                for (int i = 0; i < num_items; ++i) {
+                    draw_row(i, left, start_y, top, h, max_len, box_color, text_color);
+                }
+            } else if (selected != last_selected) {
+                draw_row(last_selected, left, start_y, top, h, max_len, box_color, text_color);
+                draw_row(selected, left, start_y, top, h, max_len, box_color, text_color);
             }
-            
+
             cout << Draw::sync_end() << flush;
+
+            last_selected = selected;
+            last_typing_mode = typing_mode;
+            last_left = left;
+            last_top = top;
+            last_w = w;
+            last_h = h;
             
             string key = Input::wait_key();
             auto& item = menu_items[selected];
-            string type = item.contains("type") ? item["type"].get<string>() : "action";
-            string id = item.contains("id") ? item["id"].get<string>() : "";
-            string item_title = item.contains("title") ? item["title"].get<string>() : "Unknown";
+            auto& selected_meta = meta[selected];
+            string type = selected_meta.type;
+            string id = selected_meta.id;
+            string item_title = selected_meta.title;
+
+            bool selection_changed = false;
+            bool content_changed = false;
+            bool typing_mode_changed = false;
 
             if (typing_mode) {
                 if (key == "enter" || key == "escape") {
                     typing_mode = false;
+                    typing_mode_changed = true;
                 } else if (key == "backspace" || (key.length() == 1 && (key[0] == '\x7f' || key[0] == '\x08'))) {
-                    if (!g_answers[id].empty()) g_answers[id].pop_back();
+                    if (!g_answers[id].empty()) {
+                        g_answers[id].pop_back();
+                        content_changed = true;
+                    }
                 } else if (key.find("KEY_") != 0) {
                     // printable char
                     bool all_printable = true;
                     for (char c : key) {
                         if ((unsigned char)c < 32 || c == 127) all_printable = false;
                     }
-                    if (all_printable && !key.empty()) g_answers[id] += key;
+                    if (all_printable && !key.empty()) {
+                        g_answers[id] += key;
+                        content_changed = true;
+                    }
                 }
+
+                needs_full_redraw = content_changed || typing_mode_changed;
                 continue;
             }
 
-            if (key == "KEY_up") { if (selected > 0) selected--; }
-            else if (key == "KEY_down") { if (selected < num_items - 1) selected++; }
+            if (key == "KEY_up") {
+                if (selected > 0) {
+                    selected--;
+                    selection_changed = true;
+                }
+            }
+            else if (key == "KEY_down") {
+                if (selected < num_items - 1) {
+                    selected++;
+                    selection_changed = true;
+                }
+            }
             else if (key == "KEY_right" || key == "enter" || key == " ") {
                 if (type == "action") {
                     if (id == "action_back") return false;
@@ -611,31 +696,29 @@ namespace UI {
                     }
                 } else if (type == "boolean") {
                     g_answers[id] = (g_answers[id] == "true") ? "false" : "true";
+                    content_changed = true;
                 } else if (type == "select") {
-                    if (item.contains("options")) {
-                        auto& opts = item["options"];
+                    if (!selected_meta.options.empty()) {
                         int current_idx = 0;
-                        for (size_t i = 0; i < opts.size(); ++i) {
-                            if (opts[i].get<string>() == g_answers[id]) { current_idx = i; break; }
-                        }
-                        if (key == "KEY_right" || key == "enter" || key == " ") {
-                            current_idx = (current_idx + 1) % opts.size();
-                        }
-                        g_answers[id] = opts[current_idx].get<string>();
+                        auto it = selected_meta.option_index.find(g_answers[id]);
+                        if (it != selected_meta.option_index.end()) current_idx = it->second;
+                        current_idx = (current_idx + 1) % static_cast<int>(selected_meta.options.size());
+                        g_answers[id] = selected_meta.options[static_cast<size_t>(current_idx)];
+                        content_changed = true;
                     }
                 } else if (type == "text") {
                     typing_mode = true;
+                    typing_mode_changed = true;
                 }
             } else if (key == "KEY_left") {
                 if (type == "select") {
-                    if (item.contains("options")) {
-                        auto& opts = item["options"];
+                    if (!selected_meta.options.empty()) {
                         int current_idx = 0;
-                        for (size_t i = 0; i < opts.size(); ++i) {
-                            if (opts[i].get<string>() == g_answers[id]) { current_idx = i; break; }
-                        }
-                        current_idx = (current_idx - 1 + opts.size()) % opts.size();
-                        g_answers[id] = opts[current_idx].get<string>();
+                        auto it = selected_meta.option_index.find(g_answers[id]);
+                        if (it != selected_meta.option_index.end()) current_idx = it->second;
+                        current_idx = (current_idx - 1 + static_cast<int>(selected_meta.options.size())) % static_cast<int>(selected_meta.options.size());
+                        g_answers[id] = selected_meta.options[static_cast<size_t>(current_idx)];
+                        content_changed = true;
                     }
                 } else {
                     return false; // Back out of submenu
@@ -643,6 +726,8 @@ namespace UI {
             } else if (key == "escape") {
                 return false;
             }
+
+            needs_full_redraw = content_changed || typing_mode_changed || !selection_changed;
         }
         return false;
     }
