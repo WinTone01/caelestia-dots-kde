@@ -46,6 +46,10 @@ function notifyActiveWindowReal() {
     let window = workspace.activeWindow;
     let cursorScreen = workspace.screenAt(workspace.cursorPos);
     let out = cursorScreen ? cursorScreen.name : "";
+    if (window && (window.resourceClass === "quickshell" || window.resourceClass === "plasmashell")) {
+        return; // Ignore shell panels taking focus
+    }
+    
     if (!window) {
         if (lastActiveUuid !== null) {
             lastActiveUuid = null;
@@ -113,6 +117,7 @@ function notifyWindowList() {
                 width: w.frameGeometry ? w.frameGeometry.width : w.width,
                 height: w.frameGeometry ? w.frameGeometry.height : w.height,
                 fullscreen: w.fullScreen ? true : false,
+                minimized: w.minimized ? true : false,
                 floating: !w.tile,
                 workspace: { id: deskId }
             });
@@ -122,10 +127,24 @@ function notifyWindowList() {
 }
 
 workspace.windowActivated.connect(onActiveWindowChanged);
-workspace.windowAdded.connect(notifyWindowList);
+
+function onWindowAdded(window) {
+    if (window && window.normalWindow) {
+        try { window.minimizedChanged.connect(notifyWindowList); } catch(e){}
+    }
+    notifyWindowList();
+}
+
+workspace.windowAdded.connect(onWindowAdded);
 workspace.windowRemoved.connect(notifyWindowList);
 
 // Initial push
+let initialWins = workspace.windowList();
+for (let i = 0; i < initialWins.length; ++i) {
+    if (initialWins[i].normalWindow) {
+        try { initialWins[i].minimizedChanged.connect(notifyWindowList); } catch(e){}
+    }
+}
 onActiveWindowChanged();
 notifyWindowList();
 )js";
@@ -233,6 +252,7 @@ void KWinActiveWindowBridge::focusWindow(const QString& address) {
         let wins = workspace.windowList();
         for (let i = 0; i < wins.length; ++i) {
             if (wins[i].internalId && String(wins[i].internalId) === "%1") {
+                wins[i].minimized = false;
                 workspace.activeWindow = wins[i];
                 break;
             }
