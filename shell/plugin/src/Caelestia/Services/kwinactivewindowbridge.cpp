@@ -30,6 +30,12 @@ void KWinActiveWindowBridgeAdaptor::notifyWindowList(const QString& windowsJson)
     }
 }
 
+void KWinActiveWindowBridgeAdaptor::notifyCurrentDesktop(int desktop) {
+    if (auto* bridge = qobject_cast<KWinActiveWindowBridge*>(parent())) {
+        bridge->updateCurrentDesktop(desktop);
+    }
+}
+
 static const QString kScriptSource = R"js(
 const BUS = "dev.caelestia.KWinActiveWindow";
 const PATH = "/dev/caelestia/KWinActiveWindow";
@@ -101,11 +107,19 @@ function notifyWindowList() {
     for (let i = 0; i < wins.length; ++i) {
         let w = wins[i];
         if (w.normalWindow) {
-            let deskId = "";
+            let deskId = 1;
             if (w.resourceClass === "quickshell") continue;
             if (w.desktops && w.desktops.length > 0) {
                 let d = w.desktops[0];
-                deskId = String(d.id || d.name || d);
+                let allD = workspace.desktops;
+                if (allD) {
+                    for (let j = 0; j < allD.length; ++j) {
+                        if (allD[j] === d) {
+                            deskId = j + 1;
+                            break;
+                        }
+                    }
+                }
             }
             arr.push({
                 address: w.internalId ? String(w.internalId) : "",
@@ -135,6 +149,22 @@ function onWindowAdded(window) {
     notifyWindowList();
 }
 
+function onCurrentDesktopChanged() {
+    let curr = workspace.currentDesktop;
+    let idx = 1;
+    let d = workspace.desktops;
+    if (d) {
+        for (let i = 0; i < d.length; ++i) {
+            if (d[i] === curr) {
+                idx = i + 1;
+                break;
+            }
+        }
+    }
+    callDBus(BUS, PATH, IFACE, "notifyCurrentDesktop", idx);
+}
+
+workspace.currentDesktopChanged.connect(onCurrentDesktopChanged);
 workspace.windowAdded.connect(onWindowAdded);
 workspace.windowRemoved.connect(notifyWindowList);
 
@@ -147,6 +177,9 @@ for (let i = 0; i < initialWins.length; ++i) {
 }
 onActiveWindowChanged();
 notifyWindowList();
+if (workspace.currentDesktop) {
+    onCurrentDesktopChanged();
+}
 )js";
 
 KWinActiveWindowBridge::KWinActiveWindowBridge(QObject* parent)
@@ -210,6 +243,17 @@ void KWinActiveWindowBridge::updateActiveWindow(
 
 QVariantList KWinActiveWindowBridge::windowList() const {
     return m_windowList;
+}
+
+int KWinActiveWindowBridge::currentDesktop() const {
+    return m_currentDesktop;
+}
+
+void KWinActiveWindowBridge::updateCurrentDesktop(int desktop) {
+    if (m_currentDesktop != desktop) {
+        m_currentDesktop = desktop;
+        emit currentDesktopChanged();
+    }
 }
 
 void KWinActiveWindowBridge::executeKWinScriptAction(const QString& scriptBody) {
@@ -393,10 +437,42 @@ void KWinActiveWindowBridge::setWindowDesktop(const QString& address, int deskto
 
 void KWinActiveWindowBridge::setDesktop(int desktopId) {
     QString script = QString(R"(
-        let id = %1;
-        let d = workspace.desktops.find((d) => d.x11DesktopNumber == id);
-        if (d) workspace.currentDesktop = d;
+        let d = workspace.desktops;
+        let idx = %1 - 1;
+        if (d && idx >= 0 && idx < d.length) {
+            workspace.currentDesktop = d[idx];
+        }
     )").arg(desktopId);
+    executeKWinScriptAction(script);
+}
+
+void KWinActiveWindowBridge::nextDesktop() {
+    QString script = QString(R"(
+        let curr = workspace.currentDesktop;
+        let d = workspace.desktops;
+        for (let i = 0; i < d.length; ++i) {
+            if (d[i] === curr) {
+                let nextIdx = (i + 1) % d.length;
+                workspace.currentDesktop = d[nextIdx];
+                break;
+            }
+        }
+    )");
+    executeKWinScriptAction(script);
+}
+
+void KWinActiveWindowBridge::previousDesktop() {
+    QString script = QString(R"(
+        let curr = workspace.currentDesktop;
+        let d = workspace.desktops;
+        for (let i = 0; i < d.length; ++i) {
+            if (d[i] === curr) {
+                let prevIdx = (i - 1 + d.length) % d.length;
+                workspace.currentDesktop = d[prevIdx];
+                break;
+            }
+        }
+    )");
     executeKWinScriptAction(script);
 }
 

@@ -53,7 +53,9 @@ Provides real-time information about active windows, monitors, and the global wi
 * `void resizeWindow(const QString &address, int width, int height)`: Resizes the window.
 * `void setWindowProperty(const QString &address, const QString &property, bool enable)`: Toggles states (above, below, skip_taskbar, fullscreen, minimized, etc).
 * `void setWindowDesktop(const QString &address, int desktopId)`: Moves window to desktop (-1 for current, -2 for all).
-* `void setDesktop(int desktopId)`: Switches the current desktop workspace.
+* `void setDesktop(int desktopId)`: Switches the current desktop workspace (1-indexed).
+* `void nextDesktop()`: Switches to the next adjacent desktop, wrapping around at the end.
+* `void previousDesktop()`: Switches to the previous adjacent desktop, wrapping around at the beginning.
 * `void runArbitraryScript(const QString &script)`: Executes raw KWin JavaScript natively.
 * `void setActiveOutputName(const QString &outputName)`: Manually sets the active output tracker.
 

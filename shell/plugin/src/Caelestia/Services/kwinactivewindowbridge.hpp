@@ -18,6 +18,7 @@ public:
 public slots:
     Q_NOREPLY void notifyActiveWindow(const QString &uuid, const QString &title, const QString &appClass, const QString &activeOutputName, bool isFullscreen, bool isMaximized);
     Q_NOREPLY void notifyWindowList(const QString &windowsJson);
+    Q_NOREPLY void notifyCurrentDesktop(int desktop);
 };
 
 class KWinActiveWindowBridge : public QObject {
@@ -25,6 +26,7 @@ class KWinActiveWindowBridge : public QObject {
     Q_PROPERTY(QVariantMap activeWindow READ activeWindow NOTIFY activeWindowChanged)
     Q_PROPERTY(QString activeOutputName READ activeOutputName NOTIFY activeWindowChanged)
     Q_PROPERTY(QVariantList windowList READ windowList NOTIFY windowListChanged)
+    Q_PROPERTY(int currentDesktop READ currentDesktop NOTIFY currentDesktopChanged)
     QML_ELEMENT
     QML_SINGLETON
 
@@ -36,6 +38,7 @@ public:
     QString activeOutputName() const;
 
     QVariantList windowList() const;
+    int currentDesktop() const;
 
     Q_INVOKABLE void focusWindow(const QString &address);
     Q_INVOKABLE void closeWindow(const QString &address);
@@ -47,15 +50,19 @@ public:
     Q_INVOKABLE void setWindowProperty(const QString &address, const QString &property, bool enable);
     Q_INVOKABLE void setWindowDesktop(const QString &address, int desktopId);
     Q_INVOKABLE void setDesktop(int desktopId);
+    Q_INVOKABLE void nextDesktop();
+    Q_INVOKABLE void previousDesktop();
     Q_INVOKABLE void runArbitraryScript(const QString &script);
     Q_INVOKABLE void setActiveOutputName(const QString &outputName);
 
     void updateActiveWindow(const QString &uuid, const QString &title, const QString &appClass, const QString &activeOutputName, bool isFullscreen, bool isMaximized);
     void updateWindowList(const QString &windowsJson);
+    void updateCurrentDesktop(int desktop);
 
 signals:
     void activeWindowChanged();
     void windowListChanged();
+    void currentDesktopChanged();
 
 private:
     void injectKWinScript();
@@ -65,6 +72,7 @@ private:
     QVariantList m_windowList;
     QString m_activeOutputName;
     QString m_scriptName;
+    int m_currentDesktop = 1;
 };
 
 } // namespace caelestia::services

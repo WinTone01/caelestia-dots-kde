@@ -289,6 +289,9 @@ Then rebuild the shell by running setup.sh again.
   - **DiscordRPC**: Logs connection states and errors for the Discord Rich Presence service.
   - **BluetoothReconnect**: Logs background device reconnection attempts on startup.
   - **Nexus StackPage**: Logs internal UI navigation states and errors.
+  - **Keyboard Shortcuts**: Logs detection of existing keybinds, and unbinding/binding processes.
+  - **Dock**: Logs window address, active window detection, and cycling behavior.
+  - **DesktopIcons**: Logs when the desktop icons are loaded, saved, or repositioned.
 
 </details>
 
