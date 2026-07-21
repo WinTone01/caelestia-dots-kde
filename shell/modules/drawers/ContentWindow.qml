@@ -16,20 +16,67 @@ import qs.modules.bar
 StyledWindow {
     id: root
 
+    component BlurMaskCross: QtObject {
+        required property Item target
+        property int r: root.borderRounding
+        
+        property point mappedPos: target && target.parent && root.contentItem ? target.parent.mapToItem(root.contentItem, target.x, target.y) : Qt.point(0,0)
+        property bool isActive: target && target.visible && target.opacity > 0 && GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur
+        
+        property Item rect1: Item {
+            parent: root.contentItem
+            x: mappedPos.x + r
+            y: mappedPos.y
+            width: Math.max(0, target.width - r * 2)
+            height: target.height
+            visible: isActive
+        }
+        
+        property Item rect2: Item {
+            parent: root.contentItem
+            x: mappedPos.x
+            y: mappedPos.y + r
+            width: target.width
+            height: Math.max(0, target.height - r * 2)
+            visible: isActive
+        }
+    }
+
     Config.screen: screen.name
+
+    BlurMaskCross { id: maskBar; target: bar }
+    BlurMaskCross { id: maskSidebar; target: panels.sidebar }
+    BlurMaskCross { id: maskNotifications; target: panels.notifications }
+    BlurMaskCross { id: maskOsdWrapper; target: panels.osdWrapper }
+    BlurMaskCross { id: maskSessionWrapper; target: panels.sessionWrapper }
+    BlurMaskCross { id: maskLauncher; target: panels.launcher }
+    BlurMaskCross { id: maskDashboard; target: panels.dashboard }
+    BlurMaskCross { id: maskPopoutsWrapper; target: panels.popoutsWrapper }
+    BlurMaskCross { id: maskUtilities; target: panels.utilities }
+    BlurMaskCross { id: maskToasts; target: panels.toasts }
 
     BackgroundEffect.blurRegion: Region {
         Region { x: -10; y: -10; width: 1; height: 1 } // Prevent fallback to full-window blur when empty
-        Region { item: (GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur) ? bar : null }
-        Region { item: (GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur) ? panels.sidebar : null }
-        Region { item: (GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur) ? panels.notifications : null }
-        Region { item: (GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur) ? panels.osdWrapper : null }
-        Region { item: (GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur) ? panels.sessionWrapper : null }
-        Region { item: (GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur) ? panels.launcher : null }
-        Region { item: (GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur) ? panels.dashboard : null }
-        Region { item: (GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur) ? panels.popoutsWrapper : null }
-        Region { item: (GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur) ? panels.utilities : null }
-        Region { item: (GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur) ? panels.toasts : null }
+        Region { item: maskBar.isActive ? maskBar.rect1 : null }
+        Region { item: maskBar.isActive ? maskBar.rect2 : null }
+        Region { item: maskSidebar.isActive ? maskSidebar.rect1 : null }
+        Region { item: maskSidebar.isActive ? maskSidebar.rect2 : null }
+        Region { item: maskNotifications.isActive ? maskNotifications.rect1 : null }
+        Region { item: maskNotifications.isActive ? maskNotifications.rect2 : null }
+        Region { item: maskOsdWrapper.isActive ? maskOsdWrapper.rect1 : null }
+        Region { item: maskOsdWrapper.isActive ? maskOsdWrapper.rect2 : null }
+        Region { item: maskSessionWrapper.isActive ? maskSessionWrapper.rect1 : null }
+        Region { item: maskSessionWrapper.isActive ? maskSessionWrapper.rect2 : null }
+        Region { item: maskLauncher.isActive ? maskLauncher.rect1 : null }
+        Region { item: maskLauncher.isActive ? maskLauncher.rect2 : null }
+        Region { item: maskDashboard.isActive ? maskDashboard.rect1 : null }
+        Region { item: maskDashboard.isActive ? maskDashboard.rect2 : null }
+        Region { item: maskPopoutsWrapper.isActive ? maskPopoutsWrapper.rect1 : null }
+        Region { item: maskPopoutsWrapper.isActive ? maskPopoutsWrapper.rect2 : null }
+        Region { item: maskUtilities.isActive ? maskUtilities.rect1 : null }
+        Region { item: maskUtilities.isActive ? maskUtilities.rect2 : null }
+        Region { item: maskToasts.isActive ? maskToasts.rect1 : null }
+        Region { item: maskToasts.isActive ? maskToasts.rect2 : null }
     }
 
     readonly property alias bar: bar
