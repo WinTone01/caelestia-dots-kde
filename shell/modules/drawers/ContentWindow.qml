@@ -18,6 +18,20 @@ StyledWindow {
 
     Config.screen: screen.name
 
+    BackgroundEffect.blurRegion: Region {
+        Region { x: -10; y: -10; width: 1; height: 1 } // Prevent fallback to full-window blur when empty
+        Region { item: (GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur) ? bar : null }
+        Region { item: (GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur) ? panels.sidebar : null }
+        Region { item: (GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur) ? panels.notifications : null }
+        Region { item: (GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur) ? panels.osdWrapper : null }
+        Region { item: (GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur) ? panels.sessionWrapper : null }
+        Region { item: (GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur) ? panels.launcher : null }
+        Region { item: (GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur) ? panels.dashboard : null }
+        Region { item: (GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur) ? panels.popoutsWrapper : null }
+        Region { item: (GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur) ? panels.utilities : null }
+        Region { item: (GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur) ? panels.toasts : null }
+    }
+
     readonly property alias bar: bar
     readonly property alias interactionWrapper: interactions
 
@@ -121,6 +135,8 @@ StyledWindow {
         height: root.height
     }
 
+
+
     QtObject {
         id: focusGrabState
 
@@ -183,7 +199,7 @@ StyledWindow {
 
         Config.screen: root.screen.name
         anchors.fill: parent
-        opacity: GlobalConfig.appearance.pitchBlack ? 1 : (Colours.transparency.enabled ? Colours.transparency.base : root.surfaceColour.a)
+        opacity: GlobalConfig.appearance.pitchBlack ? 1 : (Colours.transparency.enabled ? Colours.transparency.base : 1.0)
         layer.enabled: true
         layer.effect: MultiEffect {
             shadowEnabled: true

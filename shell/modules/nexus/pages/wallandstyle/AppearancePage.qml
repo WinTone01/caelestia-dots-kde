@@ -54,7 +54,34 @@ PageBase {
                 text: qsTr("Transparency")
                 subtext: qsTr("Base %1, layers %2").arg(Colours.transparency.base).arg(Colours.transparency.layers)
                 checked: Colours.transparency.enabled
-                onToggled: GlobalConfig.appearance.transparency.enabled = checked
+                onToggled: {
+                    GlobalConfig.appearance.transparency.enabled = checked
+                    if (!checked) {
+                        GlobalConfig.appearance.blur = false
+                    }
+                }
+            }
+
+            ToggleRow {
+                Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
+                Layout.fillWidth: true
+                text: qsTr("Background Blur")
+                subtext: qsTr("Apply blur to transparent window backgrounds")
+                checked: GlobalConfig.appearance.blur
+                enabled: GlobalConfig.appearance.transparency.enabled
+                onToggled: {
+                    GlobalConfig.appearance.blur = checked
+                    if (GlobalConfig.appearance.transparency.enabled) {
+                        GlobalConfig.appearance.transparency.enabled = false
+                        blurHackTimer.start()
+                    }
+                }
+
+                Timer {
+                    id: blurHackTimer
+                    interval: 50
+                    onTriggered: GlobalConfig.appearance.transparency.enabled = true
+                }
             }
 
             ToggleRow {
