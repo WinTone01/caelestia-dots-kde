@@ -56,7 +56,7 @@ Scope {
         onPressed: {
             if (root.hasFullscreen)
                 return;
-            Quickshell.execDetached(["caelestia", "shell", "region", "screenshot"]);
+            regionSelector.screenshot();
         }
     }
 
@@ -69,7 +69,7 @@ Scope {
         onPressed: {
             if (root.hasFullscreen)
                 return;
-            Quickshell.execDetached(["caelestia", "shell", "region", "search"]);
+            regionSelector.search();
         }
     }
 
@@ -82,7 +82,7 @@ Scope {
         onPressed: {
             if (root.hasFullscreen)
                 return;
-            Quickshell.execDetached(["caelestia", "shell", "region", "record"]);
+            regionSelector.record();
         }
     }
 
