@@ -56,6 +56,7 @@ Provides real-time information about active windows, monitors, and the global wi
 * `void setDesktop(int desktopId)`: Switches the current desktop workspace (1-indexed).
 * `void nextDesktop()`: Switches to the next adjacent desktop, wrapping around at the end.
 * `void previousDesktop()`: Switches to the previous adjacent desktop, wrapping around at the beginning.
+* `void setDesktop(int desktopId)`: Switches the current desktop workspace.
 * `void runArbitraryScript(const QString &script)`: Executes raw KWin JavaScript natively.
 * `void setActiveOutputName(const QString &outputName)`: Manually sets the active output tracker.
 
