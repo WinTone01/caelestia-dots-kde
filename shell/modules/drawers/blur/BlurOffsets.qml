@@ -41,7 +41,7 @@ QtObject {
     property real bW: isActive ? Math.max(0, (target ? target.width : 0) - sLeft - sRight) : 0
     property real bH: isActive ? Math.max(0, (target ? target.height : 0) - sTop - sBottom) : 0
     
-    property real r: Tokens.rounding.extraLarge * animScale
+    property real r: isActive ? Tokens.rounding.extraLarge * animScale : 0
     property bool isIsland: GlobalConfig.appearance.islands
     
     property real rTop: (!isIsland && vAnchor === "top") ? 0 : r
