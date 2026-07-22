@@ -130,7 +130,7 @@ Item {
     Item {
         id: osdWrapper
         
-        property string vAnchor: "top"
+        property string vAnchor: "center"
         property string hAnchor: Config.bar.position === "right" ? "left" : "right"
 
         anchors.verticalCenter: parent.verticalCenter
@@ -178,7 +178,7 @@ Item {
     Item {
         id: sessionWrapper
         
-        property string vAnchor: "bottom"
+        property string vAnchor: "center"
         property string hAnchor: Config.bar.position === "right" ? "left" : "right"
 
         anchors.verticalCenter: parent.verticalCenter
@@ -206,7 +206,7 @@ Item {
         id: launcher
         
         property string vAnchor: "bottom"
-        property string hAnchor: "right"
+        property string hAnchor: "center"
 
         screen: root.screen
         visibilities: root.visibilities
@@ -220,7 +220,7 @@ Item {
         id: dashboard
         
         property string vAnchor: "top"
-        property string hAnchor: "right"
+        property string hAnchor: "center"
 
         visibilities: root.visibilities
 

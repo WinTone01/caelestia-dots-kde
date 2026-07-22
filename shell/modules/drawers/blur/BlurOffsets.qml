@@ -1,4 +1,5 @@
 import QtQuick
+import QtCore
 import Caelestia.Config
 
 QtObject {
@@ -17,6 +18,11 @@ QtObject {
     property real blurOffsetRight: 0
 
     property bool isActive: target && target.visible && target.opacity > 0 && GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur
+    
+    property Settings blurSettings: Settings {
+        category: "Blur"
+        property int blurQuality: 20
+    }
     
     property real animScale: 1 - offsetScale
     
@@ -46,8 +52,8 @@ QtObject {
     
     property real rTop: (!isIsland && vAnchor === "top") ? 0 : r
     property real rBottom: (!isIsland && vAnchor === "bottom") ? 0 : r
-    property real rLeft: r
-    property real rRight: r
+    property real rLeft: (!isIsland && hAnchor === "left") ? 0 : r
+    property real rRight: (!isIsland && hAnchor === "right") ? 0 : r
     
     property real inLeft: bX + rLeft
     property real inRight: bX + bW - rRight

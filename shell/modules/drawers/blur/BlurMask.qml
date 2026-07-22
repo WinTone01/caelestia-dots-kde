@@ -39,6 +39,8 @@ Region {
 
     BlurCorners {
         vAnchor: root.vAnchor
+        hAnchor: root.hAnchor
+        blurQuality: root.offsets.blurSettings.blurQuality
         inLeft: root.offsets.inLeft
         inRight: root.offsets.inRight
         inTop: root.offsets.inTop

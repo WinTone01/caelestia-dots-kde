@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtCore
 import QtQuick.Layouts
 import Caelestia.Components
 import Caelestia.Config
@@ -101,6 +102,24 @@ PageBase {
                     interval: 50
                     onTriggered: GlobalConfig.appearance.transparency.enabled = true
                 }
+            }
+
+            Settings {
+                id: blurSettings
+                category: "Blur"
+                property int blurQuality: 20
+            }
+
+            StepperRow {
+                Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
+                label: qsTr("Blur Corner Quality")
+                subtext: qsTr("Number of regions used to render blur corners")
+                value: blurSettings.blurQuality
+                enabled: GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur
+                from: 1
+                to: 100
+                stepSize: 1
+                onMoved: v => blurSettings.blurQuality = Math.round(v)
             }
 
             ToggleRow {
