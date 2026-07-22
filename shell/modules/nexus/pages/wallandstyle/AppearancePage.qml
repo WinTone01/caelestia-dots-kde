@@ -52,14 +52,32 @@ PageBase {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
                 Layout.fillWidth: true
                 text: qsTr("Transparency")
-                subtext: qsTr("Base %1, layers %2").arg(Colours.transparency.base).arg(Colours.transparency.layers)
-                checked: Colours.transparency.enabled
+                subtext: qsTr("Enable transparency across the shell")
+                checked: GlobalConfig.appearance.transparency.enabled
                 onToggled: {
                     GlobalConfig.appearance.transparency.enabled = checked
                     if (!checked) {
                         GlobalConfig.appearance.blur = false
                     }
                 }
+            }
+
+            SliderRow {
+                Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
+                label: qsTr("Base Transparency")
+                valueLabel: Math.round(value * 100) + "%"
+                value: GlobalConfig.appearance.transparency.base
+                enabled: GlobalConfig.appearance.transparency.enabled
+                onMoved: v => GlobalConfig.appearance.transparency.base = v
+            }
+
+            SliderRow {
+                Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
+                label: qsTr("Layers Transparency")
+                valueLabel: Math.round(value * 100) + "%"
+                value: GlobalConfig.appearance.transparency.layers
+                enabled: GlobalConfig.appearance.transparency.enabled
+                onMoved: v => GlobalConfig.appearance.transparency.layers = v
             }
 
             ToggleRow {
@@ -71,7 +89,8 @@ PageBase {
                 enabled: GlobalConfig.appearance.transparency.enabled
                 onToggled: {
                     GlobalConfig.appearance.blur = checked
-                    if (GlobalConfig.appearance.transparency.enabled) {
+                    if (GlobalConfig.appearance.transparency.enabled && checked) {
+                        // Hack to force Quickshell blur region to update when enabling blur
                         GlobalConfig.appearance.transparency.enabled = false
                         blurHackTimer.start()
                     }
