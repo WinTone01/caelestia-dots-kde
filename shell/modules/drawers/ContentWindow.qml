@@ -18,100 +18,159 @@ StyledWindow {
 
     // Edit these variables to adjust how far the blur mask is inset from each logical edge.
     // They are relative to the widget's growth direction from the bar.
-    property int blurOffsetTop: 7
+    property int blurOffsetTop: 0
     property int blurOffsetBottom: 0
     property int blurOffsetLeft: 0
     property int blurOffsetRight: 0
 
-    component BlurMask: QtObject {
+    component BlurRegion: Region {
         required property Item target
         property string vAnchor: "bottom" 
         property string hAnchor: "right"
+        property real offsetScale: 0
         
-        property point mappedPos: target && target.parent && root.contentItem ? target.parent.mapToItem(root.contentItem, target.x, target.y) : Qt.point(0,0)
+        Config.screen: root.screen.name
+        
         property bool isActive: target && target.visible && target.opacity > 0 && GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur
         
-        // Map logical edges to screen-space edges based on the widget's actual anchor
-        property int sTop: vAnchor === "top" ? root.blurOffsetBottom : root.blurOffsetTop
-        property int sBottom: vAnchor === "top" ? root.blurOffsetTop : root.blurOffsetBottom
-        property int sLeft: hAnchor === "left" ? root.blurOffsetRight : root.blurOffsetLeft
-        property int sRight: hAnchor === "left" ? root.blurOffsetLeft : root.blurOffsetRight
+        // Scale the offsets proportionally as the widget animates
+        property real animScale: 1 - offsetScale
         
-        property Item rect: Item {
-            parent: root.contentItem
-            x: mappedPos.x + sLeft
-            y: mappedPos.y + sTop
-            width: Math.max(0, target.width - sLeft - sRight)
-            height: Math.max(0, target.height - sTop - sBottom)
-            visible: isActive
+        // With a multi-rectangle mask, we don't need large offsets to hide sharp corners.
+        // We can just use the user-defined base offsets directly.
+        property real sTop: (vAnchor === "top" ? root.blurOffsetBottom : root.blurOffsetTop) * animScale
+        property real sBottom: (vAnchor === "top" ? root.blurOffsetTop : root.blurOffsetBottom) * animScale
+        property real sLeft: (hAnchor === "left" ? root.blurOffsetRight : root.blurOffsetLeft) * animScale
+        property real sRight: (hAnchor === "left" ? root.blurOffsetLeft : root.blurOffsetRight) * animScale
+        
+        // Target tracking explicitly dependent on target geometry for fluid animation
+        property real tX: {
+            if (!target) return 0;
+            let _ = target.x + target.width; // Dependency tracking
+            return target.parent ? target.parent.mapToItem(root.contentItem, target.x, target.y).x : 0;
         }
-    }
+        property real tY: {
+            if (!target) return 0;
+            let _ = target.y + target.height; // Dependency tracking
+            return target.parent ? target.parent.mapToItem(root.contentItem, target.x, target.y).y : 0;
+        }
+        
+        property real bX: tX + sLeft
+        property real bY: tY + sTop
+        property real bW: isActive ? Math.max(0, (target ? target.width : 0) - sLeft - sRight) : 0
+        property real bH: isActive ? Math.max(0, (target ? target.height : 0) - sTop - sBottom) : 0
+        
+        property real r: Tokens.rounding.extraLarge * animScale
+        property bool isIsland: GlobalConfig.appearance.islands
+        
+        // If anchored to the top/bottom and not floating (islands), that edge should be flat/sharp.
+        property real rTop: (!isIsland && vAnchor === "top") ? 0 : r
+        property real rBottom: (!isIsland && vAnchor === "bottom") ? 0 : r
 
+        property real inLeft: bX + r
+        property real inRight: bX + bW - r
+        property real inTop: bY + rTop
+        property real inBottom: bY + bH - rBottom
+
+        // Horizontal body (Expands to cover sharp top/bottom edges)
+        Region { 
+            x: bX; y: inTop
+            width: bW; height: Math.max(0, inBottom - inTop)
+        }
+        // Vertical body
+        Region { 
+            x: inLeft; y: bY
+            width: Math.max(0, inRight - inLeft); height: bH
+        }
+        // Top-Left Corner
+        Region { x: inLeft - rTop*0.9860; y: inTop - rTop*0.1667; width: rTop*0.9860; height: rTop*0.1667 }
+        Region { x: inLeft - rTop*0.9428; y: inTop - rTop*0.3333; width: rTop*0.9428; height: rTop*0.1667 }
+        Region { x: inLeft - rTop*0.8660; y: inTop - rTop*0.5000; width: rTop*0.8660; height: rTop*0.1667 }
+        Region { x: inLeft - rTop*0.7454; y: inTop - rTop*0.6667; width: rTop*0.7454; height: rTop*0.1667 }
+        Region { x: inLeft - rTop*0.5528; y: inTop - rTop*0.8333; width: rTop*0.5528; height: rTop*0.1667 }
+        // Top-Right Corner
+        Region { x: inRight; y: inTop - rTop*0.1667; width: rTop*0.9860; height: rTop*0.1667 }
+        Region { x: inRight; y: inTop - rTop*0.3333; width: rTop*0.9428; height: rTop*0.1667 }
+        Region { x: inRight; y: inTop - rTop*0.5000; width: rTop*0.8660; height: rTop*0.1667 }
+        Region { x: inRight; y: inTop - rTop*0.6667; width: rTop*0.7454; height: rTop*0.1667 }
+        Region { x: inRight; y: inTop - rTop*0.8333; width: rTop*0.5528; height: rTop*0.1667 }
+        // Bottom-Left Corner
+        Region { x: inLeft - rBottom*0.9860; y: inBottom + rBottom*0.0000; width: rBottom*0.9860; height: rBottom*0.1667 }
+        Region { x: inLeft - rBottom*0.9428; y: inBottom + rBottom*0.1667; width: rBottom*0.9428; height: rBottom*0.1667 }
+        Region { x: inLeft - rBottom*0.8660; y: inBottom + rBottom*0.3333; width: rBottom*0.8660; height: rBottom*0.1667 }
+        Region { x: inLeft - rBottom*0.7454; y: inBottom + rBottom*0.5000; width: rBottom*0.7454; height: rBottom*0.1667 }
+        Region { x: inLeft - rBottom*0.5528; y: inBottom + rBottom*0.6667; width: rBottom*0.5528; height: rBottom*0.1667 }
+        // Bottom-Right Corner
+        Region { x: inRight; y: inBottom + rBottom*0.0000; width: rBottom*0.9860; height: rBottom*0.1667 }
+        Region { x: inRight; y: inBottom + rBottom*0.1667; width: rBottom*0.9428; height: rBottom*0.1667 }
+        Region { x: inRight; y: inBottom + rBottom*0.3333; width: rBottom*0.8660; height: rBottom*0.1667 }
+        Region { x: inRight; y: inBottom + rBottom*0.5000; width: rBottom*0.7454; height: rBottom*0.1667 }
+        Region { x: inRight; y: inBottom + rBottom*0.6667; width: rBottom*0.5528; height: rBottom*0.1667 }
+    }
+    
     Config.screen: screen.name
-
-    BlurMask { 
-        id: maskBar; target: bar
-        vAnchor: Config.bar.position === "top" ? "top" : "bottom"
-        hAnchor: Config.bar.position === "left" ? "left" : "right"
-    }
-    BlurMask { 
-        id: maskSidebar; target: panels.sidebar
-        vAnchor: "bottom"
-        hAnchor: Config.bar.position === "right" ? "left" : "right"
-    }
-    BlurMask { 
-        id: maskNotifications; target: panels.notifications
-        vAnchor: Config.bar.position === "bottom" ? "bottom" : "top"
-        hAnchor: Config.bar.position === "right" ? "left" : "right"
-    }
-    BlurMask { 
-        id: maskOsdWrapper; target: panels.osdWrapper
-        vAnchor: "top"
-        hAnchor: Config.bar.position === "right" ? "left" : "right"
-    }
-    BlurMask { 
-        id: maskSessionWrapper; target: panels.sessionWrapper
-        vAnchor: "bottom"
-        hAnchor: Config.bar.position === "right" ? "left" : "right"
-    }
-    BlurMask { 
-        id: maskLauncher; target: panels.launcher
-        vAnchor: "bottom"
-        hAnchor: "right"
-    }
-    BlurMask { 
-        id: maskDashboard; target: panels.dashboard
-        vAnchor: "top"
-        hAnchor: "right"
-    }
-    BlurMask { 
-        id: maskPopoutsWrapper; target: panels.popoutsWrapper
-        vAnchor: Config.bar.position === "top" ? "top" : "bottom"
-        hAnchor: Config.bar.position === "left" ? "left" : "right"
-    }
-    BlurMask { 
-        id: maskUtilities; target: panels.utilities
-        vAnchor: Config.bar.position === "bottom" ? "top" : "bottom"
-        hAnchor: Config.bar.position === "right" ? "left" : "right"
-    }
-    BlurMask { 
-        id: maskToasts; target: panels.toasts
-        vAnchor: "bottom"
-        hAnchor: Config.bar.position === "bottom" ? "left" : (Config.bar.position === "right" ? "left" : "right")
-    }
 
     BackgroundEffect.blurRegion: Region {
         Region { x: -10; y: -10; width: 1; height: 1 } // Prevent fallback to full-window blur when empty
-        Region { item: maskBar.isActive ? maskBar.rect : null }
-        Region { item: maskSidebar.isActive ? maskSidebar.rect : null }
-        Region { item: maskNotifications.isActive ? maskNotifications.rect : null }
-        Region { item: maskOsdWrapper.isActive ? maskOsdWrapper.rect : null }
-        Region { item: maskSessionWrapper.isActive ? maskSessionWrapper.rect : null }
-        Region { item: maskLauncher.isActive ? maskLauncher.rect : null }
-        Region { item: maskDashboard.isActive ? maskDashboard.rect : null }
-        Region { item: maskPopoutsWrapper.isActive ? maskPopoutsWrapper.rect : null }
-        Region { item: maskUtilities.isActive ? maskUtilities.rect : null }
-        Region { item: maskToasts.isActive ? maskToasts.rect : null }
+        
+        BlurRegion { 
+            target: bar
+            vAnchor: Config.bar.position === "top" ? "top" : "bottom"
+            hAnchor: Config.bar.position === "left" ? "left" : "right"
+        }
+        BlurRegion { 
+            target: panels.sidebar
+            vAnchor: "bottom"
+            hAnchor: Config.bar.position === "right" ? "left" : "right"
+            offsetScale: panels.sidebar.offsetScale
+        }
+        BlurRegion { 
+            target: panels.notifications
+            vAnchor: Config.bar.position === "bottom" ? "bottom" : "top"
+            hAnchor: Config.bar.position === "right" ? "left" : "right"
+            offsetScale: panels.notifications.offsetScale
+        }
+        BlurRegion { 
+            target: panels.osdWrapper
+            vAnchor: "top"
+            hAnchor: Config.bar.position === "right" ? "left" : "right"
+            offsetScale: panels.osd.offsetScale
+        }
+        BlurRegion { 
+            target: panels.sessionWrapper
+            vAnchor: "bottom"
+            hAnchor: Config.bar.position === "right" ? "left" : "right"
+            offsetScale: panels.session.offsetScale
+        }
+        BlurRegion { 
+            target: panels.launcher
+            vAnchor: "bottom"
+            hAnchor: "right"
+            offsetScale: panels.launcher.offsetScale
+        }
+        BlurRegion { 
+            target: panels.dashboard
+            vAnchor: "top"
+            hAnchor: "right"
+            offsetScale: panels.dashboard.offsetScale
+        }
+        BlurRegion { 
+            target: panels.popoutsWrapper
+            vAnchor: Config.bar.position === "top" ? "top" : "bottom"
+            hAnchor: Config.bar.position === "left" ? "left" : "right"
+            offsetScale: panels.popoutsWrapper.offsetScale
+        }
+        BlurRegion { 
+            target: panels.utilities
+            vAnchor: Config.bar.position === "bottom" ? "top" : "bottom"
+            hAnchor: Config.bar.position === "right" ? "left" : "right"
+            offsetScale: panels.utilities.offsetScale
+        }
+        BlurRegion { 
+            target: panels.toasts
+            vAnchor: "bottom"
+            hAnchor: Config.bar.position === "bottom" ? "left" : (Config.bar.position === "right" ? "left" : "right")
+        }
     }
 
     readonly property alias bar: bar
