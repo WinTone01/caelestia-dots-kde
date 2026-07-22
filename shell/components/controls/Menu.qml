@@ -34,6 +34,7 @@ MouseArea {
     property MenuItem active: dynamicModel[0] ?? null
     property bool expanded
     property real maxHeight: 320
+    readonly property alias backgroundItem: menu
 
     signal itemSelected(item: MenuItem)
 
@@ -60,6 +61,7 @@ MouseArea {
     onClicked: expanded = false
 
     opacity: expanded ? 1 : 0
+    onExpandedChanged: { console.log("Menu expanded:", expanded, "opacity:", opacity, "x:", menu.x, "y:", menu.y, "w:", menu.width, "h:", menu.height, "enabled:", enabled); }
 
     Behavior on opacity {
         Anim {
@@ -99,6 +101,9 @@ MouseArea {
 
         implicitWidth: Math.max(200, column.implicitWidth + Tokens.padding.extraSmall * 2)
         implicitHeight: Math.min(root.maxHeight, column.implicitHeight + Tokens.padding.extraSmall * 2)
+        
+        width: implicitWidth
+        height: implicitHeight
 
         transform: Scale {
             yScale: root.expanded ? 1 : 0.1
@@ -118,8 +123,9 @@ MouseArea {
         StyledRect {
             anchors.fill: parent
             radius: parent.radius
-            color: Colours.palette.m3surfaceContainerLow
-
+            color: (GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur) 
+                ? Colours.mix(Colours.palette.m3surfaceContainerLow, "transparent", GlobalConfig.appearance.transparency.base) 
+                : Colours.palette.m3surfaceContainerLow
             Flickable {
                 id: flickable
 

@@ -8,6 +8,8 @@ import Caelestia.Services
 import qs.components
 import qs.components.containers
 import qs.services
+import "../drawers/blur" as Blur
+import Quickshell.Hyprland
 
 Variants {
     model: Screens.screens.filter(s => GlobalConfig.forScreen(s.name).background.enabled)
@@ -64,6 +66,17 @@ Variants {
             attachTo: contextMenuAnchor
             screenName: win.modelData.name
             z: 9999
+        }
+
+        BackgroundEffect.blurRegion: Region {
+            Region { x: -10; y: -10; width: 1; height: 1 } // Prevent fallback to full-window blur when empty
+
+            Blur.BlurMask {
+                target: desktopContextMenu.backgroundItem
+                contentItem: win.contentItem
+                vAnchor: "none"
+                hAnchor: "none"
+            }
         }
 
         Item {
