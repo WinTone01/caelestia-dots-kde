@@ -75,6 +75,7 @@ PageBase {
             SliderRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
                 label: qsTr("Layers opacity")
+                subtext: qsTr("Requires shell restart")
                 valueLabel: Math.round(value * 100) + "%"
                 value: GlobalConfig.appearance.transparency.layers
                 enabled: GlobalConfig.appearance.transparency.enabled
@@ -112,6 +113,7 @@ PageBase {
 
             StepperRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
+                last: true
                 label: qsTr("Blur Corner Quality")
                 subtext: qsTr("Increasing this can cause lags! Requires shell restart")
                 value: blurSettings.blurQuality
