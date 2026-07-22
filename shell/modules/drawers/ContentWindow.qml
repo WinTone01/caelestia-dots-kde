@@ -36,8 +36,8 @@ StyledWindow {
             blurOffsetBottom: root.blurOffsetBottom
             blurOffsetLeft: root.blurOffsetLeft
             blurOffsetRight: root.blurOffsetRight
-            vAnchor: Config.bar.position === "top" ? "top" : "bottom"
-            hAnchor: Config.bar.position === "left" ? "left" : "right"
+            vAnchor: bar.vAnchor
+            hAnchor: bar.hAnchor
         }
         BlurMask { 
             target: panels.sidebar
@@ -46,8 +46,8 @@ StyledWindow {
             blurOffsetBottom: root.blurOffsetBottom
             blurOffsetLeft: root.blurOffsetLeft
             blurOffsetRight: root.blurOffsetRight
-            vAnchor: "bottom"
-            hAnchor: Config.bar.position === "right" ? "left" : "right"
+            vAnchor: panels.sidebar.vAnchor
+            hAnchor: panels.sidebar.hAnchor
             offsetScale: panels.sidebar.offsetScale
         }
         BlurMask { 
@@ -57,8 +57,8 @@ StyledWindow {
             blurOffsetBottom: root.blurOffsetBottom
             blurOffsetLeft: root.blurOffsetLeft
             blurOffsetRight: root.blurOffsetRight
-            vAnchor: Config.bar.position === "bottom" ? "bottom" : "top"
-            hAnchor: Config.bar.position === "right" ? "left" : "right"
+            vAnchor: panels.notifications.vAnchor
+            hAnchor: panels.notifications.hAnchor
             offsetScale: panels.notifications.offsetScale
         }
         BlurMask { 
@@ -68,8 +68,8 @@ StyledWindow {
             blurOffsetBottom: root.blurOffsetBottom
             blurOffsetLeft: root.blurOffsetLeft
             blurOffsetRight: root.blurOffsetRight
-            vAnchor: "top"
-            hAnchor: Config.bar.position === "right" ? "left" : "right"
+            vAnchor: panels.osdWrapper.vAnchor
+            hAnchor: panels.osdWrapper.hAnchor
             offsetScale: panels.osd.offsetScale
         }
         BlurMask { 
@@ -79,8 +79,8 @@ StyledWindow {
             blurOffsetBottom: root.blurOffsetBottom
             blurOffsetLeft: root.blurOffsetLeft
             blurOffsetRight: root.blurOffsetRight
-            vAnchor: "bottom"
-            hAnchor: Config.bar.position === "right" ? "left" : "right"
+            vAnchor: panels.sessionWrapper.vAnchor
+            hAnchor: panels.sessionWrapper.hAnchor
             offsetScale: panels.session.offsetScale
         }
         BlurMask { 
@@ -90,8 +90,8 @@ StyledWindow {
             blurOffsetBottom: root.blurOffsetBottom
             blurOffsetLeft: root.blurOffsetLeft
             blurOffsetRight: root.blurOffsetRight
-            vAnchor: "bottom"
-            hAnchor: "right"
+            vAnchor: panels.launcher.vAnchor
+            hAnchor: panels.launcher.hAnchor
             offsetScale: panels.launcher.offsetScale
         }
         BlurMask { 
@@ -101,8 +101,8 @@ StyledWindow {
             blurOffsetBottom: root.blurOffsetBottom
             blurOffsetLeft: root.blurOffsetLeft
             blurOffsetRight: root.blurOffsetRight
-            vAnchor: "top"
-            hAnchor: "right"
+            vAnchor: panels.dashboard.vAnchor
+            hAnchor: panels.dashboard.hAnchor
             offsetScale: panels.dashboard.offsetScale
         }
         BlurMask { 
@@ -112,8 +112,8 @@ StyledWindow {
             blurOffsetBottom: root.blurOffsetBottom
             blurOffsetLeft: root.blurOffsetLeft
             blurOffsetRight: root.blurOffsetRight
-            vAnchor: Config.bar.position === "top" ? "top" : "bottom"
-            hAnchor: Config.bar.position === "left" ? "left" : "right"
+            vAnchor: panels.popoutsWrapper.vAnchor
+            hAnchor: panels.popoutsWrapper.hAnchor
             offsetScale: panels.popoutsWrapper.offsetScale
         }
         BlurMask { 
@@ -123,8 +123,8 @@ StyledWindow {
             blurOffsetBottom: root.blurOffsetBottom
             blurOffsetLeft: root.blurOffsetLeft
             blurOffsetRight: root.blurOffsetRight
-            vAnchor: Config.bar.position === "bottom" ? "top" : "bottom"
-            hAnchor: Config.bar.position === "right" ? "left" : "right"
+            vAnchor: panels.utilities.vAnchor
+            hAnchor: panels.utilities.hAnchor
             offsetScale: panels.utilities.offsetScale
         }
         BlurMask { 
@@ -134,8 +134,8 @@ StyledWindow {
             blurOffsetBottom: root.blurOffsetBottom
             blurOffsetLeft: root.blurOffsetLeft
             blurOffsetRight: root.blurOffsetRight
-            vAnchor: "bottom"
-            hAnchor: Config.bar.position === "bottom" ? "left" : (Config.bar.position === "right" ? "left" : "right")
+            vAnchor: panels.toasts.vAnchor
+            hAnchor: panels.toasts.hAnchor
         }
     }
 
@@ -621,7 +621,10 @@ StyledWindow {
 
         BarWrapper {
             id: bar
-
+            
+            property string vAnchor: Config.bar.position === "top" ? "top" : "bottom"
+            property string hAnchor: Config.bar.position === "left" ? "left" : "right"
+            
             screen: root.screen
             visibilities: visibilities
             popouts: panels.popouts

@@ -129,6 +129,9 @@ Item {
 
     Item {
         id: osdWrapper
+        
+        property string vAnchor: "top"
+        property string hAnchor: Config.bar.position === "right" ? "left" : "right"
 
         anchors.verticalCenter: parent.verticalCenter
         anchors.right: parent.right
@@ -154,6 +157,9 @@ Item {
 
     Notifications.Wrapper {
         id: notifications
+        
+        property string vAnchor: Config.bar.position === "bottom" ? "bottom" : "top"
+        property string hAnchor: Config.bar.position === "right" ? "left" : "right"
 
         property bool shouldPush: popoutsWrapper.offsetScale < 1 && !popoutsWrapper.content.isDockPopout && !sidebar.visible
 
@@ -171,6 +177,9 @@ Item {
 
     Item {
         id: sessionWrapper
+        
+        property string vAnchor: "bottom"
+        property string hAnchor: Config.bar.position === "right" ? "left" : "right"
 
         anchors.verticalCenter: parent.verticalCenter
         anchors.right: parent.right
@@ -195,6 +204,9 @@ Item {
 
     Launcher.Wrapper {
         id: launcher
+        
+        property string vAnchor: "bottom"
+        property string hAnchor: "right"
 
         screen: root.screen
         visibilities: root.visibilities
@@ -206,6 +218,9 @@ Item {
 
     Dashboard.Wrapper {
         id: dashboard
+        
+        property string vAnchor: "top"
+        property string hAnchor: "right"
 
         visibilities: root.visibilities
 
@@ -215,6 +230,9 @@ Item {
 
     BarPopouts.ClipWrapper {
         id: popoutsWrapper
+        
+        property string vAnchor: Config.bar.position === "top" ? "top" : "bottom"
+        property string hAnchor: Config.bar.position === "left" ? "left" : "right"
 
         screen: root.screen
         bar: root.bar
@@ -224,6 +242,9 @@ Item {
 
     Utilities.Wrapper {
         id: utilities
+        
+        property string vAnchor: Config.bar.position === "bottom" ? "top" : "bottom"
+        property string hAnchor: Config.bar.position === "right" ? "left" : "right"
 
         visibilities: root.visibilities
         sidebar: sidebar
@@ -235,6 +256,9 @@ Item {
 
     Toasts.Toasts {
         id: toasts
+        
+        property string vAnchor: "bottom"
+        property string hAnchor: Config.bar.position === "bottom" ? "left" : (Config.bar.position === "right" ? "left" : "right")
 
         anchors.bottom: sidebar.visible ? parent.bottom : utilities.top
         anchors.right: sidebar.left
@@ -243,6 +267,9 @@ Item {
 
     Sidebar.Wrapper {
         id: sidebar
+        
+        property string vAnchor: "bottom"
+        property string hAnchor: Config.bar.position === "right" ? "left" : "right"
 
         visibilities: root.visibilities
         popouts: popoutsWrapper.content

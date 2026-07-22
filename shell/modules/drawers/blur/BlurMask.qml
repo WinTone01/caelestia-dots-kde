@@ -5,9 +5,9 @@ Region {
     id: root
     required property Item target
     required property Item contentItem
-    property string vAnchor: "bottom" 
-    property string hAnchor: "right"
-    property real offsetScale: 0
+    property string vAnchor: (target && target["vAnchor"] !== undefined) ? target["vAnchor"] : "bottom" 
+    property string hAnchor: (target && target["hAnchor"] !== undefined) ? target["hAnchor"] : "right"
+    property real offsetScale: (target && target["offsetScale"] !== undefined) ? target["offsetScale"] : 0
     
     property real blurOffsetTop: 0
     property real blurOffsetBottom: 0
@@ -38,11 +38,14 @@ Region {
     }
 
     BlurCorners {
+        vAnchor: root.vAnchor
         inLeft: root.offsets.inLeft
         inRight: root.offsets.inRight
         inTop: root.offsets.inTop
         inBottom: root.offsets.inBottom
         rTop: root.offsets.rTop
         rBottom: root.offsets.rBottom
+        rLeft: root.offsets.rLeft
+        rRight: root.offsets.rRight
     }
 }
