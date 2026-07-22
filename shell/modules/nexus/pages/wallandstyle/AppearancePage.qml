@@ -14,7 +14,7 @@ PageBase {
     id: root
 
     isSubPage: true
-    title: qsTr("Appearance")
+    title: qsTr("Theme & Effects")
 
     ColumnLayout {
         anchors.horizontalCenter: parent.horizontalCenter
@@ -65,7 +65,7 @@ PageBase {
 
             SliderRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
-                label: qsTr("Base Transparency")
+                label: qsTr("Base opacity")
                 valueLabel: Math.round(value * 100) + "%"
                 value: GlobalConfig.appearance.transparency.base
                 enabled: GlobalConfig.appearance.transparency.enabled
@@ -74,7 +74,7 @@ PageBase {
 
             SliderRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
-                label: qsTr("Layers Transparency")
+                label: qsTr("Layers opacity")
                 valueLabel: Math.round(value * 100) + "%"
                 value: GlobalConfig.appearance.transparency.layers
                 enabled: GlobalConfig.appearance.transparency.enabled
@@ -113,22 +113,13 @@ PageBase {
             StepperRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
                 label: qsTr("Blur Corner Quality")
-                subtext: qsTr("Number of regions used to render blur corners")
+                subtext: qsTr("Increasing this can cause lags! Requires shell restart")
                 value: blurSettings.blurQuality
                 enabled: GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur
                 from: 1
                 to: 100
                 stepSize: 1
                 onMoved: v => blurSettings.blurQuality = Math.round(v)
-            }
-
-            ToggleRow {
-                Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
-                Layout.fillWidth: true
-                last: true
-                text: qsTr("Dark theme")
-                checked: !Colours.light
-                onToggled: Colours.setMode(checked ? "dark" : "light")
             }
         }
     }
