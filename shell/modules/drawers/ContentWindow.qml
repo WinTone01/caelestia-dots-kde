@@ -141,7 +141,7 @@ StyledWindow {
             contentItem: root.contentItem
             blurOffsetTop: root.blurOffsetTop
             blurOffsetBottom: root.blurOffsetBottom
-            blurOffsetLeft: root.blurOffsetLeft
+            blurOffsetLeft: root.blurOffsetLeft + 1
             blurOffsetRight: root.blurOffsetRight
             vAnchor: desktopContextMenu.backgroundItem.vAnchor
             hAnchor: desktopContextMenu.backgroundItem.hAnchor
