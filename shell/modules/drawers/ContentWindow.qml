@@ -630,8 +630,8 @@ StyledWindow {
         BarWrapper {
             id: bar
             
-            property string vAnchor: Config.bar.position === "top" ? "top" : "bottom"
-            property string hAnchor: Config.bar.position === "left" ? "left" : "right"
+            property string vAnchor: (Config.bar.position === "left" || Config.bar.position === "right") ? "both" : (Config.bar.position === "top" ? "top" : "bottom")
+            property string hAnchor: (Config.bar.position === "top" || Config.bar.position === "bottom") ? "both" : (Config.bar.position === "left" ? "left" : "right")
             
             screen: root.screen
             visibilities: visibilities

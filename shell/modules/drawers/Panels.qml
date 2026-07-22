@@ -231,8 +231,8 @@ Item {
     BarPopouts.ClipWrapper {
         id: popoutsWrapper
         
-        property string vAnchor: Config.bar.position === "top" ? "top" : "bottom"
-        property string hAnchor: Config.bar.position === "left" ? "left" : "right"
+        property string vAnchor: (Config.bar.position === "top" || Config.bar.position === "bottom") ? Config.bar.position : "none"
+        property string hAnchor: (Config.bar.position === "left" || Config.bar.position === "right") ? Config.bar.position : "none"
 
         screen: root.screen
         bar: root.bar

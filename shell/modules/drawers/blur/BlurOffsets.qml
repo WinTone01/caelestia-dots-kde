@@ -67,10 +67,10 @@ QtObject {
     property real r: isActive ? Tokens.rounding.extraLarge * animScale : 0
     property bool isIsland: GlobalConfig.appearance.islands
     
-    property real rTop: (!isIsland && vAnchor === "top") ? 0 : r
-    property real rBottom: (!isIsland && vAnchor === "bottom") ? 0 : r
-    property real rLeft: (!isIsland && hAnchor === "left") ? 0 : r
-    property real rRight: (!isIsland && hAnchor === "right") ? 0 : r
+    property real rTop: (!isIsland && (vAnchor === "top" || vAnchor === "both")) ? 0 : r
+    property real rBottom: (!isIsland && (vAnchor === "bottom" || vAnchor === "both")) ? 0 : r
+    property real rLeft: (!isIsland && (hAnchor === "left" || hAnchor === "both")) ? 0 : r
+    property real rRight: (!isIsland && (hAnchor === "right" || hAnchor === "both")) ? 0 : r
     
     property real inLeft: bX + rLeft
     property real inRight: bX + bW - rRight
