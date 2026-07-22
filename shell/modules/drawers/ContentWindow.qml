@@ -12,6 +12,7 @@ import qs.components
 import qs.components.containers
 import qs.services
 import qs.modules.bar
+import "blur"
 
 StyledWindow {
     id: root
@@ -23,209 +24,116 @@ StyledWindow {
     property real blurOffsetLeft: 0
     property real blurOffsetRight: 0
 
-    component BlurRegion: Region {
-        required property Item target
-        property string vAnchor: "bottom" 
-        property string hAnchor: "right"
-        property real offsetScale: 0
-        
-        Config.screen: root.screen.name
-        
-        property bool isActive: target && target.visible && target.opacity > 0 && GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur
-        
-        // Scale the offsets proportionally as the widget animates
-        property real animScale: 1 - offsetScale
-        
-        // With a multi-rectangle mask, we don't need large offsets to hide sharp corners.
-        // We can just use the user-defined base offsets directly.
-        property real sTop: (vAnchor === "top" ? root.blurOffsetBottom : root.blurOffsetTop) * animScale
-        property real sBottom: (vAnchor === "top" ? root.blurOffsetTop : root.blurOffsetBottom) * animScale
-        property real sLeft: (hAnchor === "left" ? root.blurOffsetRight : root.blurOffsetLeft) * animScale
-        property real sRight: (hAnchor === "left" ? root.blurOffsetLeft : root.blurOffsetRight) * animScale
-        
-        // Target tracking explicitly dependent on target geometry for fluid animation
-        property real tX: {
-            if (!target) return 0;
-            let _ = target.x + target.width; // Dependency tracking
-            return target.parent ? target.parent.mapToItem(root.contentItem, target.x, target.y).x : 0;
-        }
-        property real tY: {
-            if (!target) return 0;
-            let _ = target.y + target.height; // Dependency tracking
-            return target.parent ? target.parent.mapToItem(root.contentItem, target.x, target.y).y : 0;
-        }
-        
-        property real bX: tX + sLeft
-        property real bY: tY + sTop
-        property real bW: isActive ? Math.max(0, (target ? target.width : 0) - sLeft - sRight) : 0
-        property real bH: isActive ? Math.max(0, (target ? target.height : 0) - sTop - sBottom) : 0
-        
-        property real r: Tokens.rounding.extraLarge * animScale
-        property bool isIsland: GlobalConfig.appearance.islands
-        
-        // Dynamic corners depending on attachment anchor
-        property real rTop: (!isIsland && vAnchor === "top") ? 0 : r
-        property real rBottom: (!isIsland && vAnchor === "bottom") ? 0 : r
-        property real rLeft: r
-        property real rRight: r
-        
-        property real inLeft: bX + rLeft
-        property real inRight: bX + bW - rRight
-        property real inTop: bY + rTop
-        property real inBottom: bY + bH - rBottom
-
-        // Central and Edge Bodies (Strictly non-overlapping)
-        Region { x: inLeft; y: inTop; width: Math.max(0, inRight - inLeft); height: Math.max(0, inBottom - inTop) } // Center
-        Region { x: bX; y: inTop; width: Math.max(0, inLeft - bX); height: Math.max(0, inBottom - inTop) } // Left
-        Region { x: inRight; y: inTop; width: Math.max(0, bX + bW - inRight); height: Math.max(0, inBottom - inTop) } // Right
-        Region { x: inLeft; y: bY; width: Math.max(0, inRight - inLeft); height: Math.max(0, inTop - bY) } // Top
-        Region { x: inLeft; y: inBottom; width: Math.max(0, inRight - inLeft); height: Math.max(0, bY + bH - inBottom) } // Bottom
-
-        // Top-Left Corner (each strip extends to inTop — zero junction gap)
-        Region { x: inLeft - rTop*0.9987 + 1; y: inTop - rTop*0.0500; width: rTop*0.9987; height: rTop*0.0500 }
-        Region { x: inLeft - rTop*0.9950 + 1; y: inTop - rTop*0.1000; width: rTop*0.9950; height: rTop*0.1000 }
-        Region { x: inLeft - rTop*0.9887 + 1; y: inTop - rTop*0.1500; width: rTop*0.9887; height: rTop*0.1500 }
-        Region { x: inLeft - rTop*0.9798 + 1; y: inTop - rTop*0.2000; width: rTop*0.9798; height: rTop*0.2000 }
-        Region { x: inLeft - rTop*0.9682 + 1; y: inTop - rTop*0.2500; width: rTop*0.9682; height: rTop*0.2500 }
-        Region { x: inLeft - rTop*0.9539 + 1; y: inTop - rTop*0.3000; width: rTop*0.9539; height: rTop*0.3000 }
-        Region { x: inLeft - rTop*0.9367 + 1; y: inTop - rTop*0.3500; width: rTop*0.9367; height: rTop*0.3500 }
-        Region { x: inLeft - rTop*0.9165 + 1; y: inTop - rTop*0.4000; width: rTop*0.9165; height: rTop*0.4000 }
-        Region { x: inLeft - rTop*0.8930 + 1; y: inTop - rTop*0.4500; width: rTop*0.8930; height: rTop*0.4500 }
-        Region { x: inLeft - rTop*0.8660 + 1; y: inTop - rTop*0.5000; width: rTop*0.8660; height: rTop*0.5000 }
-        Region { x: inLeft - rTop*0.8352 + 1; y: inTop - rTop*0.5500; width: rTop*0.8352; height: rTop*0.5500 }
-        Region { x: inLeft - rTop*0.8000 + 1; y: inTop - rTop*0.6000; width: rTop*0.8000; height: rTop*0.6000 }
-        Region { x: inLeft - rTop*0.7599 + 1; y: inTop - rTop*0.6500; width: rTop*0.7599; height: rTop*0.6500 }
-        Region { x: inLeft - rTop*0.7141 + 1; y: inTop - rTop*0.7000; width: rTop*0.7141; height: rTop*0.7000 }
-        Region { x: inLeft - rTop*0.6614 + 1; y: inTop - rTop*0.7500; width: rTop*0.6614; height: rTop*0.7500 }
-        Region { x: inLeft - rTop*0.6000 + 1; y: inTop - rTop*0.8000; width: rTop*0.6000; height: rTop*0.8000 }
-        Region { x: inLeft - rTop*0.5268 + 1; y: inTop - rTop*0.8500; width: rTop*0.5268; height: rTop*0.8500 }
-        Region { x: inLeft - rTop*0.4359 + 1; y: inTop - rTop*0.9000; width: rTop*0.4359; height: rTop*0.9000 }
-        Region { x: inLeft - rTop*0.3122 + 1; y: inTop - rTop*0.9500; width: rTop*0.3122; height: rTop*0.9500 }
-        
-        // Top-Right Corner (each strip extends to inTop — zero junction gap)
-        Region { x: inRight; y: inTop - rTop*0.0500; width: rTop*0.9987; height: rTop*0.0500 }
-        Region { x: inRight; y: inTop - rTop*0.1000; width: rTop*0.9950; height: rTop*0.1000 }
-        Region { x: inRight; y: inTop - rTop*0.1500; width: rTop*0.9887; height: rTop*0.1500 }
-        Region { x: inRight; y: inTop - rTop*0.2000; width: rTop*0.9798; height: rTop*0.2000 }
-        Region { x: inRight; y: inTop - rTop*0.2500; width: rTop*0.9682; height: rTop*0.2500 }
-        Region { x: inRight; y: inTop - rTop*0.3000; width: rTop*0.9539; height: rTop*0.3000 }
-        Region { x: inRight; y: inTop - rTop*0.3500; width: rTop*0.9367; height: rTop*0.3500 }
-        Region { x: inRight; y: inTop - rTop*0.4000; width: rTop*0.9165; height: rTop*0.4000 }
-        Region { x: inRight; y: inTop - rTop*0.4500; width: rTop*0.8930; height: rTop*0.4500 }
-        Region { x: inRight; y: inTop - rTop*0.5000; width: rTop*0.8660; height: rTop*0.5000 }
-        Region { x: inRight; y: inTop - rTop*0.5500; width: rTop*0.8352; height: rTop*0.5500 }
-        Region { x: inRight; y: inTop - rTop*0.6000; width: rTop*0.8000; height: rTop*0.6000 }
-        Region { x: inRight; y: inTop - rTop*0.6500; width: rTop*0.7599; height: rTop*0.6500 }
-        Region { x: inRight; y: inTop - rTop*0.7000; width: rTop*0.7141; height: rTop*0.7000 }
-        Region { x: inRight; y: inTop - rTop*0.7500; width: rTop*0.6614; height: rTop*0.7500 }
-        Region { x: inRight; y: inTop - rTop*0.8000; width: rTop*0.6000; height: rTop*0.8000 }
-        Region { x: inRight; y: inTop - rTop*0.8500; width: rTop*0.5268; height: rTop*0.8500 }
-        Region { x: inRight; y: inTop - rTop*0.9000; width: rTop*0.4359; height: rTop*0.9000 }
-        Region { x: inRight; y: inTop - rTop*0.9500; width: rTop*0.3122; height: rTop*0.9500 }
-        
-        // Bottom-Left Corner (each strip extends from inBottom — zero junction gap)
-        Region { x: inLeft - rBottom*0.9987; y: inBottom; width: rBottom*0.9987; height: rBottom*0.0500 }
-        Region { x: inLeft - rBottom*0.9950; y: inBottom; width: rBottom*0.9950; height: rBottom*0.1000 }
-        Region { x: inLeft - rBottom*0.9887; y: inBottom; width: rBottom*0.9887; height: rBottom*0.1500 }
-        Region { x: inLeft - rBottom*0.9798; y: inBottom; width: rBottom*0.9798; height: rBottom*0.2000 }
-        Region { x: inLeft - rBottom*0.9682; y: inBottom; width: rBottom*0.9682; height: rBottom*0.2500 }
-        Region { x: inLeft - rBottom*0.9539; y: inBottom; width: rBottom*0.9539; height: rBottom*0.3000 }
-        Region { x: inLeft - rBottom*0.9367; y: inBottom; width: rBottom*0.9367; height: rBottom*0.3500 }
-        Region { x: inLeft - rBottom*0.9165; y: inBottom; width: rBottom*0.9165; height: rBottom*0.4000 }
-        Region { x: inLeft - rBottom*0.8930; y: inBottom; width: rBottom*0.8930; height: rBottom*0.4500 }
-        Region { x: inLeft - rBottom*0.8660; y: inBottom; width: rBottom*0.8660; height: rBottom*0.5000 }
-        Region { x: inLeft - rBottom*0.8352; y: inBottom; width: rBottom*0.8352; height: rBottom*0.5500 }
-        Region { x: inLeft - rBottom*0.8000; y: inBottom; width: rBottom*0.8000; height: rBottom*0.6000 }
-        Region { x: inLeft - rBottom*0.7599; y: inBottom; width: rBottom*0.7599; height: rBottom*0.6500 }
-        Region { x: inLeft - rBottom*0.7141; y: inBottom; width: rBottom*0.7141; height: rBottom*0.7000 }
-        Region { x: inLeft - rBottom*0.6614; y: inBottom; width: rBottom*0.6614; height: rBottom*0.7500 }
-        Region { x: inLeft - rBottom*0.6000; y: inBottom; width: rBottom*0.6000; height: rBottom*0.8000 }
-        Region { x: inLeft - rBottom*0.5268; y: inBottom; width: rBottom*0.5268; height: rBottom*0.8500 }
-        Region { x: inLeft - rBottom*0.4359; y: inBottom; width: rBottom*0.4359; height: rBottom*0.9000 }
-        Region { x: inLeft - rBottom*0.3122; y: inBottom; width: rBottom*0.3122; height: rBottom*0.9500 }
-        
-        // Bottom-Right Corner (each strip extends from inBottom — zero junction gap)
-        Region { x: inRight; y: inBottom; width: rBottom*0.9987; height: rBottom*0.0500 }
-        Region { x: inRight; y: inBottom; width: rBottom*0.9950; height: rBottom*0.1000 }
-        Region { x: inRight; y: inBottom; width: rBottom*0.9887; height: rBottom*0.1500 }
-        Region { x: inRight; y: inBottom; width: rBottom*0.9798; height: rBottom*0.2000 }
-        Region { x: inRight; y: inBottom; width: rBottom*0.9682; height: rBottom*0.2500 }
-        Region { x: inRight; y: inBottom; width: rBottom*0.9539; height: rBottom*0.3000 }
-        Region { x: inRight; y: inBottom; width: rBottom*0.9367; height: rBottom*0.3500 }
-        Region { x: inRight; y: inBottom; width: rBottom*0.9165; height: rBottom*0.4000 }
-        Region { x: inRight; y: inBottom; width: rBottom*0.8930; height: rBottom*0.4500 }
-        Region { x: inRight; y: inBottom; width: rBottom*0.8660; height: rBottom*0.5000 }
-        Region { x: inRight; y: inBottom; width: rBottom*0.8352; height: rBottom*0.5500 }
-        Region { x: inRight; y: inBottom; width: rBottom*0.8000; height: rBottom*0.6000 }
-        Region { x: inRight; y: inBottom; width: rBottom*0.7599; height: rBottom*0.6500 }
-        Region { x: inRight; y: inBottom; width: rBottom*0.7141; height: rBottom*0.7000 }
-        Region { x: inRight; y: inBottom; width: rBottom*0.6614; height: rBottom*0.7500 }
-        Region { x: inRight; y: inBottom; width: rBottom*0.6000; height: rBottom*0.8000 }
-        Region { x: inRight; y: inBottom; width: rBottom*0.5268; height: rBottom*0.8500 }
-        Region { x: inRight; y: inBottom; width: rBottom*0.4359; height: rBottom*0.9000 }
-        Region { x: inRight; y: inBottom; width: rBottom*0.3122; height: rBottom*0.9500 }
-    }
-    
     Config.screen: screen.name
 
     BackgroundEffect.blurRegion: Region {
         Region { x: -10; y: -10; width: 1; height: 1 } // Prevent fallback to full-window blur when empty
         
-        BlurRegion { 
+        BlurMask { 
             target: bar
+            contentItem: root.contentItem
+            blurOffsetTop: root.blurOffsetTop
+            blurOffsetBottom: root.blurOffsetBottom
+            blurOffsetLeft: root.blurOffsetLeft
+            blurOffsetRight: root.blurOffsetRight
             vAnchor: Config.bar.position === "top" ? "top" : "bottom"
             hAnchor: Config.bar.position === "left" ? "left" : "right"
         }
-        BlurRegion { 
+        BlurMask { 
             target: panels.sidebar
+            contentItem: root.contentItem
+            blurOffsetTop: root.blurOffsetTop
+            blurOffsetBottom: root.blurOffsetBottom
+            blurOffsetLeft: root.blurOffsetLeft
+            blurOffsetRight: root.blurOffsetRight
             vAnchor: "bottom"
             hAnchor: Config.bar.position === "right" ? "left" : "right"
             offsetScale: panels.sidebar.offsetScale
         }
-        BlurRegion { 
+        BlurMask { 
             target: panels.notifications
+            contentItem: root.contentItem
+            blurOffsetTop: root.blurOffsetTop
+            blurOffsetBottom: root.blurOffsetBottom
+            blurOffsetLeft: root.blurOffsetLeft
+            blurOffsetRight: root.blurOffsetRight
             vAnchor: Config.bar.position === "bottom" ? "bottom" : "top"
             hAnchor: Config.bar.position === "right" ? "left" : "right"
             offsetScale: panels.notifications.offsetScale
         }
-        BlurRegion { 
+        BlurMask { 
             target: panels.osdWrapper
+            contentItem: root.contentItem
+            blurOffsetTop: root.blurOffsetTop
+            blurOffsetBottom: root.blurOffsetBottom
+            blurOffsetLeft: root.blurOffsetLeft
+            blurOffsetRight: root.blurOffsetRight
             vAnchor: "top"
             hAnchor: Config.bar.position === "right" ? "left" : "right"
             offsetScale: panels.osd.offsetScale
         }
-        BlurRegion { 
+        BlurMask { 
             target: panels.sessionWrapper
+            contentItem: root.contentItem
+            blurOffsetTop: root.blurOffsetTop
+            blurOffsetBottom: root.blurOffsetBottom
+            blurOffsetLeft: root.blurOffsetLeft
+            blurOffsetRight: root.blurOffsetRight
             vAnchor: "bottom"
             hAnchor: Config.bar.position === "right" ? "left" : "right"
             offsetScale: panels.session.offsetScale
         }
-        BlurRegion { 
+        BlurMask { 
             target: panels.launcher
+            contentItem: root.contentItem
+            blurOffsetTop: root.blurOffsetTop
+            blurOffsetBottom: root.blurOffsetBottom
+            blurOffsetLeft: root.blurOffsetLeft
+            blurOffsetRight: root.blurOffsetRight
             vAnchor: "bottom"
             hAnchor: "right"
             offsetScale: panels.launcher.offsetScale
         }
-        BlurRegion { 
+        BlurMask { 
             target: panels.dashboard
+            contentItem: root.contentItem
+            blurOffsetTop: root.blurOffsetTop
+            blurOffsetBottom: root.blurOffsetBottom
+            blurOffsetLeft: root.blurOffsetLeft
+            blurOffsetRight: root.blurOffsetRight
             vAnchor: "top"
             hAnchor: "right"
             offsetScale: panels.dashboard.offsetScale
         }
-        BlurRegion { 
+        BlurMask { 
             target: panels.popoutsWrapper
+            contentItem: root.contentItem
+            blurOffsetTop: root.blurOffsetTop
+            blurOffsetBottom: root.blurOffsetBottom
+            blurOffsetLeft: root.blurOffsetLeft
+            blurOffsetRight: root.blurOffsetRight
             vAnchor: Config.bar.position === "top" ? "top" : "bottom"
             hAnchor: Config.bar.position === "left" ? "left" : "right"
             offsetScale: panels.popoutsWrapper.offsetScale
         }
-        BlurRegion { 
+        BlurMask { 
             target: panels.utilities
+            contentItem: root.contentItem
+            blurOffsetTop: root.blurOffsetTop
+            blurOffsetBottom: root.blurOffsetBottom
+            blurOffsetLeft: root.blurOffsetLeft
+            blurOffsetRight: root.blurOffsetRight
             vAnchor: Config.bar.position === "bottom" ? "top" : "bottom"
             hAnchor: Config.bar.position === "right" ? "left" : "right"
             offsetScale: panels.utilities.offsetScale
         }
-        BlurRegion { 
+        BlurMask { 
             target: panels.toasts
+            contentItem: root.contentItem
+            blurOffsetTop: root.blurOffsetTop
+            blurOffsetBottom: root.blurOffsetBottom
+            blurOffsetLeft: root.blurOffsetLeft
+            blurOffsetRight: root.blurOffsetRight
             vAnchor: "bottom"
             hAnchor: Config.bar.position === "bottom" ? "left" : (Config.bar.position === "right" ? "left" : "right")
         }
