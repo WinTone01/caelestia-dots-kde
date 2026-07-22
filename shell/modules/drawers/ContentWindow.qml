@@ -12,6 +12,7 @@ import qs.components
 import qs.components.containers
 import qs.services
 import qs.modules.bar
+import qs.modules.background
 import "blur"
 
 StyledWindow {
@@ -135,6 +136,18 @@ StyledWindow {
             offsetScale: panels.utilities.offsetScale
             deformMatrix: utilsBg.deformMatrix
         }
+        BlurMask {
+            target: desktopContextMenu.expanded ? desktopContextMenu.backgroundItem : null
+            contentItem: root.contentItem
+            blurOffsetTop: root.blurOffsetTop
+            blurOffsetBottom: root.blurOffsetBottom
+            blurOffsetLeft: root.blurOffsetLeft
+            blurOffsetRight: root.blurOffsetRight
+            vAnchor: desktopContextMenu.backgroundItem.vAnchor
+            hAnchor: desktopContextMenu.backgroundItem.hAnchor
+            offsetScale: desktopContextMenu.backgroundItem.offsetScale
+            deformMatrix: contextMenuBg.deformMatrix
+        }
         // BlurMask { 
         //     target: panels.toasts
         //     contentItem: root.contentItem
@@ -201,7 +214,7 @@ StyledWindow {
 
     mask: {
         if (hasFullscreen) return emptyRegion;
-        if (focusGrabState.active || panels.popouts.isDetached) return fullRegion;
+        if (focusGrabState.active || panels.popouts.isDetached || desktopContextMenu.expanded) return fullRegion;
         return regions;
     }
 
@@ -424,6 +437,14 @@ StyledWindow {
             bottomLeftRadius: GlobalConfig.appearance.islands ? radius : (Config.bar.position === "bottom" ? Math.max(0, Math.min(1, panels.sidebar.offsetScale / 0.3)) * radius : radius)
             bottomRightRadius: GlobalConfig.appearance.islands ? radius : (Config.bar.position === "bottom" ? Math.max(0, Math.min(1, panels.sidebar.offsetScale / 0.3)) * radius : radius)
         }
+        
+        PanelBg {
+            id: contextMenuBg
+            panel: desktopContextMenu.backgroundItem
+            visible: desktopContextMenu.expanded
+            x: panel.x
+            y: panel.y
+        }
 
         PanelBg {
             id: popoutBg
@@ -640,6 +661,28 @@ StyledWindow {
             fullscreen: root.hasFullscreen
 
             Component.onCompleted: Visibilities.registerBar(root.screen, this)
+        }
+
+        Connections {
+            target: ContextMenuStore
+            function onOpenDesktopContextMenu(x, y, screenName) {
+                if (root.screen.name === screenName) {
+                    desktopContextMenuAnchor.x = x - panels.leftMargin;
+                    desktopContextMenuAnchor.y = y - panels.topMargin;
+                    desktopContextMenu.expanded = true;
+                }
+            }
+        }
+
+        Item {
+            id: desktopContextMenuAnchor
+        }
+
+        DesktopContextMenu {
+            id: desktopContextMenu
+            attachTo: desktopContextMenuAnchor
+            screenName: root.screen.name
+            z: 9999
         }
     }
 
