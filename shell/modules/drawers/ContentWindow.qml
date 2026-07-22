@@ -16,67 +16,102 @@ import qs.modules.bar
 StyledWindow {
     id: root
 
-    component BlurMaskCross: QtObject {
+    // Edit these variables to adjust how far the blur mask is inset from each logical edge.
+    // They are relative to the widget's growth direction from the bar.
+    property int blurOffsetTop: 7
+    property int blurOffsetBottom: 0
+    property int blurOffsetLeft: 0
+    property int blurOffsetRight: 0
+
+    component BlurMask: QtObject {
         required property Item target
-        property int r: root.borderRounding
+        property string vAnchor: "bottom" 
+        property string hAnchor: "right"
         
         property point mappedPos: target && target.parent && root.contentItem ? target.parent.mapToItem(root.contentItem, target.x, target.y) : Qt.point(0,0)
         property bool isActive: target && target.visible && target.opacity > 0 && GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur
         
-        property Item rect1: Item {
-            parent: root.contentItem
-            x: mappedPos.x + r
-            y: mappedPos.y
-            width: Math.max(0, target.width - r * 2)
-            height: target.height
-            visible: isActive
-        }
+        // Map logical edges to screen-space edges based on the widget's actual anchor
+        property int sTop: vAnchor === "top" ? root.blurOffsetBottom : root.blurOffsetTop
+        property int sBottom: vAnchor === "top" ? root.blurOffsetTop : root.blurOffsetBottom
+        property int sLeft: hAnchor === "left" ? root.blurOffsetRight : root.blurOffsetLeft
+        property int sRight: hAnchor === "left" ? root.blurOffsetLeft : root.blurOffsetRight
         
-        property Item rect2: Item {
+        property Item rect: Item {
             parent: root.contentItem
-            x: mappedPos.x
-            y: mappedPos.y + r
-            width: target.width
-            height: Math.max(0, target.height - r * 2)
+            x: mappedPos.x + sLeft
+            y: mappedPos.y + sTop
+            width: Math.max(0, target.width - sLeft - sRight)
+            height: Math.max(0, target.height - sTop - sBottom)
             visible: isActive
         }
     }
 
     Config.screen: screen.name
 
-    BlurMaskCross { id: maskBar; target: bar }
-    BlurMaskCross { id: maskSidebar; target: panels.sidebar }
-    BlurMaskCross { id: maskNotifications; target: panels.notifications }
-    BlurMaskCross { id: maskOsdWrapper; target: panels.osdWrapper }
-    BlurMaskCross { id: maskSessionWrapper; target: panels.sessionWrapper }
-    BlurMaskCross { id: maskLauncher; target: panels.launcher }
-    BlurMaskCross { id: maskDashboard; target: panels.dashboard }
-    BlurMaskCross { id: maskPopoutsWrapper; target: panels.popoutsWrapper }
-    BlurMaskCross { id: maskUtilities; target: panels.utilities }
-    BlurMaskCross { id: maskToasts; target: panels.toasts }
+    BlurMask { 
+        id: maskBar; target: bar
+        vAnchor: Config.bar.position === "top" ? "top" : "bottom"
+        hAnchor: Config.bar.position === "left" ? "left" : "right"
+    }
+    BlurMask { 
+        id: maskSidebar; target: panels.sidebar
+        vAnchor: "bottom"
+        hAnchor: Config.bar.position === "right" ? "left" : "right"
+    }
+    BlurMask { 
+        id: maskNotifications; target: panels.notifications
+        vAnchor: Config.bar.position === "bottom" ? "bottom" : "top"
+        hAnchor: Config.bar.position === "right" ? "left" : "right"
+    }
+    BlurMask { 
+        id: maskOsdWrapper; target: panels.osdWrapper
+        vAnchor: "top"
+        hAnchor: Config.bar.position === "right" ? "left" : "right"
+    }
+    BlurMask { 
+        id: maskSessionWrapper; target: panels.sessionWrapper
+        vAnchor: "bottom"
+        hAnchor: Config.bar.position === "right" ? "left" : "right"
+    }
+    BlurMask { 
+        id: maskLauncher; target: panels.launcher
+        vAnchor: "bottom"
+        hAnchor: "right"
+    }
+    BlurMask { 
+        id: maskDashboard; target: panels.dashboard
+        vAnchor: "top"
+        hAnchor: "right"
+    }
+    BlurMask { 
+        id: maskPopoutsWrapper; target: panels.popoutsWrapper
+        vAnchor: Config.bar.position === "top" ? "top" : "bottom"
+        hAnchor: Config.bar.position === "left" ? "left" : "right"
+    }
+    BlurMask { 
+        id: maskUtilities; target: panels.utilities
+        vAnchor: Config.bar.position === "bottom" ? "top" : "bottom"
+        hAnchor: Config.bar.position === "right" ? "left" : "right"
+    }
+    BlurMask { 
+        id: maskToasts; target: panels.toasts
+        vAnchor: "bottom"
+        hAnchor: Config.bar.position === "bottom" ? "left" : (Config.bar.position === "right" ? "left" : "right")
+    }
 
     BackgroundEffect.blurRegion: Region {
         Region { x: -10; y: -10; width: 1; height: 1 } // Prevent fallback to full-window blur when empty
-        Region { item: maskBar.isActive ? maskBar.rect1 : null }
-        Region { item: maskBar.isActive ? maskBar.rect2 : null }
-        Region { item: maskSidebar.isActive ? maskSidebar.rect1 : null }
-        Region { item: maskSidebar.isActive ? maskSidebar.rect2 : null }
-        Region { item: maskNotifications.isActive ? maskNotifications.rect1 : null }
-        Region { item: maskNotifications.isActive ? maskNotifications.rect2 : null }
-        Region { item: maskOsdWrapper.isActive ? maskOsdWrapper.rect1 : null }
-        Region { item: maskOsdWrapper.isActive ? maskOsdWrapper.rect2 : null }
-        Region { item: maskSessionWrapper.isActive ? maskSessionWrapper.rect1 : null }
-        Region { item: maskSessionWrapper.isActive ? maskSessionWrapper.rect2 : null }
-        Region { item: maskLauncher.isActive ? maskLauncher.rect1 : null }
-        Region { item: maskLauncher.isActive ? maskLauncher.rect2 : null }
-        Region { item: maskDashboard.isActive ? maskDashboard.rect1 : null }
-        Region { item: maskDashboard.isActive ? maskDashboard.rect2 : null }
-        Region { item: maskPopoutsWrapper.isActive ? maskPopoutsWrapper.rect1 : null }
-        Region { item: maskPopoutsWrapper.isActive ? maskPopoutsWrapper.rect2 : null }
-        Region { item: maskUtilities.isActive ? maskUtilities.rect1 : null }
-        Region { item: maskUtilities.isActive ? maskUtilities.rect2 : null }
-        Region { item: maskToasts.isActive ? maskToasts.rect1 : null }
-        Region { item: maskToasts.isActive ? maskToasts.rect2 : null }
+        Region { item: maskBar.isActive ? maskBar.rect : null }
+        Region { item: maskSidebar.isActive ? maskSidebar.rect : null }
+        Region { item: maskNotifications.isActive ? maskNotifications.rect : null }
+        Region { item: maskOsdWrapper.isActive ? maskOsdWrapper.rect : null }
+        Region { item: maskSessionWrapper.isActive ? maskSessionWrapper.rect : null }
+        Region { item: maskLauncher.isActive ? maskLauncher.rect : null }
+        Region { item: maskDashboard.isActive ? maskDashboard.rect : null }
+        Region { item: maskPopoutsWrapper.isActive ? maskPopoutsWrapper.rect : null }
+        Region { item: maskUtilities.isActive ? maskUtilities.rect : null }
+        Region { item: maskToasts.isActive ? maskToasts.rect : null }
     }
 
     readonly property alias bar: bar
