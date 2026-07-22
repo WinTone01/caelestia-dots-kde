@@ -127,16 +127,16 @@ StyledWindow {
             hAnchor: panels.utilities.hAnchor
             offsetScale: panels.utilities.offsetScale
         }
-        BlurMask { 
-            target: panels.toasts
-            contentItem: root.contentItem
-            blurOffsetTop: root.blurOffsetTop
-            blurOffsetBottom: root.blurOffsetBottom
-            blurOffsetLeft: root.blurOffsetLeft
-            blurOffsetRight: root.blurOffsetRight
-            vAnchor: panels.toasts.vAnchor
-            hAnchor: panels.toasts.hAnchor
-        }
+        // BlurMask { 
+        //     target: panels.toasts
+        //     contentItem: root.contentItem
+        //     blurOffsetTop: root.blurOffsetTop
+        //     blurOffsetBottom: root.blurOffsetBottom
+        //     blurOffsetLeft: root.blurOffsetLeft
+        //     blurOffsetRight: root.blurOffsetRight
+        //     vAnchor: panels.toasts.vAnchor
+        //     hAnchor: panels.toasts.hAnchor
+        // }
     }
 
     readonly property alias bar: bar
