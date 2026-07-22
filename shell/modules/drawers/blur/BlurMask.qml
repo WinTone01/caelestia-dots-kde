@@ -13,6 +13,7 @@ Region {
     property real blurOffsetBottom: 0
     property real blurOffsetLeft: 0
     property real blurOffsetRight: 0
+    property matrix4x4 deformMatrix
 
     property BlurOffsets offsets: BlurOffsets {
         target: root.target
@@ -24,6 +25,7 @@ Region {
         blurOffsetBottom: root.blurOffsetBottom
         blurOffsetLeft: root.blurOffsetLeft
         blurOffsetRight: root.blurOffsetRight
+        deformMatrix: root.deformMatrix
     }
 
     BlurBodies {

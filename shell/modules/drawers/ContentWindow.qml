@@ -49,6 +49,7 @@ StyledWindow {
             vAnchor: panels.sidebar.vAnchor
             hAnchor: panels.sidebar.hAnchor
             offsetScale: panels.sidebar.offsetScale
+            deformMatrix: sidebarBg.deformMatrix
         }
         BlurMask { 
             target: panels.notifications
@@ -60,6 +61,7 @@ StyledWindow {
             vAnchor: panels.notifications.vAnchor
             hAnchor: panels.notifications.hAnchor
             offsetScale: panels.notifications.offsetScale
+            deformMatrix: notifsBg.deformMatrix
         }
         BlurMask { 
             target: panels.osdWrapper
@@ -71,6 +73,7 @@ StyledWindow {
             vAnchor: panels.osdWrapper.vAnchor
             hAnchor: panels.osdWrapper.hAnchor
             offsetScale: panels.osd.offsetScale
+            deformMatrix: osdBg.deformMatrix
         }
         BlurMask { 
             target: panels.sessionWrapper
@@ -82,6 +85,7 @@ StyledWindow {
             vAnchor: panels.sessionWrapper.vAnchor
             hAnchor: panels.sessionWrapper.hAnchor
             offsetScale: panels.session.offsetScale
+            deformMatrix: sessionBg.deformMatrix
         }
         BlurMask { 
             target: panels.launcher
@@ -93,6 +97,7 @@ StyledWindow {
             vAnchor: panels.launcher.vAnchor
             hAnchor: panels.launcher.hAnchor
             offsetScale: panels.launcher.offsetScale
+            deformMatrix: launcherBg.deformMatrix
         }
         BlurMask { 
             target: panels.dashboard
@@ -104,6 +109,7 @@ StyledWindow {
             vAnchor: panels.dashboard.vAnchor
             hAnchor: panels.dashboard.hAnchor
             offsetScale: panels.dashboard.offsetScale
+            deformMatrix: dashBg.deformMatrix
         }
         BlurMask { 
             target: panels.popoutsWrapper
@@ -115,6 +121,7 @@ StyledWindow {
             vAnchor: panels.popoutsWrapper.vAnchor
             hAnchor: panels.popoutsWrapper.hAnchor
             offsetScale: panels.popoutsWrapper.offsetScale
+            deformMatrix: popoutBg.deformMatrix
         }
         BlurMask { 
             target: panels.utilities
@@ -126,6 +133,7 @@ StyledWindow {
             vAnchor: panels.utilities.vAnchor
             hAnchor: panels.utilities.hAnchor
             offsetScale: panels.utilities.offsetScale
+            deformMatrix: utilsBg.deformMatrix
         }
         // BlurMask { 
         //     target: panels.toasts
