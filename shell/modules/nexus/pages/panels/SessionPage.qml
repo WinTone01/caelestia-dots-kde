@@ -9,12 +9,13 @@ import qs.components
 import qs.components.effects
 import qs.components.controls
 import qs.services
-import qs.modules.nexus.common
+import qs.modules.nexus.pages.wallandstyle
+import qs.utils
 
 PageBase {
     id: root
 
-    title: qsTr("Right Click Menu")
+    title: qsTr("Session Menu")
     isSubPage: true
     scrollable: true
 
@@ -29,12 +30,11 @@ PageBase {
     readonly property real emptyZoneHeight: Math.max(root.height - 120, 72)
 
     property var componentMeta: ({
-        "toggle_desktop_icons": { icon: "desktop_windows", name: qsTr("Desktop Icons") },
-        "wallpaper_style": { icon: "wallpaper", name: qsTr("Wallpaper & style") },
-        "next_wallpaper": { icon: "skip_next", name: qsTr("Next Wallpaper") },
-        "system_settings": { icon: "settings", name: qsTr("System Settings") },
-        "open_terminal": { icon: "terminal", name: qsTr("Open Terminal") },
-        "add_shortcut": { icon: "add", name: qsTr("Add Shortcut...") }
+        "logout": { icon: Config.session.icons.logout || "logout", name: qsTr("Log Out") },
+        "shutdown": { icon: Config.session.icons.shutdown || "power_settings_new", name: qsTr("Shut Down") },
+        "dino_gif": { icon: "animation", name: qsTr("Dinosaur Animation") },
+        "hibernate": { icon: Config.session.icons.hibernate || "mode_night", name: qsTr("Hibernate") },
+        "reboot": { icon: Config.session.icons.reboot || "restart_alt", name: qsTr("Restart") }
     })
 
     function getModel(name) {
@@ -67,7 +67,7 @@ PageBase {
     }
 
     function applyEntries(entries) {
-        let json = (!entries || entries.length === 0) ? cloneEntries(ContextMenuStore.defaultEntries()) : cloneEntries(entries);
+        let json = (!entries || entries.length === 0) ? cloneEntries(SessionStore.defaultEntries()) : cloneEntries(entries);
 
         activeModel.clear();
         libraryModel.clear();
@@ -75,7 +75,7 @@ PageBase {
         for (let i = 0; i < json.length; i++) {
             let entry = json[i];
             if (entry.type === "custom") {
-                root.componentMeta[entry.id] = { icon: entry.icon || "widgets", name: entry.label };
+                root.componentMeta[entry.id] = { icon: (!entry.icon || entry.icon === "application-x-executable") ? "widgets" : entry.icon, name: entry.label };
             }
             if (entry.enabled) {
                 activeModel.append({ "compId": entry.id, "isPlaceholder": false, "raw": entry });
@@ -83,18 +83,16 @@ PageBase {
                 libraryModel.append({ "compId": entry.id, "isPlaceholder": false, "raw": entry });
             }
         }
-
     }
 
     function flushSave() {
         if (!root.visible) return;
         const saveStartedAt = root.perfSaveStartedAt > 0 ? root.perfSaveStartedAt : Date.now();
         const payload = root.pendingSaveEntries.length > 0 ? root.pendingSaveEntries : collectEntries();
-        ContextMenuStore.save(payload);
-        root.componentMeta = root.componentMeta; // force update
+        SessionStore.save(payload);
 
         const saveMs = Date.now() - saveStartedAt;
-        console.log("[perf][ContextMenuPage] save queued ms=" + saveMs + " entries=" + payload.length);
+        console.log("[perf][SessionPage] save queued ms=" + saveMs + " entries=" + payload.length);
         root.perfSaveStartedAt = 0;
     }
 
@@ -107,12 +105,12 @@ PageBase {
 
     function load(forceDisk) {
         root.perfLoadStartedAt = Date.now();
-        ContextMenuStore.ensureLoaded(forceDisk === true);
-        if (ContextMenuStore.loaded && !ContextMenuStore.loading) {
-            root.applyEntries(ContextMenuStore.entries);
+        SessionStore.ensureLoaded(forceDisk === true);
+        if (SessionStore.loaded && !SessionStore.loading) {
+            root.applyEntries(SessionStore.entries);
             const source = forceDisk === true ? "store_disk" : "store_cache";
             const loadMs = Date.now() - root.perfLoadStartedAt;
-            console.log("[perf][ContextMenuPage] load source=" + source + " ms=" + loadMs + " entries=" + ContextMenuStore.entries.length);
+            console.log("[perf][SessionPage] load source=" + source + " ms=" + loadMs + " entries=" + SessionStore.entries.length);
             root.perfLoadStartedAt = 0;
         }
     }
@@ -126,13 +124,13 @@ PageBase {
         spacing: Tokens.spacing.large
 
         Connections {
-            target: ContextMenuStore
+            target: SessionStore
 
             function onEntriesChanged() {
-                root.applyEntries(ContextMenuStore.entries);
+                root.applyEntries(SessionStore.entries);
                 if (root.perfLoadStartedAt > 0) {
                     const loadMs = Date.now() - root.perfLoadStartedAt;
-                    console.log("[perf][ContextMenuPage] load source=store_update ms=" + loadMs + " entries=" + ContextMenuStore.entries.length);
+                    console.log("[perf][SessionPage] load source=store_update ms=" + loadMs + " entries=" + SessionStore.entries.length);
                     root.perfLoadStartedAt = 0;
                 }
             }
@@ -152,7 +150,7 @@ PageBase {
                 libraryModel.append({
                     compId: id,
                     isPlaceholder: false,
-                    raw: { id: id, type: "custom", label: label, command: cmd, icon: icon, enabled: false }
+                    raw: { id: id, type: "custom", label: label, command: ["sh", "-c", cmd], icon: icon, enabled: false }
                 });
                 root.componentMeta[id] = { name: label, icon: icon };
                 root.save();
@@ -446,12 +444,33 @@ PageBase {
                     anchors.margins: Tokens.padding.medium
                     spacing: Tokens.spacing.small
                     visible: !isPlaceholder
-                    
-                    MaterialIcon {
-                        text: root.componentMeta[compId]?.icon || "widgets"
-                        color: sourceList !== "library" ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
+
+                    Item {
+                        width: 24
+                        height: 24
+
+                        MaterialIcon {
+                            anchors.fill: parent
+                            visible: compId !== "dino_gif"
+                            text: root.componentMeta[compId]?.icon || "widgets"
+                            color: sourceList !== "library" ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
+                        }
+
+                        AnimatedImage {
+                            anchors.fill: parent
+                            visible: compId === "dino_gif"
+                            playing: true
+                            source: Paths.absolutePath(Config.paths.sessionGif !== "" ? Config.paths.sessionGif : "root:/assets/dino.gif")
+                            fillMode: AnimatedImage.PreserveAspectFit
+
+                            layer.enabled: true
+                            layer.effect: Colouriser {
+                                colorizationColor: sourceList !== "library" ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
+                                sourceColor: "white"
+                            }
+                        }
                     }
-                    
+
                     Text {
                         Layout.fillWidth: true
                         text: root.componentMeta[compId]?.name || "Unknown Component"

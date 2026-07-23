@@ -122,6 +122,9 @@ QtObject {
                 Component {
                     TaskbarElements {}
                 }
+                Component {
+                    SessionPage {}
+                }
             }
         },
 

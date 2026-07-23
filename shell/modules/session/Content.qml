@@ -20,111 +20,138 @@ Column {
     rightPadding: CUtils.clamp(padding - Config.border.thickness, 0, padding)
     spacing: Tokens.spacing.large
 
-    SessionButton {
-        id: logout
+    property var activeEntries: SessionStore.entries.filter(e => e.enabled)
 
-        icon: Config.session.icons.logout
-        command: ["sh", "-c", "qdbus6 org.kde.Shutdown /Shutdown org.kde.Shutdown.logout 2>/dev/null"]
+    Repeater {
+        id: repeater
+        model: root.activeEntries
 
-        KeyNavigation.down: shutdown
-
-        Component.onCompleted: forceActiveFocus()
-
-        Connections {
-            function onLauncherChanged(): void {
-                if (!root.visibilities.launcher)
-                    logout.forceActiveFocus();
-            }
-
-            target: root.visibilities
-        }
-    }
-
-    SessionButton {
-        id: shutdown
-
-        icon: Config.session.icons.shutdown
-        command: Config.session.commands.shutdown
-
-        KeyNavigation.up: logout
-        KeyNavigation.down: hibernate
-    }
-
-    Item {
-        width: Tokens.sizes.session.button
-        height: Tokens.sizes.session.button
-
-        AnimatedImage {
-            anchors.fill: parent
-            sourceSize.width: width * ((QsWindow.window as QsWindow)?.devicePixelRatio ?? 1)
-            playing: visible
-            asynchronous: true
-            speed: Config.general.sessionGifSpeed
-            source: Paths.absolutePath(Config.paths.sessionGif)
-            fillMode: AnimatedImage.PreserveAspectFit
-            opacity: Visibilities.isCaelestiaMode ? 0 : 1
-            Behavior on opacity { Anim { type: Anim.Standard } }
-            visible: Config.paths.sessionGif !== ""
-        }
-
-        AnimatedImage {
-            anchors.fill: parent
-            sourceSize.width: width * ((QsWindow.window as QsWindow)?.devicePixelRatio ?? 1)
-            playing: visible
-            asynchronous: true
-            speed: Config.general.sessionGifSpeed
-            source: Paths.absolutePath("root:/assets/dino.gif")
-            fillMode: AnimatedImage.PreserveAspectFit
-            opacity: Visibilities.isCaelestiaMode ? 1 : 0
-            Behavior on opacity { Anim { type: Anim.Standard } }
+        delegate: Loader {
+            id: loader
+            property string compId: modelData.id
+            property int itemIndex: index
             
-            layer.enabled: true
-            layer.effect: Colouriser {
-                colorizationColor: Colours.palette.m3onSurface
-                sourceColor: "white"
-            }
-        }
-
-        AnimatedImage {
-            anchors.fill: parent
-            sourceSize.width: width * ((QsWindow.window as QsWindow)?.devicePixelRatio ?? 1)
-            playing: visible
-            asynchronous: true
-            speed: Config.general.sessionGifSpeed
-            source: Paths.absolutePath("root:/assets/dino.gif")
-            fillMode: AnimatedImage.PreserveAspectFit
-            opacity: Visibilities.isCaelestiaMode ? 1 : 0
-            Behavior on opacity { Anim { type: Anim.Standard } }
+            visible: true
             
-            layer.enabled: true
-            layer.effect: Colouriser {
-                colorizationColor: Colours.palette.m3onSurface
-                sourceColor: "white"
+            sourceComponent: {
+                if (compId === "dino_gif") return dinoComponent;
+                return buttonComponent;
+            }
+
+            // Connection to focus the first button on launcher change
+            Connections {
+                target: root.visibilities
+                function onLauncherChanged() {
+                    if (!root.visibilities.launcher && loader.item && typeof loader.item.forceActiveFocus === 'function' && index === root.firstFocusableIndex()) {
+                        loader.item.forceActiveFocus();
+                    }
+                }
+            }
+            
+            Component.onCompleted: {
+                if (index === root.firstFocusableIndex() && loader.item && typeof loader.item.forceActiveFocus === 'function') {
+                    loader.item.forceActiveFocus();
+                }
             }
         }
     }
 
-    SessionButton {
-        id: hibernate
-
-        icon: Config.session.icons.hibernate
-        command: Config.session.commands.hibernate
-
-        KeyNavigation.up: shutdown
-        KeyNavigation.down: reboot
+    function firstFocusableIndex() {
+        for (let i = 0; i < root.activeEntries.length; i++) {
+            if (root.activeEntries[i].id !== "dino_gif") return i;
+        }
+        return 0;
     }
 
-    SessionButton {
-        id: reboot
+    function findFocusable(startIndex, direction) {
+        let i = startIndex + direction;
+        while (i >= 0 && i < root.activeEntries.length) {
+            if (root.activeEntries[i].id !== "dino_gif") {
+                let loader = repeater.itemAt(i);
+                if (loader && loader.item) return loader.item;
+            }
+            i += direction;
+        }
+        return null;
+    }
 
-        icon: Config.session.icons.reboot
-        command: Config.session.commands.reboot
+    Component {
+        id: dinoComponent
+        Item {
+            width: Tokens.sizes.session.button
+            height: Tokens.sizes.session.button
 
-        KeyNavigation.up: hibernate
+            AnimatedImage {
+                anchors.fill: parent
+                sourceSize.width: width * ((QsWindow.window as QsWindow)?.devicePixelRatio ?? 1)
+                playing: visible
+                asynchronous: true
+                speed: Config.general.sessionGifSpeed
+                source: Paths.absolutePath(Config.paths.sessionGif)
+                fillMode: AnimatedImage.PreserveAspectFit
+                opacity: Visibilities.isCaelestiaMode ? 0 : 1
+                Behavior on opacity { Anim { type: Anim.Standard } }
+                visible: Config.paths.sessionGif !== ""
+            }
+
+            AnimatedImage {
+                anchors.fill: parent
+                sourceSize.width: width * ((QsWindow.window as QsWindow)?.devicePixelRatio ?? 1)
+                playing: visible
+                asynchronous: true
+                speed: Config.general.sessionGifSpeed
+                source: Paths.absolutePath("root:/assets/dino.gif")
+                fillMode: AnimatedImage.PreserveAspectFit
+                opacity: Visibilities.isCaelestiaMode ? 1 : 0
+                Behavior on opacity { Anim { type: Anim.Standard } }
+                
+                layer.enabled: true
+                layer.effect: Colouriser {
+                    colorizationColor: Colours.palette.m3onSurface
+                    sourceColor: "white"
+                }
+            }
+
+            AnimatedImage {
+                anchors.fill: parent
+                sourceSize.width: width * ((QsWindow.window as QsWindow)?.devicePixelRatio ?? 1)
+                playing: visible
+                asynchronous: true
+                speed: Config.general.sessionGifSpeed
+                source: Paths.absolutePath("root:/assets/dino.gif")
+                fillMode: AnimatedImage.PreserveAspectFit
+                opacity: Visibilities.isCaelestiaMode ? 1 : 0
+                Behavior on opacity { Anim { type: Anim.Standard } }
+                
+                layer.enabled: true
+                layer.effect: Colouriser {
+                    colorizationColor: Colours.palette.m3onSurface
+                    sourceColor: "white"
+                }
+            }
+        }
+    }
+
+    Component {
+        id: buttonComponent
+        SessionButton {
+            id: button
+            
+            icon: modelData.icon || "widgets"
+            command: modelData.command || []
+            
+            // The Loader passes compId and itemIndex to its properties, but we access it from the Loader parent context
+            
+            property Item navUp: root.findFocusable(itemIndex, -1)
+            property Item navDown: root.findFocusable(itemIndex, 1)
+
+            KeyNavigation.up: navUp
+            KeyNavigation.down: navDown
+        }
     }
 
     component SessionButton: IconButton {
-        id: button
+        id: buttonBase
 
         required property list<string> command
 

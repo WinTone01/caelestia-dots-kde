@@ -95,7 +95,7 @@ Controls.Menu {
             }
 
             item.text = entry.label;
-            item.icon = entry.icon || "application-x-executable";
+            item.icon = entry.icon || "widgets";
             newArr.push(item);
         }
         for (const k in root.itemPool) {

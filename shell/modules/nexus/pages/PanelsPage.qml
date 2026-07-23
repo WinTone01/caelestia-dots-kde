@@ -43,11 +43,18 @@ PageBase {
         }
 
         NavRow {
-            last: true
             icon: "settings_input_component"
             label: qsTr("Quick toggle")
             status: Config.utilities.enabled ? qsTr("Enabled") : qsTr("Disabled")
             onClicked: root.nState.openSubPage(5)
+        }
+
+        NavRow {
+            last: true
+            icon: "power_settings_new"
+            label: qsTr("Session")
+            status: qsTr("Customize session buttons")
+            onClicked: root.nState.openSubPage(16)
         }
     }
 }
