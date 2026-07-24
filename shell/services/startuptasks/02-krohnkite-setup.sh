@@ -20,7 +20,23 @@ kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapLeft 4
 kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapRight 4
 kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapTop 4
 
-echo "StartupTasks: Added quickshell to Krohnkite exceptions"
+# Set binary as the tiling method and disable others to avoid interference
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key binaryTreeLayoutOrder 1
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key cascadeLayoutOrder 0
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key columnsLayoutOrder 0
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key monocleLayoutOrder 0
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key quarterLayoutOrder 0
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key spiralLayoutOrder 0
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key spreadLayoutOrder 0
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key stackedLayoutOrder 0
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key stairLayoutOrder 0
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key threeColumnLayoutOrder 0
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key tileLayoutOrder 0
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key floatingLayoutOrder 2
+
+
+
+echo "StartupTasks: Added quickshell to Krohnkite exceptions, configured layouts and shortcuts"
 
 # Return 1 to indicate KWin reconfigure is needed
 exit 1
