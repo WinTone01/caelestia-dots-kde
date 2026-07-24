@@ -29,7 +29,7 @@ ShellRoot {
     GSFLoader {}
 
     Background {}
-    // BadAppleOverlay {}
+    BadAppleOverlay {}
 
     Drawers {}
     // AreaPicker {}
