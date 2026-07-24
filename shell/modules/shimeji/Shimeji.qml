@@ -76,7 +76,8 @@ StyledWindow {
     visible: shouldBeVisible
 
     name: "shimeji"
-    WlrLayershell.layer: WlrLayer.Bottom
+    isDesktopWidget: true
+    WlrLayershell.layer: WlrLayer.Background
     WlrLayershell.exclusionMode: ExclusionMode.Ignore
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
     surfaceFormat.opaque: false

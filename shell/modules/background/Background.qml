@@ -22,8 +22,9 @@ Variants {
 
         screen: modelData
         name: "background"
+        isDesktopWidget: true
         WlrLayershell.exclusionMode: ExclusionMode.Ignore
-        WlrLayershell.layer: WlrLayer.Bottom
+        WlrLayershell.layer: WlrLayer.Background
         color: contentItem.Config.background.wallpaperEnabled ? "black" : "transparent"
         surfaceFormat.opaque: false
 
