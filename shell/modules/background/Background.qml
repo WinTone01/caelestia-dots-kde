@@ -24,13 +24,13 @@ Variants {
         name: "background"
         isDesktopWidget: true
         WlrLayershell.exclusionMode: ExclusionMode.Ignore
-        WlrLayershell.layer: WlrLayer.Background
-        color: contentItem.Config.background.wallpaperEnabled ? "black" : "transparent"
+        WlrLayershell.layer: WlrLayer.Bottom
+        color: Config.background.wallpaperEnabled ? "black" : "transparent"
         surfaceFormat.opaque: false
 
         // If Quickshell wallpaper is disabled, use empty mask so KDE desktop gets clicks
         // If enabled, use null mask so Quickshell captures clicks
-        mask: contentItem.Config.background.wallpaperEnabled ? null : emptyRegion
+        mask: Config.background.wallpaperEnabled ? null : emptyRegion
 
         Region {
             id: emptyRegion
@@ -46,7 +46,7 @@ Variants {
         TapHandler {
             acceptedButtons: Qt.LeftButton | Qt.RightButton
             onTapped: (eventPoint, button) => {
-                if (button === Qt.RightButton && contentItem.Config.background.wallpaperEnabled) {
+                if (button === Qt.RightButton && Config.background.wallpaperEnabled) {
                     ContextMenuStore.openDesktopContextMenu(eventPoint.position.x, eventPoint.position.y, win.modelData.name);
                 } else if (button === Qt.LeftButton) {
                     if (typeof KWinActiveWindowBridge !== "undefined") {

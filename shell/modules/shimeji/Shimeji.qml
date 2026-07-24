@@ -42,7 +42,7 @@ StyledWindow {
         workingDirectory: "/tmp"
     }
 
-    readonly property real borderThickness: modelData ? contentItem.Config.border.thickness : 0
+    readonly property real borderThickness: modelData ? Config.border.thickness : 0
 
     readonly property var barWrapper: (() => {
         let name = root.screen ? root.screen.name : undefined;
@@ -55,7 +55,7 @@ StyledWindow {
     function getImgPath(): string {
         if (!modelData)
             return "";
-        let path = Paths.absolutePath(String(contentItem.Config.shimeji.path));
+        let path = Paths.absolutePath(String(Config.shimeji.path));
         if (!path)
             return "";
 
@@ -77,7 +77,7 @@ StyledWindow {
 
     name: "shimeji"
     isDesktopWidget: true
-    WlrLayershell.layer: WlrLayer.Background
+    WlrLayershell.layer: WlrLayer.Bottom
     WlrLayershell.exclusionMode: ExclusionMode.Ignore
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
     surfaceFormat.opaque: false

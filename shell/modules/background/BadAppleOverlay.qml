@@ -18,7 +18,7 @@ Variants {
         name: "drawers" // Use 'drawers' namespace so Hyprland blurs it automatically
         isDesktopWidget: true
         WlrLayershell.exclusionMode: ExclusionMode.Ignore
-        WlrLayershell.layer: WlrLayer.Background
+        WlrLayershell.layer: WlrLayer.Bottom
         color: "transparent"
 
         anchors.top: true
