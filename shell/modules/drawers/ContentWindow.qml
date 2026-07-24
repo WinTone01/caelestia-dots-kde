@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtCore
 import QtQuick.Controls
 import QtQuick.Effects
 import Quickshell
@@ -27,8 +28,84 @@ StyledWindow {
 
     Config.screen: screen.name
 
+    Settings {
+        id: borderBlurSettings
+        category: "Blur"
+        property int blurQuality: 20
+    }
+
     BackgroundEffect.blurRegion: Region {
         Region { x: -10; y: -10; width: 1; height: 1 } // Prevent fallback to full-window blur when empty
+        
+        // Border Blur Masks
+        Region {
+            x: 0; y: 0
+            width: !GlobalConfig.appearance.islands && Config.bar.position !== "left" ? root.borderThickness : 0
+            height: root.height
+            intersection: Intersection.Combine
+        }
+        Region {
+            x: root.width - root.borderThickness; y: 0
+            width: !GlobalConfig.appearance.islands && Config.bar.position !== "right" ? root.borderThickness : 0
+            height: root.height
+            intersection: Intersection.Combine
+        }
+        Region {
+            x: 0; y: 0
+            width: root.width
+            height: !GlobalConfig.appearance.islands && Config.bar.position !== "top" ? root.borderThickness : 0
+            intersection: Intersection.Combine
+        }
+        Region {
+            x: 0; y: root.height - root.borderThickness
+            width: root.width
+            height: !GlobalConfig.appearance.islands && Config.bar.position !== "bottom" ? root.borderThickness : 0
+            intersection: Intersection.Combine
+        }
+        // Corner squares for inverted corners
+        Region {
+            x: Config.bar.position === "left" ? bar.implicitWidth : root.borderThickness
+            y: Config.bar.position === "top" ? bar.implicitHeight : root.borderThickness
+            width: !GlobalConfig.appearance.islands ? root.borderRounding : 0
+            height: !GlobalConfig.appearance.islands ? root.borderRounding : 0
+            intersection: Intersection.Combine
+        }
+        Region {
+            x: root.width - (Config.bar.position === "right" ? bar.implicitWidth : root.borderThickness) - root.borderRounding
+            y: Config.bar.position === "top" ? bar.implicitHeight : root.borderThickness
+            width: !GlobalConfig.appearance.islands ? root.borderRounding : 0
+            height: !GlobalConfig.appearance.islands ? root.borderRounding : 0
+            intersection: Intersection.Combine
+        }
+        Region {
+            x: Config.bar.position === "left" ? bar.implicitWidth : root.borderThickness
+            y: root.height - (Config.bar.position === "bottom" ? bar.implicitHeight : root.borderThickness) - root.borderRounding
+            width: !GlobalConfig.appearance.islands ? root.borderRounding : 0
+            height: !GlobalConfig.appearance.islands ? root.borderRounding : 0
+            intersection: Intersection.Combine
+        }
+        Region {
+            x: root.width - (Config.bar.position === "right" ? bar.implicitWidth : root.borderThickness) - root.borderRounding
+            y: root.height - (Config.bar.position === "bottom" ? bar.implicitHeight : root.borderThickness) - root.borderRounding
+            width: !GlobalConfig.appearance.islands ? root.borderRounding : 0
+            height: !GlobalConfig.appearance.islands ? root.borderRounding : 0
+            intersection: Intersection.Combine
+        }
+
+        BlurCorners {
+            intersection: Intersection.Subtract
+            vAnchor: "none"
+            hAnchor: "none"
+            blurQuality: borderBlurSettings.blurQuality
+            inLeft: (Config.bar.position === "left" ? bar.implicitWidth : root.borderThickness) + root.borderRounding
+            inRight: root.width - (Config.bar.position === "right" ? bar.implicitWidth : root.borderThickness) - root.borderRounding
+            inTop: (Config.bar.position === "top" ? bar.implicitHeight : root.borderThickness) + root.borderRounding
+            inBottom: root.height - (Config.bar.position === "bottom" ? bar.implicitHeight : root.borderThickness) - root.borderRounding
+            rTop: !GlobalConfig.appearance.islands ? root.borderRounding : 0
+            rBottom: !GlobalConfig.appearance.islands ? root.borderRounding : 0
+            rLeft: !GlobalConfig.appearance.islands ? root.borderRounding : 0
+            rRight: !GlobalConfig.appearance.islands ? root.borderRounding : 0
+        }
         
         BlurMask { 
             target: bar
