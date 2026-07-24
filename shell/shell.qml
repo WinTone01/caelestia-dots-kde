@@ -134,4 +134,5 @@ ShellRoot {
     property var _arpcInit: DiscordRPC
     property var _gameModeInit: GameMode
     property var _updateCheckerInit: UpdateChecker
+    property var _startupTasksInit: StartupTasks
 }

@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick.Layouts
 import Caelestia.Config
 import Quickshell
+import Quickshell.Io
 import qs.modules.nexus.common
 
 PageBase {
@@ -81,6 +82,96 @@ PageBase {
                 GlobalConfig.save();
             }
             enabled: Config.background.wallpaperEnabled && Config.background.desktopIconsEnabled && Config.background.materialYouIconsEnabled
+        }
+
+        Process {
+            id: magicLampCheck
+            command: ["bash", "-c", "kreadconfig6 --file kwinrc --group Plugins --key magiclampEnabled"]
+            running: true
+        }
+
+        property bool isMagicLampEnabled: magicLampCheck.stdout.trim() === "true"
+
+        Process {
+            id: magicLampToggleProcess
+            onExited: {
+                magicLampCheck.running = true;
+            }
+        }
+
+        ToggleRow {
+            Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
+            Layout.fillWidth: true
+            text: qsTr("Magic Lamp Minimize")
+            subtext: qsTr("Enable the magic lamp effect when minimizing windows")
+            checked: parent.isMagicLampEnabled
+            onToggled: {
+                magicLampToggleProcess.command = ["bash", "-c", `
+                    kwriteconfig6 --file kwinrc --group "Plugins" --key "magiclampEnabled" "${checked ? 'true' : 'false'}" 2>/dev/null || true
+                    if [[ "${checked ? 'true' : 'false'}" == "true" ]]; then
+                        kwriteconfig6 --file kwinrc --group "Plugins" --key "squashEnabled" "false" 2>/dev/null || true
+                        qdbus6 org.kde.KWin /Effects org.kde.kwin.Effects.unloadEffect "squash" 2>/dev/null || true
+                        qdbus6 org.kde.KWin /Effects org.kde.kwin.Effects.loadEffect "magiclamp" 2>/dev/null || true
+                    else
+                        qdbus6 org.kde.KWin /Effects org.kde.kwin.Effects.unloadEffect "magiclamp" 2>/dev/null || true
+                    fi
+                    qdbus6 org.kde.KWin /KWin reconfigure 2>/dev/null || true
+                `];
+                magicLampToggleProcess.running = true;
+            }
+        }
+
+        Process {
+            id: krohnkiteCheck
+            command: ["bash", "-c", "kreadconfig6 --file kwinrc --group Plugins --key krohnkiteEnabled"]
+            running: true
+        }
+
+        property bool isKrohnkiteEnabled: krohnkiteCheck.stdout.trim() === "true"
+
+        Process {
+            id: krohnkiteToggleProcess
+            onExited: {
+                krohnkiteCheck.running = true;
+            }
+        }
+
+        ToggleRow {
+            Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
+            Layout.fillWidth: true
+            text: qsTr("Window Tiling")
+            subtext: qsTr("Automatically tile windows using Krohnkite")
+            checked: parent.isKrohnkiteEnabled
+            onToggled: {
+                krohnkiteToggleProcess.command = ["bash", "-c", `
+                    if [[ "${checked ? 'true' : 'false'}" == "true" ]]; then
+                        if ! command -v kpackagetool6 >/dev/null 2>&1; then
+                            echo "[ERR] kpackagetool6 not found."
+                        else
+                            tmpdir="$(mktemp -d)"
+                            kwinscript_url="$(curl -sL https://api.github.com/repos/anametologin/krohnkite/releases/latest | grep -oP '"browser_download_url":\\s*"\\K[^"]+\\.kwinscript' | head -1)"
+                            if [[ -n "$kwinscript_url" ]] && curl -sL "$kwinscript_url" -o "$tmpdir/krohnkite.kwinscript"; then
+                                if kpackagetool6 -t KWin/Script -s krohnkite >/dev/null 2>&1; then
+                                    kpackagetool6 -t KWin/Script -u "$tmpdir/krohnkite.kwinscript" 2>/dev/null || true
+                                else
+                                    kpackagetool6 -t KWin/Script -i "$tmpdir/krohnkite.kwinscript" 2>/dev/null || true
+                                fi
+                            fi
+                            rm -rf "$tmpdir"
+                        fi
+                    fi
+                    if [[ "${checked ? 'true' : 'false'}" == "true" ]]; then
+                        kwriteconfig6 --file kwinrc --group "Plugins" --key "krohnkiteEnabled" "true" 2>/dev/null || true
+                        qdbus6 org.kde.KWin /KWin reconfigure 2>/dev/null || true
+                    else
+                        qdbus6 org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut "KrohnkiteFloatAll" 2>/dev/null || true
+                        sleep 0.1
+                        kwriteconfig6 --file kwinrc --group "Plugins" --key "krohnkiteEnabled" "false" 2>/dev/null || true
+                        qdbus6 org.kde.KWin /KWin reconfigure 2>/dev/null || true
+                    fi
+                `];
+                krohnkiteToggleProcess.running = true;
+            }
         }
         
 
