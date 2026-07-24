@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick.Layouts
 import Caelestia.Config
+import Caelestia.Services
 import Quickshell
 import Quickshell.Io
 import qs.modules.nexus.common
@@ -13,6 +14,8 @@ PageBase {
 
     ColumnLayout {
         anchors.horizontalCenter: parent.horizontalCenter
+        
+        property bool showTilingLogout: false
         anchors.top: parent.top
         width: root.cappedWidth
         spacing: Tokens.spacing.extraSmall / 2
@@ -116,6 +119,9 @@ PageBase {
             onToggled: {
                 GlobalConfig.general.krohnkiteEnabled = checked;
                 GlobalConfig.save();
+                if (!checked) {
+                    parent.showTilingLogout = true;
+                }
                 Quickshell.execDetached(["bash", "-c", `
                     if [[ "${checked ? 'true' : 'false'}" == "true" ]]; then
                         qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript "krohnkite" 2>/dev/null || true
@@ -147,7 +153,14 @@ PageBase {
                 `]);
             }
         }
-        
+
+        NavRow {
+            visible: parent.showTilingLogout
+            icon: "logout"
+            label: qsTr("Log out to fully disable tiling")
+            status: qsTr("KWin requires a restart to clear window tiling rules")
+            onClicked: Quickshell.execDetached(["sh", "-c", "qdbus6 org.kde.Shutdown /Shutdown org.kde.Shutdown.logout 2>/dev/null || true"])
+        }
 
         NavRow {
             icon: "extension"
