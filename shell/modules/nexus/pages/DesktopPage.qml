@@ -118,6 +118,7 @@ PageBase {
                 GlobalConfig.save();
                 Quickshell.execDetached(["bash", "-c", `
                     if [[ "${checked ? 'true' : 'false'}" == "true" ]]; then
+                        qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript "krohnkite" 2>/dev/null || true
                         if ! kpackagetool6 -t KWin/Script -s krohnkite >/dev/null 2>&1; then
                             if command -v kpackagetool6 >/dev/null 2>&1; then
                                 notify-send "Installing Krohnkite..." "Please stay connected to internet.."
@@ -139,6 +140,7 @@ PageBase {
                     else
                         qdbus6 org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut "KrohnkiteFloatAll" 2>/dev/null || true
                         sleep 0.1
+                        qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript "krohnkite" 2>/dev/null || true
                         kwriteconfig6 --file kwinrc --group "Plugins" --key "krohnkiteEnabled" "false" 2>/dev/null || true
                         qdbus6 org.kde.KWin /KWin reconfigure 2>/dev/null || true
                     fi

@@ -13,6 +13,13 @@ else
 fi
 kwriteconfig6 --file kwinrc --group Script-krohnkite --key ignoreClass "$NEW_IGNORE"
 
+# Set default tiling gaps for Krohnkite
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapBetween 10
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapBottom 4
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapLeft 4
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapRight 4
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapTop 4
+
 echo "StartupTasks: Added quickshell to Krohnkite exceptions"
 
 # Return 1 to indicate KWin reconfigure is needed

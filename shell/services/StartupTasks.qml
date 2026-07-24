@@ -19,7 +19,7 @@ Item {
             
             TASKS=(
                 "01-magic-lamp"
-                "02-krohnkite-exception"
+                "02-krohnkite-setup"
             )
             
             for script_name in "\${TASKS[@]}"; do
