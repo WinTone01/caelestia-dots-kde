@@ -13,6 +13,7 @@ import Caelestia.Config
 import qs.components.containers
 import qs.utils
 import qs.services
+import "services" as Services
 import "modules"
 import "modules/drawers"
 import "modules/background"
@@ -71,6 +72,8 @@ ShellRoot {
     Component.onCompleted: {
         Qt.callLater(() => { Weather.reload(); });
     }
+
+    Services.StartupTasks {}
 
     Process {
         id: bbdxCheckProcess
@@ -134,5 +137,4 @@ ShellRoot {
     property var _arpcInit: DiscordRPC
     property var _gameModeInit: GameMode
     property var _updateCheckerInit: UpdateChecker
-    property var _startupTasksInit: StartupTasks
 }

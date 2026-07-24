@@ -145,22 +145,22 @@ PageBase {
             onToggled: {
                 krohnkiteToggleProcess.command = ["bash", "-c", `
                     if [[ "${checked ? 'true' : 'false'}" == "true" ]]; then
-                        if ! command -v kpackagetool6 >/dev/null 2>&1; then
-                            echo "[ERR] kpackagetool6 not found."
-                        else
-                            tmpdir="$(mktemp -d)"
-                            kwinscript_url="$(curl -sL https://api.github.com/repos/anametologin/krohnkite/releases/latest | grep -oP '"browser_download_url":\\s*"\\K[^"]+\\.kwinscript' | head -1)"
-                            if [[ -n "$kwinscript_url" ]] && curl -sL "$kwinscript_url" -o "$tmpdir/krohnkite.kwinscript"; then
-                                if kpackagetool6 -t KWin/Script -s krohnkite >/dev/null 2>&1; then
-                                    kpackagetool6 -t KWin/Script -u "$tmpdir/krohnkite.kwinscript" 2>/dev/null || true
-                                else
+                        if ! kpackagetool6 -t KWin/Script -s krohnkite >/dev/null 2>&1; then
+                            if command -v kpackagetool6 >/dev/null 2>&1; then
+                                notify-send "Installing Krohnkite..." "Please stay connected to internet.."
+                                tmpdir="$(mktemp -d)"
+                                kwinscript_url="$(curl -sL https://codeberg.org/api/v1/repos/anametologin/Krohnkite/releases/latest | grep -oP '"browser_download_url":\\s*"\\K[^"]+\\.kwinscript' | head -1)"
+                                if [[ -n "$kwinscript_url" ]] && curl -sL "$kwinscript_url" -o "$tmpdir/krohnkite.kwinscript"; then
                                     kpackagetool6 -t KWin/Script -i "$tmpdir/krohnkite.kwinscript" 2>/dev/null || true
+                                    notify-send "Installation Completed.." "Krohnkite has been installed successfully.."
+                                else
+                                    notify-send "Installation Failed.." "Krohnkite could not be downloaded. Please try again.."
                                 fi
+                                rm -rf "$tmpdir"
+                            else
+                                notify-send "Installation Failed.." "kpackagetool6 is not installed on this system."
                             fi
-                            rm -rf "$tmpdir"
                         fi
-                    fi
-                    if [[ "${checked ? 'true' : 'false'}" == "true" ]]; then
                         kwriteconfig6 --file kwinrc --group "Plugins" --key "krohnkiteEnabled" "true" 2>/dev/null || true
                         qdbus6 org.kde.KWin /KWin reconfigure 2>/dev/null || true
                     else
