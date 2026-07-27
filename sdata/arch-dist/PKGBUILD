@@ -55,7 +55,7 @@ source=(
 sha256sums=('SKIP'
             'f7f188ef2ef44c1d637184a20471a3711bc94dc180f8e8ac10ffb57592960587'
             'de1c4fb3b9a63ba4cc5f7c0b198a345e3b537793be4796ec7991d44960ae9dd3'
-            '41e5f259dc1849751ff45f800ceab898baa288fbf6e2296f82453357083557ab')
+            '913ffaaf275ed71f9cad502ed9360ed16a061118b79398485ded4c48f20e3143')
 
 prepare() {
     cd "$_reponame"
