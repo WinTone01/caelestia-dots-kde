@@ -36,6 +36,14 @@ public:
     Q_INVOKABLE void resetKey(const QString& name);
     Q_INVOKABLE QVariantList query(const QString& searchText) const;
 
+    // Called from QML once the keybinds.json file has been read and parsed.
+    // Populates m_overrides but does NOT apply them yet (shortcuts may not exist).
+    Q_INVOKABLE void loadFromJson(const QVariantMap& overrides);
+
+    // Called from QML's Component.onCompleted after all shortcuts are initialized.
+    // Applies every override in m_overrides to its registered GlobalShortcut.
+    Q_INVOKABLE void applyAllOverrides();
+
 signals:
     void keybindsChanged();
 
@@ -50,8 +58,8 @@ private:
     QTimer* m_saveTimer = nullptr;
 
     QString overridesPath() const;
-    void loadOverrides();
     void saveOverrides();
 };
 
 } // namespace caelestia::services
+

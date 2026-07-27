@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Io
 import Caelestia
 import Caelestia.Config
+import Caelestia.Services
 import qs.components.misc
 import qs.services
 import qs.modules.nexus
@@ -14,6 +15,29 @@ Scope {
     property bool launcherInterrupted
     property string lastAction: ""
     readonly property bool hasFullscreen: Hypr.focusedWorkspace?.toplevels?.values?.some(t => (t?.lastIpcObject?.fullscreen ?? 0) > 1) ?? false
+
+    // Load user keybind overrides from ~/.config/caelestia/keybinds.json.
+    // Using FileView (async read) + Component.onCompleted (all shortcuts initialized) ensures
+    // that applyAllOverrides() is called after every GlobalShortcut has set its defaultKey.
+    FileView {
+        id: keybindsFileView
+        path: Qt.url("file://" + Quickshell.env("HOME") + "/.config/caelestia/keybinds.json")
+        watchChanges: false
+
+        onTextChanged: {
+            try {
+                const overrides = JSON.parse(text || "{}")
+                KeybindsModel.loadFromJson(overrides)
+                KeybindsModel.applyAllOverrides()
+            } catch (e) {
+                // File missing or malformed — no overrides applied
+            }
+        }
+    }
+
+    Component.onCompleted: {
+        keybindsFileView.reload()
+    }
 
     // qmllint disable unresolved-type
     CustomShortcut {

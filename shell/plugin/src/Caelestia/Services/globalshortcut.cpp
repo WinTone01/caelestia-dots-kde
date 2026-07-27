@@ -102,6 +102,17 @@ void GlobalShortcut::setKey(const QString &key)
     updateShortcut();
 }
 
+void GlobalShortcut::setKeyOverride(const QString &key)
+{
+    // Like setKey(), but intentionally does NOT modify m_defaultKey.
+    // This preserves the QML-assigned default even for shortcuts with no `key:` property.
+    if (m_key == key)
+        return;
+    m_key = key;
+    emit keyChanged();
+    updateShortcut();
+}
+
 QString GlobalShortcut::defaultKey() const
 {
     return m_defaultKey;

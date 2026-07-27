@@ -3,9 +3,9 @@
 
 #include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QStandardPaths>
 #include <QLoggingCategory>
 
 Q_LOGGING_CATEGORY(lcKeybinds, "caelestia.services.keybindsmodel", QtInfoMsg)
@@ -15,8 +15,6 @@ namespace caelestia::services {
 KeybindsModel::KeybindsModel(QObject* parent)
     : QAbstractListModel(parent) {
     
-    loadOverrides();
-
     connect(GlobalShortcutDispatcher::instance(), &GlobalShortcutDispatcher::shortcutRegistered,
             this, &KeybindsModel::onShortcutRegistered);
     connect(GlobalShortcutDispatcher::instance(), &GlobalShortcutDispatcher::shortcutUnregistered,
@@ -64,11 +62,20 @@ QHash<int, QByteArray> KeybindsModel::roleNames() const {
 
 void KeybindsModel::setKey(const QString& name, const QString& newKey) {
     GlobalShortcut* sc = GlobalShortcut::findByName(name);
-    if (!sc) return;
+    if (!sc)
+        return;
 
+    // CRITICAL: capture defaultKey BEFORE calling sc->setKey().
+    // GlobalShortcut::setKey() sets m_defaultKey = newKey on the very first call when
+    // m_defaultKey is empty. Shortcuts with no `key:` property in QML never receive a
+    // QML-initiated setKey(), so m_defaultKey stays "". If we call sc->setKey(newKey)
+    // first, newKey becomes the default, then `newKey == sc->defaultKey()` is trivially
+    // true and the override is discarded instead of saved.
+    const QString defaultKey = sc->defaultKey();
     sc->setKey(newKey);
 
-    if (newKey == sc->defaultKey()) {
+    if (!defaultKey.isEmpty() && newKey == defaultKey) {
+        // User restored the shortcut to its real default
         m_overrides.remove(name);
     } else {
         m_overrides.insert(name, newKey);
@@ -108,11 +115,11 @@ QVariantList KeybindsModel::query(const QString& searchText) const {
 }
 
 void KeybindsModel::onShortcutRegistered(GlobalShortcut* sc) {
-    if (m_rows.contains(sc)) return;
+    if (m_rows.contains(sc))
+        return;
 
-    if (m_overrides.contains(sc->name())) {
-        sc->setKey(m_overrides.value(sc->name()));
-    }
+    // Do NOT apply overrides here — m_defaultKey is not yet set by QML's `key` property.
+    // Overrides are applied later via applyAllOverrides(), called from Component.onCompleted.
 
     const int row = m_rows.size();
     beginInsertRows(QModelIndex(), row, row);
@@ -140,22 +147,32 @@ void KeybindsModel::onShortcutUnregistered(GlobalShortcut* sc) {
 }
 
 QString KeybindsModel::overridesPath() const {
-    return QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation) + "/keybinds.json";
+    return QDir::homePath() + "/.config/caelestia/keybinds.json";
 }
 
-void KeybindsModel::loadOverrides() {
-    QString path = overridesPath();
-    QFile file(path);
-    if (!file.open(QIODevice::ReadOnly)) return;
-
-    QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
-    if (doc.isObject()) {
-        QJsonObject obj = doc.object();
-        for (auto it = obj.begin(); it != obj.end(); ++it) {
-            m_overrides.insert(it.key(), it.value().toString());
-        }
+void KeybindsModel::loadFromJson(const QVariantMap& overrides) {
+    m_overrides.clear();
+    for (auto it = overrides.begin(); it != overrides.end(); ++it) {
+        const QString val = it.value().toString();
+        if (!val.isEmpty())
+            m_overrides.insert(it.key(), val);
     }
 }
+
+void KeybindsModel::applyAllOverrides() {
+    for (auto it = m_overrides.begin(); it != m_overrides.end(); ++it) {
+        GlobalShortcut* sc = GlobalShortcut::findByName(it.key());
+        if (sc)
+            // Use setKeyOverride() instead of setKey() to avoid setting m_defaultKey.
+            // For shortcuts with no QML `key:` property, m_defaultKey is ""; calling
+            // setKey() would set m_defaultKey = overrideKey, making the override appear
+            // to be the default and breaking subsequent user modifications.
+            sc->setKeyOverride(it.value());
+    }
+    emit keybindsChanged();
+}
+
+
 
 void KeybindsModel::saveOverrides() {
     QString path = overridesPath();

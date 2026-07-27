@@ -41,6 +41,11 @@ public:
     QString key() const;
     void setKey(const QString &key);
 
+    // Sets the active key without modifying m_defaultKey.
+    // Used by KeybindsModel::applyAllOverrides() to avoid corrupting
+    // m_defaultKey for shortcuts that have no `key:` property in QML.
+    void setKeyOverride(const QString &key);
+
     QString defaultKey() const;
 
     QString description() const;
