@@ -48,10 +48,11 @@ PageBase {
         tilingShortcuts = tiling
     }
 
-    function openCaptureDialog(name: string, currentKey: string) {
+    function openCaptureDialog(name: string, currentKey: string, targetItem: var) {
         dialogLoader.active = true
         dialogLoader.item.shortcutName = name
         dialogLoader.item.currentKey = currentKey
+        dialogLoader.item.targetItem = targetItem
         dialogLoader.item.open()
     }
 
@@ -105,7 +106,8 @@ PageBase {
                 keybind: modelData.bind
                 isOverridden: modelData.isOverridden
 
-                onClicked: root.openCaptureDialog(modelData.name, modelData.bind)
+                onAddClicked: (target) => root.openCaptureDialog(modelData.name, modelData.bind, target)
+                onKeybindEdited: (newKey) => KeybindsModel.setKey(modelData.name, newKey)
                 onResetClicked: KeybindsModel.resetKey(modelData.name)
             }
         }
@@ -126,7 +128,8 @@ PageBase {
                 keybind: modelData.bind
                 isOverridden: modelData.isOverridden
 
-                onClicked: root.openCaptureDialog(modelData.name, modelData.bind)
+                onAddClicked: (target) => root.openCaptureDialog(modelData.name, modelData.bind, target)
+                onKeybindEdited: (newKey) => KeybindsModel.setKey(modelData.name, newKey)
                 onResetClicked: KeybindsModel.resetKey(modelData.name)
             }
         }
@@ -147,7 +150,8 @@ PageBase {
                 keybind: modelData.bind
                 isOverridden: modelData.isOverridden
 
-                onClicked: root.openCaptureDialog(modelData.name, modelData.bind)
+                onAddClicked: (target) => root.openCaptureDialog(modelData.name, modelData.bind, target)
+                onKeybindEdited: (newKey) => KeybindsModel.setKey(modelData.name, newKey)
                 onResetClicked: KeybindsModel.resetKey(modelData.name)
             }
         }
@@ -169,7 +173,8 @@ PageBase {
                 keybind: modelData.bind
                 isOverridden: modelData.isOverridden
 
-                onClicked: root.openCaptureDialog(modelData.name, modelData.bind)
+                onAddClicked: (target) => root.openCaptureDialog(modelData.name, modelData.bind, target)
+                onKeybindEdited: (newKey) => KeybindsModel.setKey(modelData.name, newKey)
                 onResetClicked: KeybindsModel.resetKey(modelData.name)
             }
         }

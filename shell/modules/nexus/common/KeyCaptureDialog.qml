@@ -6,6 +6,7 @@ import Caelestia.Config
 import qs.components
 import qs.components.controls as Controls
 import qs.components.effects
+import qs.services
 
 Popup {
     id: root
@@ -17,15 +18,28 @@ Popup {
     signal confirm(string name, string newKey)
     signal clear(string name)
 
+    property var targetItem: null
+
     width: 320
     padding: 24
     height: contentColumn.implicitHeight + 48
+
     modal: true
     focus: true
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+    parent: Overlay.overlay
 
-    x: Math.round((parent.width - width) / 2)
-    y: Math.round((parent.height - height) / 2)
+    enter: Transition {
+        NumberAnimation { property: "opacity"; from: 0.0; to: 1.0; duration: Tokens.anim.durations.small }
+        NumberAnimation { property: "scale"; from: 0.9; to: 1.0; duration: Tokens.anim.durations.small; easing.type: Easing.OutCubic }
+    }
+    exit: Transition {
+        NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; duration: Tokens.anim.durations.small }
+        NumberAnimation { property: "scale"; from: 1.0; to: 0.9; duration: Tokens.anim.durations.small; easing.type: Easing.InCubic }
+    }
+
+    x: targetItem && parent ? Math.min(parent.width - width - 16, Math.max(16, targetItem.mapToItem(parent, targetItem.width - width, targetItem.height + 8).x)) : (parent ? Math.round((parent.width - width) / 2) : 0)
+    y: targetItem && parent ? Math.min(parent.height - height - 16, Math.max(16, targetItem.mapToItem(parent, 0, targetItem.height + 8).y)) : (parent ? Math.round((parent.height - height) / 2) : 0)
 
     background: Item {
         Elevation {
@@ -36,16 +50,32 @@ Popup {
         Rectangle {
             id: bgRect
             anchors.fill: parent
-            color: Colours.palette.surface
+            color: Colours.palette.m3surfaceContainerHigh
             radius: 16
             border.width: 1
-            border.color: Colours.palette.surfaceVariant
+            border.color: Colours.palette.m3outlineVariant
         }
     }
 
+    onVisibleChanged: {
+        if (visible) {
+            focusTimer.start()
+        }
+    }
+
+    Timer {
+        id: focusTimer
+        interval: 10
+        onTriggered: focusScope.forceActiveFocus()
+    }
+
     onOpened: {
-        capturedKey = currentKey
-        focusScope.forceActiveFocus()
+        capturedKey = ""
+        KeybindsModel.suspendCapture()
+    }
+
+    onClosed: {
+        KeybindsModel.resumeCapture()
     }
 
     contentItem: ColumnLayout {
@@ -55,7 +85,7 @@ Popup {
         StyledText {
             text: qsTr("Record Keybind")
             font: Tokens.font.title.medium
-            color: Colours.palette.onSurface
+            color: Colours.palette.m3onSurface
             Layout.fillWidth: true
         }
 
@@ -66,16 +96,16 @@ Popup {
 
             Rectangle {
                 anchors.fill: parent
-                color: focusScope.activeFocus ? Colours.palette.primaryContainer : Colours.palette.surfaceVariant
+                color: focusScope.activeFocus ? Colours.palette.m3primaryContainer : Colours.palette.m3surfaceVariant
                 radius: Tokens.radius.medium
                 border.width: focusScope.activeFocus ? 2 : 1
-                border.color: focusScope.activeFocus ? Colours.palette.primary : Colours.palette.outline
+                border.color: focusScope.activeFocus ? Colours.palette.m3primary : Colours.palette.m3outline
 
                 StyledText {
                     anchors.centerIn: parent
                     text: root.capturedKey === "" ? qsTr("Press keys now...") : root.capturedKey
                     font: Tokens.font.body.large
-                    color: focusScope.activeFocus ? Colours.palette.onPrimaryContainer : Colours.palette.onSurfaceVariant
+                    color: focusScope.activeFocus ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurfaceVariant
                 }
             }
 
@@ -127,26 +157,23 @@ Popup {
         RowLayout {
             Layout.fillWidth: true
             Layout.topMargin: 8
-            
-            Controls.TextButton {
-                text: qsTr("Clear")
-                onClicked: {
-                    root.clear(root.shortcutName)
-                    root.close()
-                }
-            }
-
-            Item { Layout.fillWidth: true }
 
             Controls.TextButton {
                 text: qsTr("Cancel")
                 onClicked: root.close()
             }
 
+            Item { Layout.fillWidth: true }
+
             Controls.TextButton {
                 text: qsTr("Confirm")
+                enabled: root.capturedKey !== ""
                 onClicked: {
-                    root.confirm(root.shortcutName, root.capturedKey)
+                    let finalKey = root.capturedKey
+                    if (root.targetItem && root.currentKey !== "") {
+                        finalKey = root.currentKey + "; " + root.capturedKey
+                    }
+                    root.confirm(root.shortcutName, finalKey)
                     root.close()
                 }
             }
