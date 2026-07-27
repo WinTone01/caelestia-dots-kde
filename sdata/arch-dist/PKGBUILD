@@ -1,0 +1,90 @@
+# Packages the compiled Quickshell C++ modules (shell/plugin) and the
+# default shell/ QML config for the Caelestia KDE port.
+#
+# This is the source-build package. Build/install with any AUR helper:
+#
+#   yay -S caelestia-shell
+#
+# A precompiled counterpart, caelestia-kde-bin, is published from the
+# same PackageBase family (see ../arch-dist-bin/PKGBUILD) for anyone who
+# wants to skip the local compile - install that one instead:
+#
+#   yay -S caelestia-kde-bin
+#
+# Companion files in this directory:
+#   caelestia-shell.install     - pacman post_install/post_upgrade hints
+#   caelestia-shell-setup.sh    - per-user config deployment helper
+#   caelestia-shell-profile.sh  - /etc/profile.d hook that runs the helper
+#
+# Runtime/build dependency names below are taken from the project's own
+# verified Arch package list at sdata/arch-dist/installDP.sh - keep the
+# two lists in sync when either changes.
+
+pkgname=caelestia-shell
+pkgver=2.2.2
+pkgrel=1
+pkgdesc="Compiled QML shell plugins and default config for the Caelestia KDE port"
+arch=('x86_64')
+url="https://github.com/ladybug-me/caelestia-dots-kde"
+license=('GPL-3.0-only')
+depends=(
+    'quickshell-git'
+    'qt6-base' 'qt6-declarative' 'qt6-wayland'
+    'libqalculate' 'aubio' 'libcava' 'lm_sensors' 'libsecret'
+    'kpipewire' 'kglobalaccel'
+    'wireplumber' 'rsync'
+)
+makedepends=('cmake' 'ninja' 'git' 'pkgconf' 'qt6-shadertools' 'libx11' 'kwindowsystem')
+optdepends=(
+    'darkly: Darkly Plasma/window-decoration theme used by the default profile'
+    'kvantum: Qt style engine for the Material You application look'
+    'kde-material-you-colors: wallpaper-adaptive accent colours'
+    'ffmpeg: screen recording via the caelestia CLI'
+    'caelestia-cli: command-line control of the shell (launcher, record, screenshot, clipboard, emoji picker)'
+)
+provides=("${pkgname}")
+options=('!lto')
+install=caelestia-shell.install
+_reponame=caelestia-dots-kde
+source=(
+    "git+${url}.git#tag=v${pkgver}"
+    "caelestia-shell-setup.sh"
+    "caelestia-shell-profile.sh"
+)
+sha256sums=('SKIP'
+            '029596e79a593ebc774d90c77642d8fbdc10120b73757c2aaf030c9cc89507bf'
+            '239ee3dbf554db9fd3c2d7cb29c9aca9d8b35178af19672c5771aed9c1ec5365')
+
+prepare() {
+    cd "$_reponame"
+    git submodule update --init --recursive -- src/yet-another-monochrome-icon-set
+}
+
+build() {
+    cd "$_reponame/shell"
+    cmake -B build -G Ninja \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DINSTALL_LIBDIR=lib/caelestia \
+        -DINSTALL_QMLDIR=lib/qt6/qml \
+        -DINSTALL_QSCONFDIR=share/caelestia-shell \
+        -DVERSION="v${pkgver}" \
+        -DDISTRIBUTOR=archlinux
+    cmake --build build
+}
+
+package() {
+    cd "$_reponame"
+    DESTDIR="${pkgdir}" cmake --install shell/build
+
+    install -d "${pkgdir}/usr/share/caelestia-shell/assets/icons"
+    if [[ -d "src/yet-another-monochrome-icon-set" ]]; then
+        cp -a "src/yet-another-monochrome-icon-set" \
+            "${pkgdir}/usr/share/caelestia-shell/assets/icons/yet-another-monochrome-icon-set"
+    fi
+    echo "${pkgver}" > "${pkgdir}/usr/share/caelestia-shell/.version"
+
+    install -Dm755 "${srcdir}/caelestia-shell-setup.sh" "${pkgdir}/usr/bin/caelestia-shell-setup"
+    install -Dm644 "${srcdir}/caelestia-shell-profile.sh" "${pkgdir}/etc/profile.d/caelestia-shell.sh"
+    install -Dm644 "LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

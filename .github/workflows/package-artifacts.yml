@@ -1,0 +1,282 @@
+name: Package Artifacts
+
+on:
+  push:
+    branches: ["main", "dev"]
+    paths:
+      - "sdata/**"
+      - ".github/workflows/package-artifacts.yml"
+  pull_request:
+    paths:
+      - "sdata/**"
+  release:
+    types: [published]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Attaches a submodule-inclusive source tarball to the GitHub Release so
+  # the Fedora .spec (which has no way to fetch git submodules itself) has
+  # something reliable to point Source0 at. The Arch PKGBUILD doesn't need
+  # this - makepkg clones the git source directly and can init submodules.
+  full-source-tarball:
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Determine version
+        id: ver
+        run: |
+          set -euo pipefail
+          TAG="${{ github.event.release.tag_name }}"
+          if [[ -z "$TAG" ]]; then
+            source .github/version.env
+            TAG="$VERSION"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Build full source tarball
+        run: |
+          set -euo pipefail
+          NAME="caelestia-dots-kde-${{ steps.ver.outputs.version }}"
+          mkdir -p "/tmp/${NAME}"
+          rsync -a --exclude='.git' ./ "/tmp/${NAME}/"
+          tar -C /tmp -czf "${NAME}-full-src.tar.gz" "${NAME}"
+          echo "TARBALL=${NAME}-full-src.tar.gz" >> "$GITHUB_ENV"
+
+      - name: Upload tarball to the release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ steps.ver.outputs.tag }}" "$TARBALL" --clobber
+
+      - name: Upload as workflow artifact (manual runs)
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-src-tarball
+          path: ${{ env.TARBALL }}
+
+  # Performs a REAL build of the Arch package - including its AUR-only
+  # dependencies (libcava, quickshell-git) - inside a disposable Arch
+  # container, then attaches the resulting .pkg.tar.zst to the GitHub
+  # Release. This is what lets end users `pacman -U` a precompiled binary
+  # instead of recompiling caelestia-shell (extras/plugin/QMLTermWidget)
+  # locally, which is the expensive part of a fresh install.
+  build-arch-binary:
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Determine version
+        id: ver
+        run: |
+          set -euo pipefail
+          TAG="${{ github.event.release.tag_name }}"
+          if [[ -z "$TAG" ]]; then
+            source .github/version.env
+            TAG="$VERSION"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Pin pkgver to release tag
+        run: sed -i "s/^pkgver=.*/pkgver=${{ steps.ver.outputs.version }}/" sdata/arch-dist/PKGBUILD
+
+      - name: Prepare builder user
+        run: |
+          set -euo pipefail
+          pacman -Syu --noconfirm --needed git sudo github-cli
+          useradd -m builder
+          echo "builder ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/builder
+          chown -R builder:builder .
+
+      - name: Build & install AUR dependencies (libcava, quickshell-git)
+        run: |
+          su builder -c '
+            set -euo pipefail
+            for pkg in libcava quickshell-git; do
+              tmpdir=$(mktemp -d)
+              git clone "https://aur.archlinux.org/${pkg}.git" "$tmpdir"
+              (cd "$tmpdir" && makepkg -si --noconfirm --needed)
+              rm -rf "$tmpdir"
+            done
+          '
+
+      - name: Build caelestia-shell package
+        run: |
+          su builder -c '
+            set -euo pipefail
+            cd sdata/arch-dist
+            makepkg -s --noconfirm
+          '
+
+      - name: Upload package to release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ steps.ver.outputs.tag }}" sdata/arch-dist/*.pkg.tar.zst --clobber
+
+      - name: Upload as workflow artifact (manual runs)
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: caelestia-shell-arch-pkg
+          path: sdata/arch-dist/*.pkg.tar.zst
+
+      # Keeps the caelestia-kde-bin AUR package (sdata/arch-dist-bin/)
+      # pointed at this release's artifact, the same way any -bin AUR
+      # package maintainer bumps pkgver + sha256sums after upstream ships.
+      # Checks out main fresh (rather than the release tag's detached
+      # HEAD) so the commit lands on the branch, not a dangling ref.
+      - name: Sync caelestia-kde-bin and push
+        if: github.event_name == 'release'
+        run: |
+          set -euo pipefail
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          PKGFILE=$(ls sdata/arch-dist/*.pkg.tar.zst)
+          SUM=$(sha256sum "$PKGFILE" | cut -d' ' -f1)
+
+          git fetch origin main
+          git checkout -B main origin/main
+
+          sed -i "s/^pkgver=.*/pkgver=${{ steps.ver.outputs.version }}/" sdata/arch-dist-bin/PKGBUILD
+          sed -i "s/^sha256sums=.*/sha256sums=('${SUM}')/" sdata/arch-dist-bin/PKGBUILD
+
+          if git diff --quiet -- sdata/arch-dist-bin/PKGBUILD; then
+            echo "No changes to caelestia-kde-bin/PKGBUILD."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add sdata/arch-dist-bin/PKGBUILD
+          git commit -m "chore: sync caelestia-kde-bin to ${{ steps.ver.outputs.tag }} [skip ci]"
+          git push origin HEAD:main
+
+
+  # Builds the Fedora RPM (enabling the celestelove/libcava COPR for
+  # libcava-devel) inside a disposable Fedora container and attaches the
+  # resulting .rpm to the GitHub Release, so `dnf install` can consume a
+  # precompiled binary instead of running rpmbuild locally.
+  build-fedora-binary:
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    container: fedora:latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Determine version
+        id: ver
+        run: |
+          set -euo pipefail
+          TAG="${{ github.event.release.tag_name }}"
+          if [[ -z "$TAG" ]]; then
+            source .github/version.env
+            TAG="$VERSION"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Pin Version to release tag
+        run: |
+          sed -i "s/^Version:.*/Version:        ${{ steps.ver.outputs.version }}/" sdata/fedora-dist/caelestia-shell.spec
+
+      - name: Install build tooling and dependencies
+        run: |
+          set -euo pipefail
+          dnf install -y rpmdevtools rpm-build gh git rsync
+          dnf copr enable -y celestelove/libcava
+          dnf install -y cmake ninja-build gcc-c++ pkgconf-pkg-config \
+            qt6-qtbase-devel qt6-qtdeclarative-devel qt6-qtwayland-devel \
+            qt6-qtsvg-devel qt6-qtshadertools-devel \
+            kf6-kglobalaccel-devel kf6-kpipewire-devel kf6-kwindowsystem-devel \
+            libqalculate-devel aubio-devel libcava-devel \
+            lm_sensors-devel libsecret-devel pipewire-devel
+
+      - name: Assemble sources for rpmbuild
+        run: |
+          set -euo pipefail
+          rpmdev-setuptree
+          NAME="caelestia-dots-kde-${{ steps.ver.outputs.version }}"
+          mkdir -p "/tmp/${NAME}"
+          rsync -a --exclude='.git' ./ "/tmp/${NAME}/"
+          tar -C /tmp -czf "$HOME/rpmbuild/SOURCES/${NAME}-full-src.tar.gz" "${NAME}"
+          cp sdata/fedora-dist/caelestia-shell-setup.sh "$HOME/rpmbuild/SOURCES/"
+          cp sdata/fedora-dist/caelestia-shell-profile.sh "$HOME/rpmbuild/SOURCES/"
+          cp sdata/fedora-dist/caelestia-shell.spec "$HOME/rpmbuild/SPECS/"
+
+      - name: Build RPM
+        run: rpmbuild -bb "$HOME/rpmbuild/SPECS/caelestia-shell.spec"
+
+      - name: Upload package to release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ steps.ver.outputs.tag }}" "$HOME"/rpmbuild/RPMS/*/*.rpm --clobber
+
+      - name: Upload as workflow artifact (manual runs)
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: caelestia-shell-fedora-rpm
+          path: /github/home/rpmbuild/RPMS/*/*.rpm
+
+  # Advisory-only: makes sure the packaging metadata itself stays parseable
+  # on every push/PR. The build-arch-binary job above covers real
+  # dependency-resolved builds on release; this stays fast and cheap.
+  lint-pkgbuild:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    container: archlinux:base-devel
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install lint tools
+        run: pacman -Syu --noconfirm --needed namcap git
+
+      - name: Generate .SRCINFO and lint PKGBUILD
+        run: |
+          useradd -m builder
+          chown -R builder:builder .
+          su builder -c 'cd sdata/arch-dist && makepkg --printsrcinfo > .SRCINFO && cat .SRCINFO'
+          su builder -c 'cd sdata/arch-dist-bin && makepkg --printsrcinfo > .SRCINFO && cat .SRCINFO'
+          namcap sdata/arch-dist/PKGBUILD || true
+          namcap sdata/arch-dist-bin/PKGBUILD || true
+
+  lint-spec:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    container: fedora:latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install lint tools
+        run: dnf install -y rpmlint rpmdevtools
+
+      - name: Validate spec syntax
+        run: |
+          rpmspec --parse sdata/fedora-dist/caelestia-shell.spec
+          rpmlint sdata/fedora-dist/caelestia-shell.spec || true

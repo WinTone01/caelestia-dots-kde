@@ -1,0 +1,55 @@
+# Precompiled counterpart of caelestia-shell (../arch-dist/PKGBUILD).
+#
+# Every GitHub Release has a caelestia-shell-<ver>-1-x86_64.pkg.tar.zst
+# attached by the "Package Artifacts" CI workflow (see
+# .github/workflows/package-artifacts.yml, job build-arch-binary). This
+# PKGBUILD just re-hosts that already-built package - no compiling.
+#
+# Install with any AUR helper, same as any other package:
+#
+#   yay -S caelestia-kde-bin
+#
+# pkgver and sha256sums are updated automatically by CI on every release
+# (see the "Sync caelestia-kde-bin checksum" step in build-arch-binary).
+# If bumping by hand, recompute the checksum with:
+#
+#   curl -fLO "$url/releases/download/v$pkgver/$_srcname-$pkgver-1-x86_64.pkg.tar.zst"
+#   sha256sum "$_srcname-$pkgver-1-x86_64.pkg.tar.zst"
+
+pkgname=caelestia-kde-bin
+_srcname=caelestia-shell
+pkgver=2.2.2
+pkgrel=1
+pkgdesc="Compiled QML shell plugins and default config for the Caelestia KDE port (precompiled binary)"
+arch=('x86_64')
+url="https://github.com/ladybug-me/caelestia-dots-kde"
+license=('GPL-3.0-only')
+depends=(
+    'quickshell-git'
+    'qt6-base' 'qt6-declarative' 'qt6-wayland'
+    'libqalculate' 'aubio' 'libcava' 'lm_sensors' 'libsecret'
+    'kpipewire' 'kglobalaccel'
+    'wireplumber' 'rsync'
+)
+optdepends=(
+    'darkly: Darkly Plasma/window-decoration theme used by the default profile'
+    'kvantum: Qt style engine for the Material You application look'
+    'kde-material-you-colors: wallpaper-adaptive accent colours'
+    'ffmpeg: screen recording via the caelestia CLI'
+    'caelestia-cli: command-line control of the shell (launcher, record, screenshot, clipboard, emoji picker)'
+)
+provides=("$_srcname")
+conflicts=("$_srcname")
+options=('!lto' '!strip' '!debug')
+install=caelestia-kde-bin.install
+source=("${_srcname}-${pkgver}-${pkgrel}-x86_64.pkg.tar.zst::${url}/releases/download/v${pkgver}/${_srcname}-${pkgver}-${pkgrel}-x86_64.pkg.tar.zst")
+sha256sums=('SKIP')
+
+package() {
+    # The downloaded file is itself a complete pacman package. Extract its
+    # file tree straight into pkgdir and drop pacman's own bookkeeping
+    # entries so we don't ship them a second time.
+    bsdtar -xf "${srcdir}/${_srcname}-${pkgver}-${pkgrel}-x86_64.pkg.tar.zst" -C "${pkgdir}"
+    rm -f "${pkgdir}/.PKGINFO" "${pkgdir}/.BUILDINFO" "${pkgdir}/.MTREE"
+    find "${pkgdir}" -maxdepth 1 -name '.*' -type f -delete
+}
