@@ -62,7 +62,7 @@ Quickshell modules and the default shell configuration.
 
 %build
 cmake -S shell -B shell/build -G Ninja \
-    -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+    -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=%{_prefix} \
     -DINSTALL_LIBDIR=%{_lib}/caelestia \
     -DINSTALL_QMLDIR=%{_lib}/qt6/qml \
@@ -88,6 +88,7 @@ install -Dm644 %{SOURCE2} "%{buildroot}%{_sysconfdir}/profile.d/caelestia-shell.
 %license LICENSE
 %{_libdir}/caelestia/
 %{_libdir}/qt6/qml/Caelestia/
+%{_libdir}/qt6/qml/M3Shapes/
 %{_datadir}/caelestia-shell/
 %{_bindir}/caelestia-shell-setup
 %{_sysconfdir}/profile.d/caelestia-shell.sh
