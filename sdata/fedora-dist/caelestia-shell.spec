@@ -42,13 +42,13 @@ Source2:        caelestia-shell-profile.sh
 BuildRequires:  cmake ninja-build gcc-c++ pkgconfig rsync
 BuildRequires:  qt6-qtbase-devel qt6-qtdeclarative-devel qt6-qtwayland-devel
 BuildRequires:  qt6-qtsvg-devel qt6-qtshadertools-devel
-BuildRequires:  kf6-kglobalaccel-devel kf6-kpipewire-devel kf6-kwindowsystem-devel
+BuildRequires:  kf6-kglobalaccel-devel kpipewire-devel kf6-kwindowsystem-devel
 BuildRequires:  libqalculate-devel aubio-devel libcava-devel
 BuildRequires:  lm_sensors-devel libsecret-devel pipewire-devel
 
 Requires:       qt6-qtbase qt6-qtdeclarative qt6-qtwayland qt6-qtsvg
 Requires:       libqalculate aubio libcava lm_sensors libsecret
-Requires:       kf6-kpipewire wireplumber rsync
+Requires:       kpipewire wireplumber rsync
 Requires:       quickshell-git
 
 %description
