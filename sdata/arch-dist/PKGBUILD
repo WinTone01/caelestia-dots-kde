@@ -52,8 +52,8 @@ source=(
     "caelestia-shell-profile.sh"
 )
 sha256sums=('SKIP'
-            '029596e79a593ebc774d90c77642d8fbdc10120b73757c2aaf030c9cc89507bf'
-            '239ee3dbf554db9fd3c2d7cb29c9aca9d8b35178af19672c5771aed9c1ec5365')
+            'f7f188ef2ef44c1d637184a20471a3711bc94dc180f8e8ac10ffb57592960587'
+            'de1c4fb3b9a63ba4cc5f7c0b198a345e3b537793be4796ec7991d44960ae9dd3')
 
 prepare() {
     cd "$_reponame"

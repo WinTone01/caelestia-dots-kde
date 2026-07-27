@@ -45,4 +45,11 @@ mkdir -p "$USER_CONFIG"
 rsync -a --delete --exclude '.installed_version' "$SYSTEM_SHARE/" "$USER_CONFIG/"
 echo "$PKG_VERSION" > "$STAMP_FILE"
 
+# Make quickshell find caelestia as the default config so no --config flag
+# or QUICKSHELL_CONFIG env var is needed.
+DEFAULT_LINK="$(dirname "$USER_CONFIG")/default"
+if [[ ! -L "$DEFAULT_LINK" ]] || [[ "$(readlink "$DEFAULT_LINK")" != "caelestia" ]]; then
+    ln -sfn caelestia "$DEFAULT_LINK"
+fi
+
 echo "[OK] Caelestia shell config deployed to $USER_CONFIG (version $PKG_VERSION)"
