@@ -1,0 +1,23 @@
+post_install() {
+    cat <<'EOM'
+==> caelestia-shell installed.
+==> Run 'caelestia-shell-setup' (or simply log in again) to deploy the
+    default config into ~/.config/quickshell/caelestia for your user.
+EOM
+}
+
+post_upgrade() {
+    cat <<'EOM'
+==> caelestia-shell updated.
+==> Your per-user config refreshes automatically on next login.
+    Run 'caelestia-shell-setup --force' now to refresh it immediately.
+EOM
+}
+
+post_remove() {
+    cat <<'EOM'
+==> caelestia-shell removed.
+==> Your existing ~/.config/quickshell/caelestia was left in place;
+    remove it manually if you no longer need it.
+EOM
+}
