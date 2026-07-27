@@ -241,6 +241,7 @@ jobs:
           tar -C /tmp -czf "$HOME/rpmbuild/SOURCES/${NAME}-full-src.tar.gz" "${NAME}"
           cp sdata/fedora-dist/caelestia-shell-setup.sh "$HOME/rpmbuild/SOURCES/"
           cp sdata/fedora-dist/caelestia-shell-profile.sh "$HOME/rpmbuild/SOURCES/"
+          cp sdata/fedora-dist/caelestia-shell.desktop "$HOME/rpmbuild/SOURCES/"
           cp sdata/fedora-dist/caelestia-shell.spec "$HOME/rpmbuild/SPECS/"
 
       - name: Build RPM

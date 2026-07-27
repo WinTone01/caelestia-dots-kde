@@ -38,6 +38,7 @@ URL:            https://github.com/ladybug-me/%{reponame}
 Source0:        %{url}/releases/download/v%{version}/%{reponame}-%{version}-full-src.tar.gz
 Source1:        caelestia-shell-setup.sh
 Source2:        caelestia-shell-profile.sh
+Source3:        caelestia-shell.desktop
 
 BuildRequires:  cmake ninja-build gcc-c++ pkgconfig rsync
 BuildRequires:  qt6-qtbase-devel qt6-qtbase-private-devel qt6-qtdeclarative-devel qt6-qtwayland-devel
@@ -83,6 +84,7 @@ echo "%{version}" > "%{buildroot}%{_datadir}/caelestia-shell/.version"
 
 install -Dm755 %{SOURCE1} "%{buildroot}%{_bindir}/caelestia-shell-setup"
 install -Dm644 %{SOURCE2} "%{buildroot}%{_sysconfdir}/profile.d/caelestia-shell.sh"
+install -Dm644 %{SOURCE3} "%{buildroot}%{_datadir}/wayland-sessions/caelestia-shell.desktop"
 
 %files
 %license LICENSE
@@ -92,6 +94,7 @@ install -Dm644 %{SOURCE2} "%{buildroot}%{_sysconfdir}/profile.d/caelestia-shell.
 %{_datadir}/caelestia-shell/
 %{_bindir}/caelestia-shell-setup
 %{_sysconfdir}/profile.d/caelestia-shell.sh
+%{_datadir}/wayland-sessions/caelestia-shell.desktop
 
 %post
 echo "caelestia-shell installed. Run 'caelestia-shell-setup' (or log in again) to deploy the config to ~/.config/quickshell/caelestia."

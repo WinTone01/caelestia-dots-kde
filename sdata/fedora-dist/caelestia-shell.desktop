@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Caelestia Shell
+Comment=A celestial-themed Wayland desktop shell powered by Quickshell
+Exec=env QUICKSHELL_CONFIG=caelestia quickshell
+Type=Application
+DesktopNames=caelestia;KDE;

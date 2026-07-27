@@ -28,5 +28,6 @@ srpm:
 	cp "$(spec)" "$(topdir)/SPECS/"
 	cp sdata/fedora-dist/caelestia-shell-setup.sh "$(topdir)/SOURCES/"
 	cp sdata/fedora-dist/caelestia-shell-profile.sh "$(topdir)/SOURCES/"
+	cp sdata/fedora-dist/caelestia-shell.desktop "$(topdir)/SOURCES/"
 	spectool -g -R --directory "$(topdir)/SOURCES" "$(topdir)/SPECS/caelestia-shell.spec"
 	rpmbuild -bs --define "_topdir $(topdir)" --define "_srcrpmdir $(outdir)" "$(topdir)/SPECS/caelestia-shell.spec"

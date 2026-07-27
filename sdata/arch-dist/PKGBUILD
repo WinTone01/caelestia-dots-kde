@@ -50,10 +50,12 @@ source=(
     "git+${url}.git#tag=v${pkgver}"
     "caelestia-shell-setup.sh"
     "caelestia-shell-profile.sh"
+    "caelestia-shell.desktop"
 )
 sha256sums=('SKIP'
             'f7f188ef2ef44c1d637184a20471a3711bc94dc180f8e8ac10ffb57592960587'
-            'de1c4fb3b9a63ba4cc5f7c0b198a345e3b537793be4796ec7991d44960ae9dd3')
+            'de1c4fb3b9a63ba4cc5f7c0b198a345e3b537793be4796ec7991d44960ae9dd3'
+            '41e5f259dc1849751ff45f800ceab898baa288fbf6e2296f82453357083557ab')
 
 prepare() {
     cd "$_reponame"
@@ -86,5 +88,6 @@ package() {
 
     install -Dm755 "${srcdir}/caelestia-shell-setup.sh" "${pkgdir}/usr/bin/caelestia-shell-setup"
     install -Dm644 "${srcdir}/caelestia-shell-profile.sh" "${pkgdir}/etc/profile.d/caelestia-shell.sh"
+    install -Dm644 "${srcdir}/caelestia-shell.desktop" "${pkgdir}/usr/share/wayland-sessions/caelestia-shell.desktop"
     install -Dm644 "LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }
