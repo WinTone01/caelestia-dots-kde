@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import Caelestia.Config
 import qs.components
 import qs.components.controls as Controls
@@ -17,6 +18,7 @@ Popup {
 
     signal confirm(string name, string newKey)
     signal clear(string name)
+    signal unblocked()
 
     property var targetItem: null
 
@@ -69,13 +71,26 @@ Popup {
         onTriggered: focusScope.forceActiveFocus()
     }
 
+    Process {
+        id: blockShortcutsProc
+        command: ["bash", "-c", "gdbus call --session --dest=org.kde.kglobalaccel --object-path=/kglobalaccel --method=org.kde.KGlobalAccel.blockGlobalShortcuts 'true'"]
+    }
+
+    Process {
+        id: unblockShortcutsProc
+        command: ["bash", "-c", "gdbus call --session --dest=org.kde.kglobalaccel --object-path=/kglobalaccel --method=org.kde.KGlobalAccel.blockGlobalShortcuts 'false'"]
+        onExited: {
+            root.unblocked()
+        }
+    }
+
     onOpened: {
         capturedKey = ""
-        KeybindsModel.suspendCapture()
+        blockShortcutsProc.running = true
     }
 
     onClosed: {
-        KeybindsModel.resumeCapture()
+        unblockShortcutsProc.running = true
     }
 
     contentItem: ColumnLayout {

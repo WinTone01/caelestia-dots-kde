@@ -77,13 +77,11 @@ PageBase {
             sourceComponent: KeyCaptureDialog {
                 onConfirm: (name, newKey) => {
                     KeybindsModel.setKey(name, newKey)
-                    dialogLoader.active = false
                 }
                 onClear: (name) => {
                     KeybindsModel.setKey(name, "")
-                    dialogLoader.active = false
                 }
-                onClosed: {
+                onUnblocked: {
                     dialogLoader.active = false
                 }
             }
