@@ -16,27 +16,12 @@ Scope {
     property string lastAction: ""
     readonly property bool hasFullscreen: Hypr.focusedWorkspace?.toplevels?.values?.some(t => (t?.lastIpcObject?.fullscreen ?? 0) > 1) ?? false
 
-    // Load user keybind overrides from ~/.config/caelestia/keybinds.json.
-    // Using FileView (async read) + Component.onCompleted (all shortcuts initialized) ensures
-    // that applyAllOverrides() is called after every GlobalShortcut has set its defaultKey.
-    FileView {
-        id: keybindsFileView
-        path: Qt.url("file://" + Quickshell.env("HOME") + "/.config/caelestia/keybinds.json")
-        watchChanges: false
-
-        onTextChanged: {
-            try {
-                const overrides = JSON.parse(text || "{}")
-                KeybindsModel.loadFromJson(overrides)
-                KeybindsModel.applyAllOverrides()
-            } catch (e) {
-                // File missing or malformed — no overrides applied
-            }
-        }
-    }
-
+    // Load and apply user keybind overrides from ~/.config/caelestia/keybinds.json.
+    // Called in Component.onCompleted so that all CustomShortcut children (and their
+    // inner GlobalShortcut objects) are fully initialized before overrides are applied.
+    // This guarantees m_defaultKey is correctly set on every shortcut before we touch it.
     Component.onCompleted: {
-        keybindsFileView.reload()
+        KeybindsModel.loadAndApplyOverrides()
     }
 
     // qmllint disable unresolved-type

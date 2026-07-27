@@ -150,28 +150,37 @@ QString KeybindsModel::overridesPath() const {
     return QDir::homePath() + "/.config/caelestia/keybinds.json";
 }
 
-void KeybindsModel::loadFromJson(const QVariantMap& overrides) {
-    m_overrides.clear();
-    for (auto it = overrides.begin(); it != overrides.end(); ++it) {
-        const QString val = it.value().toString();
-        if (!val.isEmpty())
-            m_overrides.insert(it.key(), val);
+void KeybindsModel::loadAndApplyOverrides() {
+    // Read overrides synchronously from disk.
+    // This is called from QML's Component.onCompleted, which fires after all
+    // CustomShortcut children (and their inner GlobalShortcut objects) are fully
+    // initialized — so m_defaultKey is already set on every shortcut before we apply.
+    QString path = overridesPath();
+    QFile file(path);
+    if (file.open(QIODevice::ReadOnly)) {
+        QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+        if (doc.isObject()) {
+            m_overrides.clear();
+            QJsonObject obj = doc.object();
+            for (auto it = obj.begin(); it != obj.end(); ++it) {
+                const QString val = it.value().toString();
+                if (!val.isEmpty())
+                    m_overrides.insert(it.key(), val);
+            }
+        }
     }
-}
 
-void KeybindsModel::applyAllOverrides() {
+    // Apply every override. Use setKeyOverride() to leave m_defaultKey intact —
+    // critical for shortcuts with no `key:` property in QML (m_defaultKey would
+    // otherwise be set to the override value, breaking future modifications).
     for (auto it = m_overrides.begin(); it != m_overrides.end(); ++it) {
         GlobalShortcut* sc = GlobalShortcut::findByName(it.key());
         if (sc)
-            // Use setKeyOverride() instead of setKey() to avoid setting m_defaultKey.
-            // For shortcuts with no QML `key:` property, m_defaultKey is ""; calling
-            // setKey() would set m_defaultKey = overrideKey, making the override appear
-            // to be the default and breaking subsequent user modifications.
             sc->setKeyOverride(it.value());
     }
+
     emit keybindsChanged();
 }
-
 
 
 void KeybindsModel::saveOverrides() {
