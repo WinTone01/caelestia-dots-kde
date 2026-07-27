@@ -2,7 +2,10 @@ name: Package Artifacts
 
 on:
   push:
-    branches: ["main", "dev"]
+    # TEMP: feat/aur-pkg added so pushes here exercise the release-only
+    # build jobs before this workflow exists on the default branch (a
+    # prerequisite for workflow_dispatch). Remove before merging.
+    branches: ["main", "dev", "feat/aur-pkg"]
     paths:
       - "sdata/**"
       - ".github/workflows/package-artifacts.yml"
@@ -23,7 +26,8 @@ jobs:
   # something reliable to point Source0 at. The Arch PKGBUILD doesn't need
   # this - makepkg clones the git source directly and can init submodules.
   full-source-tarball:
-    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    # TEMP: `|| github.event_name == 'push'` added for feat/aur-pkg testing. Remove before merging.
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch' || github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -75,7 +79,8 @@ jobs:
   # instead of recompiling caelestia-shell (extras/plugin/QMLTermWidget)
   # locally, which is the expensive part of a fresh install.
   build-arch-binary:
-    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    # TEMP: `|| github.event_name == 'push'` added for feat/aur-pkg testing. Remove before merging.
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch' || github.event_name == 'push'
     runs-on: ubuntu-latest
     container: archlinux:base-devel
     permissions:
@@ -177,7 +182,8 @@ jobs:
   # resulting .rpm to the GitHub Release, so `dnf install` can consume a
   # precompiled binary instead of running rpmbuild locally.
   build-fedora-binary:
-    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    # TEMP: `|| github.event_name == 'push'` added for feat/aur-pkg testing. Remove before merging.
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch' || github.event_name == 'push'
     runs-on: ubuntu-latest
     container: fedora:latest
     permissions:
