@@ -1,41 +1,57 @@
 // SPDX-License-Identifier: GPL-3.0-only
 #pragma once
 
-#include <qprocess.h>
-#include <qobject.h>
-#include <qqmlintegration.h>
-#include <qvariant.h>
-#include <qjsondocument.h>
+#include <QAbstractListModel>
+#include <QObject>
+#include <QQmlEngine>
+#include <QVariant>
+#include <QHash>
+#include <QList>
+#include <QTimer>
+#include "globalshortcut.hpp"
 
 namespace caelestia::services {
 
-class KeybindsModel : public QObject {
+class KeybindsModel : public QAbstractListModel {
     Q_OBJECT
     QML_ELEMENT
     QML_SINGLETON
 
-    Q_PROPERTY(QVariantList keybinds READ keybinds NOTIFY keybindsChanged)
-    Q_PROPERTY(bool initialized READ initialized NOTIFY initializedChanged)
-
 public:
+    enum Roles {
+        NameRole = Qt::UserRole + 1,
+        KeyRole,
+        DefaultKeyRole,
+        DescriptionRole,
+        IsOverriddenRole,
+    };
+
     explicit KeybindsModel(QObject* parent = nullptr);
 
-    [[nodiscard]] QVariantList keybinds() const;
-    [[nodiscard]] bool initialized() const;
+    int rowCount(const QModelIndex& parent = {}) const override;
+    QVariant data(const QModelIndex& index, int role) const override;
+    QHash<int, QByteArray> roleNames() const override;
 
-    Q_INVOKABLE void load();
+    Q_INVOKABLE void setKey(const QString& name, const QString& newKey);
+    Q_INVOKABLE void resetKey(const QString& name);
     Q_INVOKABLE QVariantList query(const QString& searchText) const;
 
 signals:
     void keybindsChanged();
-    void initializedChanged();
-    void loaded();
+
+private slots:
+    void onShortcutRegistered(GlobalShortcut* sc);
+    void onShortcutUnregistered(GlobalShortcut* sc);
+    void flushOverridesToDisk();
 
 private:
-    QVariantList m_keybinds;
-    bool m_initialized = false;
+    QList<GlobalShortcut*> m_rows;
+    QHash<QString, QString> m_overrides;
+    QTimer* m_saveTimer = nullptr;
 
-    QProcess* m_process = nullptr;
+    QString overridesPath() const;
+    void loadOverrides();
+    void saveOverrides();
 };
 
 } // namespace caelestia::services

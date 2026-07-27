@@ -6,6 +6,21 @@
 #include <QString>
 #include <QList>
 #include <QKeySequence>
+#include <QHash>
+#include <memory>
+#include <QAtomicInt>
+
+class GlobalShortcut;
+
+class GlobalShortcutDispatcher : public QObject {
+    Q_OBJECT
+public:
+    static GlobalShortcutDispatcher* instance();
+signals:
+    void shortcutRegistered(GlobalShortcut* sc);
+    void shortcutUnregistered(GlobalShortcut* sc);
+};
+
 
 class GlobalShortcut : public QObject
 {
@@ -13,6 +28,7 @@ class GlobalShortcut : public QObject
     QML_ELEMENT
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
     Q_PROPERTY(QString key READ key WRITE setKey NOTIFY keyChanged)
+    Q_PROPERTY(QString defaultKey READ defaultKey CONSTANT)
     Q_PROPERTY(QString description READ description WRITE setDescription NOTIFY descriptionChanged)
 
 public:
@@ -25,6 +41,8 @@ public:
     QString key() const;
     void setKey(const QString &key);
 
+    QString defaultKey() const;
+
     QString description() const;
     void setDescription(const QString &description);
 
@@ -34,13 +52,22 @@ signals:
     void descriptionChanged();
     void activated();
 
+public:
+    static GlobalShortcut* findByName(const QString& name);
+    static QList<GlobalShortcut*> allShortcuts();
+
 private:
     void updateShortcut();
 
     QString m_name;
     QString m_key;
+    QString m_defaultKey;
     QString m_description;
     QAction *m_action;
+    
+    int m_registerGeneration = 0;
+
+    static QHash<QString, GlobalShortcut*> s_registry;
 
     struct StolenShortcut {
         QString component;

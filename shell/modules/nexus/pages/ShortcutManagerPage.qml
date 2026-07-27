@@ -1,0 +1,177 @@
+pragma ComponentBehavior: Bound
+
+import QtQuick
+import QtQuick.Layouts
+import Caelestia.Config
+import Caelestia.Services
+import qs.components
+import qs.utils
+import qs.modules.nexus.common
+
+PageBase {
+    id: root
+
+    title: qsTr("Shortcuts")
+
+    property var shellShortcuts: []
+    property var appShortcuts: []
+    property var workspaceShortcuts: []
+    property var tilingShortcuts: []
+
+    function updateLists() {
+        let all = KeybindsModel.query("")
+        let shell = []
+        let apps = []
+        let workspaces = []
+        let tiling = []
+
+        const shellRegex = /^(nexus|launcher|dashboard|showall|screenshot|googleLens|screenRecording|lock|session|sidebar|aiAssistant|utilities|emoji|clipboard|windowSwitcher.*|wallpaper|keybinds)$/
+        const workspaceRegex = /^workspace.*$/
+        const tilingRegex = /^krohnkite.*$/
+
+        for (let i = 0; i < all.length; i++) {
+            let item = all[i]
+            if (item.name.match(shellRegex)) {
+                shell.push(item)
+            } else if (item.name.match(workspaceRegex)) {
+                workspaces.push(item)
+            } else if (item.name.match(tilingRegex)) {
+                tiling.push(item)
+            } else {
+                apps.push(item)
+            }
+        }
+        
+        shellShortcuts = shell
+        appShortcuts = apps
+        workspaceShortcuts = workspaces
+        tilingShortcuts = tiling
+    }
+
+    function openCaptureDialog(name: string, currentKey: string) {
+        dialogLoader.active = true
+        dialogLoader.item.shortcutName = name
+        dialogLoader.item.currentKey = currentKey
+        dialogLoader.item.open()
+    }
+
+    ColumnLayout {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        width: root.cappedWidth
+        spacing: Tokens.spacing.extraSmall / 2
+
+        Component.onCompleted: updateLists()
+
+        Connections {
+            target: KeybindsModel
+            function onKeybindsChanged() {
+                updateLists()
+            }
+        }
+
+        Loader {
+            id: dialogLoader
+            active: false
+            sourceComponent: KeyCaptureDialog {
+                onConfirm: (name, newKey) => {
+                    KeybindsModel.setKey(name, newKey)
+                    dialogLoader.active = false
+                }
+                onClear: (name) => {
+                    KeybindsModel.setKey(name, "")
+                    dialogLoader.active = false
+                }
+                onClosed: {
+                    dialogLoader.active = false
+                }
+            }
+        }
+
+        SectionHeader {
+            first: true
+            text: qsTr("Shell UI")
+        }
+
+        Repeater {
+            model: root.shellShortcuts
+            delegate: ShortcutRow {
+                required property var modelData
+                required property int index
+
+                first: index === 0
+                last: index === parent.count - 1
+                label: modelData.description
+                keybind: modelData.bind
+                isOverridden: modelData.isOverridden
+
+                onClicked: root.openCaptureDialog(modelData.name, modelData.bind)
+                onResetClicked: KeybindsModel.resetKey(modelData.name)
+            }
+        }
+
+        SectionHeader {
+            text: qsTr("Applications")
+        }
+
+        Repeater {
+            model: root.appShortcuts
+            delegate: ShortcutRow {
+                required property var modelData
+                required property int index
+
+                first: index === 0
+                last: index === parent.count - 1
+                label: modelData.description
+                keybind: modelData.bind
+                isOverridden: modelData.isOverridden
+
+                onClicked: root.openCaptureDialog(modelData.name, modelData.bind)
+                onResetClicked: KeybindsModel.resetKey(modelData.name)
+            }
+        }
+
+        SectionHeader {
+            text: qsTr("Workspaces")
+        }
+
+        Repeater {
+            model: root.workspaceShortcuts
+            delegate: ShortcutRow {
+                required property var modelData
+                required property int index
+
+                first: index === 0
+                last: index === parent.count - 1
+                label: modelData.description
+                keybind: modelData.bind
+                isOverridden: modelData.isOverridden
+
+                onClicked: root.openCaptureDialog(modelData.name, modelData.bind)
+                onResetClicked: KeybindsModel.resetKey(modelData.name)
+            }
+        }
+
+        SectionHeader {
+            text: qsTr("Window Tiling (Krohnkite)")
+            visible: Config.general.krohnkiteEnabled
+        }
+
+        Repeater {
+            model: Config.general.krohnkiteEnabled ? root.tilingShortcuts : []
+            delegate: ShortcutRow {
+                required property var modelData
+                required property int index
+
+                first: index === 0
+                last: index === parent.count - 1
+                label: modelData.description
+                keybind: modelData.bind
+                isOverridden: modelData.isOverridden
+
+                onClicked: root.openCaptureDialog(modelData.name, modelData.bind)
+                onResetClicked: KeybindsModel.resetKey(modelData.name)
+            }
+        }
+    }
+}

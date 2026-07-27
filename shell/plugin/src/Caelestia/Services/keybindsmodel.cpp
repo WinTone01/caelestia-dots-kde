@@ -1,160 +1,182 @@
 // SPDX-License-Identifier: GPL-3.0-only
 #include "keybindsmodel.hpp"
 
+#include <QDir>
 #include <QFile>
-#include <QRegularExpression>
-#include <QTextStream>
-#include <qdir.h>
-#include <qjsonarray.h>
-#include <qjsonobject.h>
-#include <qloggingcategory.h>
-#include <qprocess.h>
-#include <qsettings.h>
-#include <qstandardpaths.h>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QStandardPaths>
+#include <QLoggingCategory>
 
 Q_LOGGING_CATEGORY(lcKeybinds, "caelestia.services.keybindsmodel", QtInfoMsg)
 
 namespace caelestia::services {
 
 KeybindsModel::KeybindsModel(QObject* parent)
-    : QObject(parent) {
-    load();
-}
+    : QAbstractListModel(parent) {
+    
+    loadOverrides();
 
-QVariantList KeybindsModel::keybinds() const {
-    return m_keybinds;
-}
+    connect(GlobalShortcutDispatcher::instance(), &GlobalShortcutDispatcher::shortcutRegistered,
+            this, &KeybindsModel::onShortcutRegistered);
+    connect(GlobalShortcutDispatcher::instance(), &GlobalShortcutDispatcher::shortcutUnregistered,
+            this, &KeybindsModel::onShortcutUnregistered);
 
-bool KeybindsModel::initialized() const {
-    return m_initialized;
-}
-
-void KeybindsModel::load() {
-    if (m_process) {
-        m_process->kill();
-        m_process->deleteLater();
-        m_process = nullptr;
+    for (GlobalShortcut* sc : GlobalShortcut::allShortcuts()) {
+        onShortcutRegistered(sc);
     }
 
-    m_initialized = false;
-    emit initializedChanged();
+    m_saveTimer = new QTimer(this);
+    m_saveTimer->setSingleShot(true);
+    m_saveTimer->setInterval(300);
+    connect(m_saveTimer, &QTimer::timeout, this, &KeybindsModel::flushOverridesToDisk);
+}
 
-    QVariantList result;
+int KeybindsModel::rowCount(const QModelIndex& parent) const {
+    if (parent.isValid()) return 0;
+    return m_rows.size();
+}
 
-    QString configPath =
-        QStandardPaths::locate(QStandardPaths::GenericConfigLocation, "quickshell/caelestia/modules/Shortcuts.qml");
-    if (configPath.isEmpty()) {
-        configPath = QDir::currentPath() + "/shell/modules/Shortcuts.qml";
+QVariant KeybindsModel::data(const QModelIndex& index, int role) const {
+    if (!index.isValid() || index.row() >= m_rows.size()) return QVariant();
+
+    GlobalShortcut* sc = m_rows.at(index.row());
+    
+    switch (role) {
+    case NameRole: return sc->name();
+    case KeyRole: return sc->key();
+    case DefaultKeyRole: return sc->defaultKey();
+    case DescriptionRole: return sc->description();
+    case IsOverriddenRole: return m_overrides.contains(sc->name());
     }
+    return QVariant();
+}
 
-    QFile file(configPath);
-    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        QTextStream in(&file);
+QHash<int, QByteArray> KeybindsModel::roleNames() const {
+    QHash<int, QByteArray> roles;
+    roles[NameRole] = "name";
+    roles[KeyRole] = "key";
+    roles[DefaultKeyRole] = "defaultKey";
+    roles[DescriptionRole] = "description";
+    roles[IsOverriddenRole] = "isOverridden";
+    return roles;
+}
 
-        int braceCount = 0;
-        bool inShortcut = false;
-        QString name, bind, desc;
+void KeybindsModel::setKey(const QString& name, const QString& newKey) {
+    GlobalShortcut* sc = GlobalShortcut::findByName(name);
+    if (!sc) return;
 
-        QRegularExpression nameRe(R"(name:\s*["`]([^"`]+)["`])");
-        QRegularExpression bindRe(R"(key:\s*["`]([^"`]+)["`])");
-        QRegularExpression descRe(R"(description:\s*["`]([^"`]+)["`])");
+    sc->setKey(newKey);
 
-        while (!in.atEnd()) {
-            QString line = in.readLine().trimmed();
-
-            if (line.startsWith("CustomShortcut {")) {
-                inShortcut = true;
-                braceCount = 1;
-                name.clear();
-                bind.clear();
-                desc.clear();
-                continue;
-            }
-
-            if (inShortcut) {
-                if (line.contains("{"))
-                    braceCount += line.count("{");
-                if (line.contains("}"))
-                    braceCount -= line.count("}");
-
-                if (braceCount == 1) {
-                    auto nameMatch = nameRe.match(line);
-                    if (nameMatch.hasMatch())
-                        name = nameMatch.captured(1);
-
-                    auto bindMatch = bindRe.match(line);
-                    if (bindMatch.hasMatch())
-                        bind = bindMatch.captured(1);
-
-                    auto descMatch = descRe.match(line);
-                    if (descMatch.hasMatch())
-                        desc = descMatch.captured(1);
-                }
-
-                if (braceCount == 0) {
-                    inShortcut = false;
-
-                    if (name.contains("${"))
-                        continue; // Skip template items
-
-                    if (!name.isEmpty()) {
-                        if (bind.isEmpty() || bind == "none") {
-                            continue; // Skip unbound keybinds
-                        } else {
-                            // Format the binding to look like hyprland keys for consistency
-                            bind.replace("Meta", "Super");
-                            bind = bind.replace("+", " + ");
-                            // Handle cases with semicolon like "Meta+Space; Meta"
-                            bind = bind.split(";").first().trimmed();
-                        }
-
-                        if (desc.isEmpty())
-                            desc = name;
-
-                        result.append(QVariantMap{
-                            { "bind", bind },
-                            { "action", name },
-                            { "description", desc },
-                        });
-                    }
-                }
-            }
-        }
-
-        // Add workspace shortcuts manually since they are templated in QML
-        for (int i = 1; i <= 10; ++i) {
-            int keyNum = (i == 10) ? 0 : i;
-            result.append(QVariantMap{
-                { "bind", QString("Super + %1").arg(keyNum) },
-                { "action", QString("workspace%1").arg(i) },
-                { "description", QString("Switch to workspace %1").arg(i) },
-            });
-        }
+    if (newKey == sc->defaultKey()) {
+        m_overrides.remove(name);
     } else {
-        qWarning(lcKeybinds) << "Failed to open Shortcuts.qml at" << configPath;
+        m_overrides.insert(name, newKey);
     }
 
-    m_keybinds = result;
-    m_initialized = true;
+    m_saveTimer->start();
     emit keybindsChanged();
-    emit initializedChanged();
-    emit loaded();
+}
+
+void KeybindsModel::resetKey(const QString& name) {
+    GlobalShortcut* sc = GlobalShortcut::findByName(name);
+    if (!sc) return;
+    setKey(name, sc->defaultKey());
 }
 
 QVariantList KeybindsModel::query(const QString& searchText) const {
-    if (searchText.isEmpty())
-        return m_keybinds;
-
-    const auto lower = searchText.toLower();
     QVariantList result;
-    for (const auto& v : m_keybinds) {
-        const auto map = v.toMap();
-        if (map.value("bind").toString().toLower().contains(lower) ||
-            map.value("description").toString().toLower().contains(lower)) {
-            result.append(v);
+    const auto lower = searchText.toLower();
+    
+    for (GlobalShortcut* sc : m_rows) {
+        if (searchText.isEmpty() ||
+            sc->key().toLower().contains(lower) ||
+            sc->description().toLower().contains(lower) ||
+            sc->name().toLower().contains(lower)) {
+            
+            result.append(QVariantMap{
+                { "bind", sc->key() },
+                { "action", sc->name() },
+                { "name", sc->name() },
+                { "description", sc->description() },
+                { "defaultKey", sc->defaultKey() },
+                { "isOverridden", m_overrides.contains(sc->name()) }
+            });
         }
     }
     return result;
+}
+
+void KeybindsModel::onShortcutRegistered(GlobalShortcut* sc) {
+    if (m_rows.contains(sc)) return;
+
+    if (m_overrides.contains(sc->name())) {
+        sc->setKey(m_overrides.value(sc->name()));
+    }
+
+    const int row = m_rows.size();
+    beginInsertRows(QModelIndex(), row, row);
+    m_rows.append(sc);
+    endInsertRows();
+    
+    emit keybindsChanged();
+
+    connect(sc, &GlobalShortcut::keyChanged, this, [this, sc] {
+        int idx = m_rows.indexOf(sc);
+        if (idx >= 0) {
+            emit dataChanged(index(idx), index(idx), {KeyRole, IsOverriddenRole});
+        }
+    });
+}
+
+void KeybindsModel::onShortcutUnregistered(GlobalShortcut* sc) {
+    int idx = m_rows.indexOf(sc);
+    if (idx >= 0) {
+        beginRemoveRows(QModelIndex(), idx, idx);
+        m_rows.removeAt(idx);
+        endRemoveRows();
+        emit keybindsChanged();
+    }
+}
+
+QString KeybindsModel::overridesPath() const {
+    return QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation) + "/keybinds.json";
+}
+
+void KeybindsModel::loadOverrides() {
+    QString path = overridesPath();
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) return;
+
+    QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+    if (doc.isObject()) {
+        QJsonObject obj = doc.object();
+        for (auto it = obj.begin(); it != obj.end(); ++it) {
+            m_overrides.insert(it.key(), it.value().toString());
+        }
+    }
+}
+
+void KeybindsModel::saveOverrides() {
+    QString path = overridesPath();
+    QDir().mkpath(QFileInfo(path).absolutePath());
+    QFile file(path);
+    if (!file.open(QIODevice::WriteOnly)) {
+        qWarning(lcKeybinds) << "Failed to save keybind overrides to" << path;
+        return;
+    }
+
+    QJsonObject obj;
+    for (auto it = m_overrides.begin(); it != m_overrides.end(); ++it) {
+        obj.insert(it.key(), it.value());
+    }
+
+    QJsonDocument doc(obj);
+    file.write(doc.toJson());
+}
+
+void KeybindsModel::flushOverridesToDisk() {
+    saveOverrides();
 }
 
 } // namespace caelestia::services
