@@ -40,7 +40,7 @@ Source1:        caelestia-shell-setup.sh
 Source2:        caelestia-shell-profile.sh
 
 BuildRequires:  cmake ninja-build gcc-c++ pkgconfig rsync
-BuildRequires:  qt6-qtbase-devel qt6-qtdeclarative-devel qt6-qtwayland-devel
+BuildRequires:  qt6-qtbase-devel qt6-qtbase-private-devel qt6-qtdeclarative-devel qt6-qtwayland-devel
 BuildRequires:  qt6-qtsvg-devel qt6-qtshadertools-devel
 BuildRequires:  kf6-kglobalaccel-devel kpipewire-devel kf6-kwindowsystem-devel
 BuildRequires:  libqalculate-devel aubio-devel libcava-devel

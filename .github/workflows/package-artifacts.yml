@@ -225,8 +225,8 @@ jobs:
           # --skip-unavailable keeps this from failing when a package name doesn't
           # exist on this Fedora release (kf6-kpipewire-devel is version-sensitive).
           dnf install -y --skip-unavailable cmake ninja-build gcc-c++ \
-            qt6-qtbase-devel qt6-qtdeclarative-devel qt6-qtwayland-devel \
-            qt6-qtsvg-devel qt6-qtshadertools-devel \
+            qt6-qtbase-devel qt6-qtbase-private-devel qt6-qtdeclarative-devel \
+            qt6-qtwayland-devel qt6-qtsvg-devel qt6-qtshadertools-devel \
             kf6-kglobalaccel-devel kpipewire-devel kf6-kwindowsystem-devel \
             libqalculate-devel aubio-devel libcava-devel \
             lm_sensors-devel libsecret-devel pipewire-devel
