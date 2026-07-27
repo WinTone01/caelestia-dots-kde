@@ -28,7 +28,6 @@ class GlobalShortcut : public QObject
     QML_ELEMENT
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
     Q_PROPERTY(QString key READ key WRITE setKey NOTIFY keyChanged)
-    Q_PROPERTY(QString defaultKey READ defaultKey CONSTANT)
     Q_PROPERTY(QString description READ description WRITE setDescription NOTIFY descriptionChanged)
 
 public:
@@ -40,13 +39,6 @@ public:
 
     QString key() const;
     void setKey(const QString &key);
-
-    // Sets the active key without modifying m_defaultKey.
-    // Used by KeybindsModel::applyAllOverrides() to avoid corrupting
-    // m_defaultKey for shortcuts that have no `key:` property in QML.
-    void setKeyOverride(const QString &key);
-
-    QString defaultKey() const;
 
     QString description() const;
     void setDescription(const QString &description);
@@ -66,7 +58,6 @@ private:
 
     QString m_name;
     QString m_key;
-    QString m_defaultKey;
     QString m_description;
     QAction *m_action;
     

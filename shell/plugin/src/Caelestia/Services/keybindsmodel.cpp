@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-only
 #include "keybindsmodel.hpp"
+#include "../Config/keybindsdefaults.hpp"
 
+#include <QCoreApplication>
 #include <QDir>
+#include <KGlobalAccel>
+#include <KGlobalShortcutInfo>
+#include <QDBusInterface>
 #include <QFile>
 #include <QFileInfo>
 #include <QJsonDocument>
@@ -15,6 +20,32 @@ namespace caelestia::services {
 KeybindsModel::KeybindsModel(QObject* parent)
     : QAbstractListModel(parent) {
     
+    // Load keybinds JSON or populate defaults
+    QString path = keybindsPath();
+    QFile file(path);
+    bool shouldSave = false;
+
+    // Start with defaults
+    QJsonObject defaults = caelestia::config::defaultKeybinds();
+    for (auto it = defaults.begin(); it != defaults.end(); ++it) {
+        m_keybinds.insert(it.key(), it.value().toString());
+    }
+
+    if (file.open(QIODevice::ReadOnly)) {
+        QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+        if (doc.isObject()) {
+            QJsonObject obj = doc.object();
+            // Merge user JSON over defaults
+            for (auto it = obj.begin(); it != obj.end(); ++it) {
+                if (it.value().isString()) {
+                    m_keybinds.insert(it.key(), it.value().toString());
+                }
+            }
+        }
+    } else {
+        shouldSave = true; // file didn't exist, save the generated defaults
+    }
+
     connect(GlobalShortcutDispatcher::instance(), &GlobalShortcutDispatcher::shortcutRegistered,
             this, &KeybindsModel::onShortcutRegistered);
     connect(GlobalShortcutDispatcher::instance(), &GlobalShortcutDispatcher::shortcutUnregistered,
@@ -28,6 +59,10 @@ KeybindsModel::KeybindsModel(QObject* parent)
     m_saveTimer->setSingleShot(true);
     m_saveTimer->setInterval(300);
     connect(m_saveTimer, &QTimer::timeout, this, &KeybindsModel::flushOverridesToDisk);
+
+    if (shouldSave) {
+        saveKeybinds();
+    }
 }
 
 int KeybindsModel::rowCount(const QModelIndex& parent) const {
@@ -43,9 +78,11 @@ QVariant KeybindsModel::data(const QModelIndex& index, int role) const {
     switch (role) {
     case NameRole: return sc->name();
     case KeyRole: return sc->key();
-    case DefaultKeyRole: return sc->defaultKey();
     case DescriptionRole: return sc->description();
-    case IsOverriddenRole: return m_overrides.contains(sc->name());
+    case IsOverriddenRole: {
+        QJsonObject defaults = caelestia::config::defaultKeybinds();
+        return defaults.value(sc->name()).toString() != sc->key();
+    }
     }
     return QVariant();
 }
@@ -54,7 +91,6 @@ QHash<int, QByteArray> KeybindsModel::roleNames() const {
     QHash<int, QByteArray> roles;
     roles[NameRole] = "name";
     roles[KeyRole] = "key";
-    roles[DefaultKeyRole] = "defaultKey";
     roles[DescriptionRole] = "description";
     roles[IsOverriddenRole] = "isOverridden";
     return roles;
@@ -65,30 +101,20 @@ void KeybindsModel::setKey(const QString& name, const QString& newKey) {
     if (!sc)
         return;
 
-    // CRITICAL: capture defaultKey BEFORE calling sc->setKey().
-    // GlobalShortcut::setKey() sets m_defaultKey = newKey on the very first call when
-    // m_defaultKey is empty. Shortcuts with no `key:` property in QML never receive a
-    // QML-initiated setKey(), so m_defaultKey stays "". If we call sc->setKey(newKey)
-    // first, newKey becomes the default, then `newKey == sc->defaultKey()` is trivially
-    // true and the override is discarded instead of saved.
-    const QString defaultKey = sc->defaultKey();
     sc->setKey(newKey);
-
-    if (!defaultKey.isEmpty() && newKey == defaultKey) {
-        // User restored the shortcut to its real default
-        m_overrides.remove(name);
-    } else {
-        m_overrides.insert(name, newKey);
-    }
+    m_keybinds.insert(name, newKey);
 
     m_saveTimer->start();
     emit keybindsChanged();
 }
 
 void KeybindsModel::resetKey(const QString& name) {
-    GlobalShortcut* sc = GlobalShortcut::findByName(name);
-    if (!sc) return;
-    setKey(name, sc->defaultKey());
+    QJsonObject defaults = caelestia::config::defaultKeybinds();
+    if (defaults.contains(name)) {
+        setKey(name, defaults.value(name).toString());
+    } else {
+        setKey(name, "");
+    }
 }
 
 QVariantList KeybindsModel::query(const QString& searchText) const {
@@ -101,13 +127,13 @@ QVariantList KeybindsModel::query(const QString& searchText) const {
             sc->description().toLower().contains(lower) ||
             sc->name().toLower().contains(lower)) {
             
+            QJsonObject defaults = caelestia::config::defaultKeybinds();
             result.append(QVariantMap{
                 { "bind", sc->key() },
                 { "action", sc->name() },
                 { "name", sc->name() },
                 { "description", sc->description() },
-                { "defaultKey", sc->defaultKey() },
-                { "isOverridden", m_overrides.contains(sc->name()) }
+                { "isOverridden", defaults.value(sc->name()).toString() != sc->key() }
             });
         }
     }
@@ -118,8 +144,10 @@ void KeybindsModel::onShortcutRegistered(GlobalShortcut* sc) {
     if (m_rows.contains(sc))
         return;
 
-    // Do NOT apply overrides here — m_defaultKey is not yet set by QML's `key` property.
-    // Overrides are applied later via applyAllOverrides(), called from Component.onCompleted.
+    // Directly assign the key from our single source of truth
+    if (m_keybinds.contains(sc->name())) {
+        sc->setKey(m_keybinds.value(sc->name()));
+    }
 
     const int row = m_rows.size();
     beginInsertRows(QModelIndex(), row, row);
@@ -136,6 +164,70 @@ void KeybindsModel::onShortcutRegistered(GlobalShortcut* sc) {
     });
 }
 
+bool KeybindsModel::isKeyCollision(const QString& keybind) const {
+    if (keybind.isEmpty()) return false;
+    
+    QString configPath = QDir::homePath() + "/.config/kglobalshortcutsrc";
+    QFile file(configPath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return false;
+    }
+    
+    QStringList targetParts = keybind.split(';', Qt::SkipEmptyParts);
+    for (QString& part : targetParts) {
+        part = part.trimmed().toLower();
+    }
+    if (targetParts.isEmpty()) return false;
+
+    QTextStream in(&file);
+    bool inIgnoredSection = false;
+    
+    while (!in.atEnd()) {
+        QString line = in.readLine().trimmed();
+        if (line.isEmpty() || line.startsWith('#')) continue;
+        
+        if (line.startsWith('[') && line.endsWith(']')) {
+            QString section = line.mid(1, line.length() - 2);
+            inIgnoredSection = (section == "caelestia" || section == "quickshell");
+            continue;
+        }
+        
+        if (inIgnoredSection) continue;
+        
+        int eqIndex = line.indexOf('=');
+        if (eqIndex == -1) continue;
+        
+        QString value = line.mid(eqIndex + 1);
+        QStringList fields = value.split(',');
+        if (fields.size() < 2) continue; // Needs at least default and current shortcut
+        
+        QString currentShortcut = fields[0].trimmed().toLower();
+        QString defaultShortcut = fields[1].trimmed().toLower();
+        
+        for (const QString& part : targetParts) {
+            QKeySequence partSeq(part);
+            if (partSeq.isEmpty()) continue;
+            QString normalizedPart = partSeq.toString().toLower();
+            
+            // Check if the keybind matches either the current or default shortcut
+            // Note: kglobalshortcutsrc separates multiple shortcuts for the same action with '\t'
+            QStringList currentList = currentShortcut.split('\t');
+            QStringList defaultList = defaultShortcut.split('\t');
+            
+            for (const QString& curr : currentList) {
+                QKeySequence seq(curr);
+                if (!seq.isEmpty() && seq.toString().toLower() == normalizedPart) return true;
+            }
+            for (const QString& def : defaultList) {
+                QKeySequence seq(def);
+                if (!seq.isEmpty() && seq.toString().toLower() == normalizedPart) return true;
+            }
+        }
+    }
+    
+    return false;
+}
+
 void KeybindsModel::onShortcutUnregistered(GlobalShortcut* sc) {
     int idx = m_rows.indexOf(sc);
     if (idx >= 0) {
@@ -146,54 +238,21 @@ void KeybindsModel::onShortcutUnregistered(GlobalShortcut* sc) {
     }
 }
 
-QString KeybindsModel::overridesPath() const {
+QString KeybindsModel::keybindsPath() const {
     return QDir::homePath() + "/.config/caelestia/keybinds.json";
 }
 
-void KeybindsModel::loadAndApplyOverrides() {
-    // Read overrides synchronously from disk.
-    // This is called from QML's Component.onCompleted, which fires after all
-    // CustomShortcut children (and their inner GlobalShortcut objects) are fully
-    // initialized — so m_defaultKey is already set on every shortcut before we apply.
-    QString path = overridesPath();
-    QFile file(path);
-    if (file.open(QIODevice::ReadOnly)) {
-        QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
-        if (doc.isObject()) {
-            m_overrides.clear();
-            QJsonObject obj = doc.object();
-            for (auto it = obj.begin(); it != obj.end(); ++it) {
-                const QString val = it.value().toString();
-                if (!val.isEmpty())
-                    m_overrides.insert(it.key(), val);
-            }
-        }
-    }
-
-    // Apply every override. Use setKeyOverride() to leave m_defaultKey intact —
-    // critical for shortcuts with no `key:` property in QML (m_defaultKey would
-    // otherwise be set to the override value, breaking future modifications).
-    for (auto it = m_overrides.begin(); it != m_overrides.end(); ++it) {
-        GlobalShortcut* sc = GlobalShortcut::findByName(it.key());
-        if (sc)
-            sc->setKeyOverride(it.value());
-    }
-
-    emit keybindsChanged();
-}
-
-
-void KeybindsModel::saveOverrides() {
-    QString path = overridesPath();
+void KeybindsModel::saveKeybinds() {
+    QString path = keybindsPath();
     QDir().mkpath(QFileInfo(path).absolutePath());
     QFile file(path);
     if (!file.open(QIODevice::WriteOnly)) {
-        qWarning(lcKeybinds) << "Failed to save keybind overrides to" << path;
+        qWarning(lcKeybinds) << "Failed to save keybinds to" << path;
         return;
     }
 
     QJsonObject obj;
-    for (auto it = m_overrides.begin(); it != m_overrides.end(); ++it) {
+    for (auto it = m_keybinds.begin(); it != m_keybinds.end(); ++it) {
         obj.insert(it.key(), it.value());
     }
 
@@ -202,7 +261,7 @@ void KeybindsModel::saveOverrides() {
 }
 
 void KeybindsModel::flushOverridesToDisk() {
-    saveOverrides();
+    saveKeybinds();
 }
 
 } // namespace caelestia::services

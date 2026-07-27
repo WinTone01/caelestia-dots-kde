@@ -103,6 +103,7 @@ PageBase {
                 label: modelData.description
                 keybind: modelData.bind
                 isOverridden: modelData.isOverridden
+                isShell: true
 
                 onAddClicked: (target) => root.openCaptureDialog(modelData.name, modelData.bind, target)
                 onKeybindEdited: (newKey) => KeybindsModel.setKey(modelData.name, newKey)

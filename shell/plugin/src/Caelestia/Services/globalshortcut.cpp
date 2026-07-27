@@ -4,6 +4,7 @@
 #include <QKeySequence>
 #include <QDebug>
 #include <QProcess>
+#include <QCoreApplication>
 #include <cstdlib>
 #include "../Config/config.hpp"
 #include "../Config/generalconfig.hpp"
@@ -93,29 +94,9 @@ void GlobalShortcut::setKey(const QString &key)
     if (m_key == key)
         return;
 
-    if (m_defaultKey.isEmpty()) {
-        m_defaultKey = key;
-    }
-
     m_key = key;
     emit keyChanged();
     updateShortcut();
-}
-
-void GlobalShortcut::setKeyOverride(const QString &key)
-{
-    // Like setKey(), but intentionally does NOT modify m_defaultKey.
-    // This preserves the QML-assigned default even for shortcuts with no `key:` property.
-    if (m_key == key)
-        return;
-    m_key = key;
-    emit keyChanged();
-    updateShortcut();
-}
-
-QString GlobalShortcut::defaultKey() const
-{
-    return m_defaultKey;
 }
 
 QString GlobalShortcut::description() const
@@ -149,12 +130,17 @@ void GlobalShortcut::updateShortcut()
         return;
     }
 
-    if (m_key.isEmpty()) {
-        KGlobalAccel::self()->setShortcut(m_action, QList<QKeySequence>(), KGlobalAccel::NoAutoloading);
-        return;
-    }
+    // Increment generation immediately so any pending async dbus bindings are aborted.
+    // This fixes a race condition during shell startup where a default shortcut might
+    // be asynchronously bound *after* we've already unbound it via an empty override.
+    const int myGeneration = ++m_registerGeneration;
 
     m_action->setText(m_description.isEmpty() ? "Caelestia Action" : m_description);
+
+    if (m_key.isEmpty()) {
+        KGlobalAccel::self()->removeAllShortcuts(m_action);
+        return;
+    }
 
     QList<QKeySequence> seqs;
     QStringList parts = m_key.split(";");
@@ -166,18 +152,18 @@ void GlobalShortcut::updateShortcut()
     }
 
     if (seqs.isEmpty()) {
-        KGlobalAccel::self()->setShortcut(m_action, QList<QKeySequence>(), KGlobalAccel::NoAutoloading);
+        KGlobalAccel::self()->removeAllShortcuts(m_action);
         return;
     }
 
-    const int myGeneration = ++m_registerGeneration;
     QList<QString> stealCmds;
 
     // 1. Find system-wide collisions for all sequences
     for (const QKeySequence &seq : seqs) {
         QList<KGlobalShortcutInfo> conflicts = KGlobalAccel::globalShortcutsByKey(seq);
         for (const auto &info : conflicts) {
-            if (info.componentUniqueName() != "caelestia") {
+            if (info.componentUniqueName() != "caelestia" && 
+                info.componentUniqueName() != QCoreApplication::applicationName()) {
                 // Store it to restore on destruction
                 m_stolenShortcuts.append({info.componentUniqueName(), info.uniqueName(), info.keys()});
                 

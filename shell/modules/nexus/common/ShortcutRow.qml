@@ -7,6 +7,8 @@ import qs.components
 import qs.services
 import qs.modules.nexus.common
 
+import QtQuick.Effects
+
 ConnectedRect {
     id: root
 
@@ -14,6 +16,7 @@ ConnectedRect {
     property alias status: status.text
     property string keybind: ""
     property bool isOverridden: false
+    property bool isShell: false
 
     signal clicked
     signal addClicked(var target)
@@ -57,6 +60,28 @@ ConnectedRect {
         RowLayout {
             spacing: Tokens.spacing.small
 
+            Rectangle {
+                visible: KeybindsModel.isKeyCollision(root.keybind) && !root.isShell
+                Layout.preferredWidth: 8
+                Layout.preferredHeight: 8
+                Layout.alignment: Qt.AlignVCenter
+                radius: width / 2
+                color: Colours.palette.m3error
+
+                SequentialAnimation on opacity {
+                    loops: Animation.Infinite
+                    NumberAnimation { from: 0.3; to: 1.0; duration: 1000 }
+                    NumberAnimation { from: 1.0; to: 0.3; duration: 1000 }
+                }
+
+                layer.enabled: true
+                layer.effect: MultiEffect {
+                    shadowEnabled: true
+                    shadowColor: Colours.palette.m3error
+                    shadowBlur: 0.8
+                }
+            }
+
             Repeater {
                 model: {
                     let parts = root.keybind.split(";").map(s => s.trim()).filter(s => s.length > 0)
@@ -68,7 +93,7 @@ ConnectedRect {
 
                     Layout.preferredHeight: 32
                     Layout.preferredWidth: pillRow.implicitWidth + Tokens.padding.medium * 2
-                    radius: Tokens.radius.small
+                    radius: Tokens.rounding.small
                     color: Colours.palette.m3surfaceContainerHigh
                     border.width: 1
                     border.color: Colours.palette.m3outlineVariant

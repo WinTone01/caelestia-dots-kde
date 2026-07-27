@@ -21,7 +21,6 @@ public:
     enum Roles {
         NameRole = Qt::UserRole + 1,
         KeyRole,
-        DefaultKeyRole,
         DescriptionRole,
         IsOverriddenRole,
     };
@@ -35,10 +34,7 @@ public:
     Q_INVOKABLE void setKey(const QString& name, const QString& newKey);
     Q_INVOKABLE void resetKey(const QString& name);
     Q_INVOKABLE QVariantList query(const QString& searchText) const;
-
-    // Called from QML's Component.onCompleted after all shortcuts are initialized.
-    // Reads ~/.config/caelestia/keybinds.json and applies every override synchronously.
-    Q_INVOKABLE void loadAndApplyOverrides();
+    Q_INVOKABLE bool isKeyCollision(const QString& keybind) const;
 
 signals:
     void keybindsChanged();
@@ -50,12 +46,11 @@ private slots:
 
 private:
     QList<GlobalShortcut*> m_rows;
-    QHash<QString, QString> m_overrides;
+    QHash<QString, QString> m_keybinds;
     QTimer* m_saveTimer = nullptr;
 
-    QString overridesPath() const;
-    void saveOverrides();
+    QString keybindsPath() const;
+    void saveKeybinds();
 };
 
 } // namespace caelestia::services
-
