@@ -221,7 +221,10 @@ jobs:
           set -euo pipefail
           dnf install -y rpmdevtools rpm-build gh git rsync
           dnf copr enable -y celestelove/libcava
-          dnf install -y cmake ninja-build gcc-c++ pkgconf-pkg-config \
+          # Pre-install what we can; rpmbuild resolves the rest from spec BuildRequires.
+          # --skip-unavailable keeps this from failing when a package name doesn't
+          # exist on this Fedora release (kf6-kpipewire-devel is version-sensitive).
+          dnf install -y --skip-unavailable cmake ninja-build gcc-c++ \
             qt6-qtbase-devel qt6-qtdeclarative-devel qt6-qtwayland-devel \
             qt6-qtsvg-devel qt6-qtshadertools-devel \
             kf6-kglobalaccel-devel kf6-kpipewire-devel kf6-kwindowsystem-devel \
