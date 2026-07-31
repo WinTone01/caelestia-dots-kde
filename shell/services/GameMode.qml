@@ -91,21 +91,47 @@ Singleton {
     // KWin's equivalents of the Hyprland options above: window animations and the
     // blur effect. Both are read back before being changed so a user who already
     // had them off does not get them switched on when game mode ends.
+    //
+    // The read-back has to happen at most once per game mode session, not once
+    // per call. props.enabled is PersistentProperties-backed (reloadableId
+    // "gameMode"), the same mechanism this codebase uses everywhere to survive a
+    // Quickshell hot-reload — so a reload while game mode is already on restores
+    // enabled: true into the freshly-constructed singleton, which fires
+    // onEnabledChanged again with enabled === true. Without a guard, applyKwin(true)
+    // would run its save step a second time, except by then kreadconfig6 reads back
+    // game mode's *own* already-applied values (blur off, animations off) and
+    // overwrites gamemode-prev with those — the user's real settings are gone, and
+    // applyKwin(false) later "restores" them to off. props._prevSaved records that
+    // the save already happened for this session; being on the same
+    // PersistentProperties object, it survives the reload that would otherwise
+    // retrigger the save.
+    //
+    // The general shape — toggle something, remember what it was before, put it
+    // back later — recurs for any feature that temporarily overrides a KDE/Hyprland
+    // setting. Guard the save step the same way: a PersistentProperties flag, set
+    // once when the override begins and cleared only when it ends, rather than
+    // assuming the "on" handler only ever runs once per session.
     function applyKwin(enable: bool): void {
-        const script = enable
-            ? 'prevBlur="$(kreadconfig6 --file kwinrc --group Plugins --key blurEnabled --default true)"; ' +
-              'prevAnim="$(kreadconfig6 --file kdeglobals --group KDE --key AnimationDurationFactor --default 1)"; ' +
-              'mkdir -p "$HOME/.cache/caelestia"; printf "%s\\n%s\\n" "$prevBlur" "$prevAnim" > "$HOME/.cache/caelestia/gamemode-prev"; ' +
-              'kwriteconfig6 --file kwinrc --group Plugins --key blurEnabled false; ' +
-              'kwriteconfig6 --file kdeglobals --group KDE --key AnimationDurationFactor 0; ' +
-              'qdbus6 org.kde.KWin /KWin reconfigure >/dev/null 2>&1'
-            : 'p="$HOME/.cache/caelestia/gamemode-prev"; ' +
-              'blur="$(sed -n 1p "$p" 2>/dev/null)"; anim="$(sed -n 2p "$p" 2>/dev/null)"; ' +
-              '[ -n "$blur" ] || blur=true; [ -n "$anim" ] || anim=1; ' +
-              'kwriteconfig6 --file kwinrc --group Plugins --key blurEnabled "$blur"; ' +
-              'kwriteconfig6 --file kdeglobals --group KDE --key AnimationDurationFactor "$anim"; ' +
-              'qdbus6 org.kde.KWin /KWin reconfigure >/dev/null 2>&1';
-        Quickshell.execDetached(["sh", "-c", script]);
+        if (enable) {
+            const saveStep = props._prevSaved ? "" :
+                'prevBlur="$(kreadconfig6 --file kwinrc --group Plugins --key blurEnabled --default true)"; ' +
+                'prevAnim="$(kreadconfig6 --file kdeglobals --group KDE --key AnimationDurationFactor --default 1)"; ' +
+                'mkdir -p "$HOME/.cache/caelestia"; printf "%s\\n%s\\n" "$prevBlur" "$prevAnim" > "$HOME/.cache/caelestia/gamemode-prev"; ';
+            props._prevSaved = true;
+            Quickshell.execDetached(["sh", "-c", saveStep +
+                'kwriteconfig6 --file kwinrc --group Plugins --key blurEnabled false; ' +
+                'kwriteconfig6 --file kdeglobals --group KDE --key AnimationDurationFactor 0; ' +
+                'qdbus6 org.kde.KWin /KWin reconfigure >/dev/null 2>&1']);
+        } else {
+            props._prevSaved = false;
+            Quickshell.execDetached(["sh", "-c",
+                'p="$HOME/.cache/caelestia/gamemode-prev"; ' +
+                'blur="$(sed -n 1p "$p" 2>/dev/null)"; anim="$(sed -n 2p "$p" 2>/dev/null)"; ' +
+                '[ -n "$blur" ] || blur=true; [ -n "$anim" ] || anim=1; ' +
+                'kwriteconfig6 --file kwinrc --group Plugins --key blurEnabled "$blur"; ' +
+                'kwriteconfig6 --file kdeglobals --group KDE --key AnimationDurationFactor "$anim"; ' +
+                'qdbus6 org.kde.KWin /KWin reconfigure >/dev/null 2>&1']);
+        }
     }
 
     onEnabledChanged: {
@@ -154,6 +180,12 @@ Singleton {
         // there. onConfigReloaded below re-applies the options on Hyprland, so
         // nothing needed the binding anyway.
         property bool enabled: false
+
+        // See applyKwin(): true once the previous KWin blur/animation state has
+        // been captured for the current game mode session, so a reload while
+        // still enabled does not re-capture (and corrupt) it from game mode's own
+        // already-applied values. Reset when game mode turns off.
+        property bool _prevSaved: false
 
         reloadableId: "gameMode"
     }
