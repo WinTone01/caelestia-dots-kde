@@ -112,6 +112,18 @@ Singleton {
     // back later — recurs for any feature that temporarily overrides a KDE/
     // Hyprland setting. Guard the save step the same way: the presence of the
     // saved-state file itself, not an in-memory or PersistentProperties flag.
+    //
+    // AnimationDurationFactor lives in kdeglobals, a generic Qt/Plasma setting
+    // rather than a KWin-specific one, and writing it with plain kwriteconfig6
+    // only updates the file — nothing tells already-running apps (KWin's own
+    // compositor included) to re-read it, so the config value changes but the
+    // live animation speed doesn't, until something else touches the file and
+    // happens to trigger a reload. Confirmed with dbus-monitor: changing it
+    // through System Settings broadcasts org.kde.kconfig.notify's
+    // ConfigChanged on /kdeglobals; kwriteconfig6's --notify flag emits the
+    // identical signal, which is what actually makes it take effect live.
+    // blurEnabled is a KWin effect setting in kwinrc, not a generic one, and
+    // reconfigure() below already covers it — no separate live-apply gap there.
     function applyKwin(enable: bool): void {
         if (enable) {
             Quickshell.execDetached(["sh", "-c",
@@ -121,7 +133,7 @@ Singleton {
                 'prevAnim="$(kreadconfig6 --file kdeglobals --group KDE --key AnimationDurationFactor --default 1)"; ' +
                 'mkdir -p "$HOME/.cache/caelestia"; printf "%s\\n%s\\n" "$prevBlur" "$prevAnim" > "$p"; }; ' +
                 'kwriteconfig6 --file kwinrc --group Plugins --key blurEnabled false; ' +
-                'kwriteconfig6 --file kdeglobals --group KDE --key AnimationDurationFactor 0; ' +
+                'kwriteconfig6 --file kdeglobals --group KDE --key AnimationDurationFactor --notify 0; ' +
                 'qdbus6 org.kde.KWin /KWin reconfigure >/dev/null 2>&1']);
         } else {
             Quickshell.execDetached(["sh", "-c",
@@ -129,7 +141,7 @@ Singleton {
                 'blur="$(sed -n 1p "$p" 2>/dev/null)"; anim="$(sed -n 2p "$p" 2>/dev/null)"; ' +
                 '[ -n "$blur" ] || blur=true; [ -n "$anim" ] || anim=1; ' +
                 'kwriteconfig6 --file kwinrc --group Plugins --key blurEnabled "$blur"; ' +
-                'kwriteconfig6 --file kdeglobals --group KDE --key AnimationDurationFactor "$anim"; ' +
+                'kwriteconfig6 --file kdeglobals --group KDE --key AnimationDurationFactor --notify "$anim"; ' +
                 'rm -f "$p"; ' +
                 'qdbus6 org.kde.KWin /KWin reconfigure >/dev/null 2>&1']);
         }
