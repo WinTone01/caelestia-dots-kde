@@ -123,7 +123,17 @@ Searcher {
 
     function setWallpaper(path: string): void {
         actualCurrent = path;
-        Quickshell.execDetached(["caelestia", "wallpaper", "-f", path, ...smartArg]);
+        if (Images.isVideo(path)) {
+            const thumb = thumbFor(path);
+            if (thumb !== "") {
+                const script = 'caelestia wallpaper -f "$1" ' + root.smartArg.join(" ") + '; printf "%s" "$2" > "$3"';
+                Quickshell.execDetached(["sh", "-c", script, "--", thumb, path, root.currentNamePath]);
+            } else {
+                Quickshell.execDetached(["sh", "-c", 'printf "%s" "$1" > "$2"', "--", path, root.currentNamePath]);
+            }
+        } else {
+            Quickshell.execDetached(["caelestia", "wallpaper", "-f", path, ...smartArg]);
+        }
     }
 
     function preview(path: string): void {
@@ -200,6 +210,10 @@ Searcher {
             const m = root.videoThumbs;
             m[path] = out;
             root.videoThumbs = Object.assign({}, m);   // a copy, so bindings re-run
+            if (path === root.actualCurrent) {
+                const script = 'caelestia wallpaper -f "$1" ' + root.smartArg.join(" ") + '; printf "%s" "$2" > "$3"';
+                Quickshell.execDetached(["sh", "-c", script, "--", out, path, root.currentNamePath]);
+            }
         }
         const pending = root.videoThumbsPending;
         delete pending[path];
@@ -246,6 +260,9 @@ Searcher {
             if (!wall) {
                 wall = root.fallback;
                 Quickshell.execDetached(["caelestia", "wallpaper", "-f", root.fallback, ...root.smartArg]);
+            }
+            if (Images.isVideo(root.actualCurrent) && wall === root.getThumbnailPath(root.actualCurrent)) {
+                return;
             }
             root.actualCurrent = wall;
             root.previewColourLock = false;
