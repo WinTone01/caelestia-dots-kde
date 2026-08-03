@@ -124,20 +124,27 @@ Singleton {
     // identical signal, which is what actually makes it take effect live.
     // blurEnabled is a KWin effect setting in kwinrc, not a generic one, and
     // reconfigure() below already covers it — no separate live-apply gap there.
+    //
+    // The state file's path is built from Paths.cache rather than hardcoding
+    // $HOME/.cache — that's the one place XDG_CACHE_HOME is already resolved
+    // correctly (falls back to $HOME/.cache only if it's unset), so re-deriving
+    // it in the shell script would just be a second, divergent copy of the same
+    // fallback logic.
     function applyKwin(enable: bool): void {
+        const stateFile = `${Paths.cache}/gamemode-state`;
         if (enable) {
             Quickshell.execDetached(["sh", "-c",
-                'p="$HOME/.cache/caelestia/gamemode-state"; ' +
+                `p="${stateFile}"; ` +
                 '[ -e "$p" ] || { ' +
                 'prevBlur="$(kreadconfig6 --file kwinrc --group Plugins --key blurEnabled --default true)"; ' +
                 'prevAnim="$(kreadconfig6 --file kdeglobals --group KDE --key AnimationDurationFactor --default 1)"; ' +
-                'mkdir -p "$HOME/.cache/caelestia"; printf "%s\\n%s\\n" "$prevBlur" "$prevAnim" > "$p"; }; ' +
+                'mkdir -p "$(dirname "$p")"; printf "%s\\n%s\\n" "$prevBlur" "$prevAnim" > "$p"; }; ' +
                 'kwriteconfig6 --file kwinrc --group Plugins --key blurEnabled false; ' +
                 'kwriteconfig6 --file kdeglobals --group KDE --key AnimationDurationFactor --notify 0; ' +
                 'qdbus6 org.kde.KWin /KWin reconfigure >/dev/null 2>&1']);
         } else {
             Quickshell.execDetached(["sh", "-c",
-                'p="$HOME/.cache/caelestia/gamemode-state"; ' +
+                `p="${stateFile}"; ` +
                 'blur="$(sed -n 1p "$p" 2>/dev/null)"; anim="$(sed -n 2p "$p" 2>/dev/null)"; ' +
                 '[ -n "$blur" ] || blur=true; [ -n "$anim" ] || anim=1; ' +
                 'kwriteconfig6 --file kwinrc --group Plugins --key blurEnabled "$blur"; ' +
