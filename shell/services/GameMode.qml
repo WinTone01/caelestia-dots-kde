@@ -96,12 +96,12 @@ Singleton {
     // The read-back has to happen at most once per game mode session, not once
     // per call — otherwise a second run reads back game mode's *own*
     // already-applied values (blur off, animations off) and overwrites
-    // gamemode-prev with those, permanently losing the user's real settings.
+    // gamemode-state with those, permanently losing the user's real settings.
     // A QML-side guard isn't enough: PersistentProperties does not survive a
     // real process restart or crash (only an in-process hot reload, and not
     // reliably even then — confirmed by testing), so a guard flag living in QML
     // state resets right along with everything else and misses exactly the case
-    // that matters. gamemode-prev's own existence on disk is the guard instead:
+    // that matters. gamemode-state's own existence on disk is the guard instead:
     // it is real, persists across anything, and is the one thing that has to
     // stay in sync with "is there a previous state saved right now" by
     // construction, since it *is* that state. The save step only runs if the
@@ -127,7 +127,7 @@ Singleton {
     function applyKwin(enable: bool): void {
         if (enable) {
             Quickshell.execDetached(["sh", "-c",
-                'p="$HOME/.cache/caelestia/gamemode-prev"; ' +
+                'p="$HOME/.cache/caelestia/gamemode-state"; ' +
                 '[ -e "$p" ] || { ' +
                 'prevBlur="$(kreadconfig6 --file kwinrc --group Plugins --key blurEnabled --default true)"; ' +
                 'prevAnim="$(kreadconfig6 --file kdeglobals --group KDE --key AnimationDurationFactor --default 1)"; ' +
@@ -137,7 +137,7 @@ Singleton {
                 'qdbus6 org.kde.KWin /KWin reconfigure >/dev/null 2>&1']);
         } else {
             Quickshell.execDetached(["sh", "-c",
-                'p="$HOME/.cache/caelestia/gamemode-prev"; ' +
+                'p="$HOME/.cache/caelestia/gamemode-state"; ' +
                 'blur="$(sed -n 1p "$p" 2>/dev/null)"; anim="$(sed -n 2p "$p" 2>/dev/null)"; ' +
                 '[ -n "$blur" ] || blur=true; [ -n "$anim" ] || anim=1; ' +
                 'kwriteconfig6 --file kwinrc --group Plugins --key blurEnabled "$blur"; ' +
@@ -197,7 +197,7 @@ Singleton {
         reloadableId: "gameMode"
     }
 
-    // If gamemode-prev already exists when the shell starts, a previous game
+    // If gamemode-state already exists when the shell starts, a previous game
     // mode session never got to turn itself off — a crash, or an exit that
     // skipped the normal disable path. KDE's blur/animations are still sitting
     // disabled from that session, but props.enabled does not survive whatever
@@ -207,7 +207,7 @@ Singleton {
     // enabled to match reality — off Hyprland this re-enters applyKwin(true),
     // which is a no-op past the disable step since the file is already there.
     FileView {
-        path: `${Paths.cache}/gamemode-prev`
+        path: `${Paths.cache}/gamemode-state`
         printErrors: false
         onLoaded: {
             if (!props.enabled)
