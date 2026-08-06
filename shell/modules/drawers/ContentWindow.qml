@@ -93,7 +93,7 @@ StyledWindow {
     // visibly wrong one for left/right, and a degenerate, invisible one for
     // top, since Bottom's math assumes the icon is below the window, the
     // opposite of where it actually is.
-    WlrLayershell.namespace: "dock"
+    WlrLayershell.namespace: "panel"
     mask: {
         if (hasOpenOverlay) return fullRegion;
         if (hasFullscreen) return emptyRegion;
