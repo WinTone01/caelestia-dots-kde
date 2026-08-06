@@ -44,6 +44,15 @@ Item {
     // Reserving space while dodging would keep windows off the bar, so nothing
     // would ever overlap it and the mode would never engage.
     readonly property int exclusiveZone: !disabled && !dodgeEnabled && (Config.bar.persistent || visibilities.bar) ? contentWidth : Config.border.thickness
+    // What the desktop layer (icons, the clock, the audio visualiser) should
+    // leave clear so its own content doesn't render under the bar. This is
+    // exclusiveZone without the dodge carve-out: dodging drops the reported
+    // zone to (near) nothing so KWin will let windows slide under the bar,
+    // which is exactly what makes overlap detection possible, but the bar is
+    // still visually there whenever it isn't actively dodging, and desktop
+    // content needs to keep leaving room for it regardless of what KWin was
+    // told for window-placement purposes.
+    readonly property int visualThickness: !disabled && (Config.bar.persistent || visibilities.bar) ? contentWidth : Config.border.thickness
     readonly property bool shouldBeVisible: !fullscreen && !disabled && !visibilities.overview && (keptOpen || visibilities.bar || isHovered)
     property bool isHovered
     readonly property bool isHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
