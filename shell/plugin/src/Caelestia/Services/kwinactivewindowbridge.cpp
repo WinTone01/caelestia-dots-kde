@@ -565,6 +565,9 @@ void KWinActiveWindowBridge::setDesktop(int desktopId) {
 }
 
 void KWinActiveWindowBridge::refreshWindows() {
+    // Keep this payload in step with notifyWindowList() in kScriptSource — it
+    // replaces the same m_windowList wholesale, so any field missing here
+    // disappears from the shell's view until the next event-driven push.
     QString script = QString(R"(
         let wins = workspace.windowList();
         let arr = [];
@@ -597,9 +600,10 @@ void KWinActiveWindowBridge::refreshWindows() {
                         width: w.frameGeometry ? w.frameGeometry.width : w.width,
                         height: w.frameGeometry ? w.frameGeometry.height : w.height,
                         fullscreen: w.fullScreen ? true : false,
-                        maximized: w.maximized ? true : false,
+                        maximized: (w.maximizeMode === 3) ? true : false,
                         minimized: w.minimized ? true : false,
                         floating: !w.tile,
+                        output: (w.output && w.output.name) ? w.output.name : "",
                         workspace: { id: deskId }
                     });
                 }
