@@ -207,16 +207,23 @@ Singleton {
     // push the bar away. Returns false off KDE: the Hyprland path has no
     // equivalent window list here, and reporting "nothing overlaps" leaves the
     // bar visible rather than stuck hidden.
-    function hasWindowOverlapping(screenName: string, x: real, y: real, width: real, height: real): bool {
+    function hasWindowOverlapping(screenName: string, x: real, y: real, width: real, height: real, focusedOnly: bool): bool {
         if (typeof KWinActiveWindowBridge === "undefined")
             return false;
 
         const wins = KWinActiveWindowBridge.windowList || [];
         const activeWsId = (typeof KWinWorkspaceState !== "undefined") ? KWinWorkspaceState.activeId : -1;
+        const activeAddr = focusedOnly ? String(KWinActiveWindowBridge.activeWindow?.address ?? "") : "";
+
+        // Nothing focused means nothing to dodge, rather than everything.
+        if (focusedOnly && !activeAddr)
+            return false;
 
         for (let i = 0; i < wins.length; i++) {
             const win = wins[i];
             if (win.minimized === true)
+                continue;
+            if (focusedOnly && String(win.address) !== activeAddr)
                 continue;
             if (screenName && win.output !== screenName)
                 continue;

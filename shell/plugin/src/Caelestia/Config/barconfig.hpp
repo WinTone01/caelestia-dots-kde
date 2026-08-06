@@ -228,6 +228,10 @@ class BarConfig : public ConfigObject {
     // reserved zone would push every window off the bar and make the two
     // oscillate.
     CONFIG_PROPERTY(bool, dodgeWindows, false)
+    // Narrow dodging to the window you are actually working in. Without this
+    // any window over the bar retracts it, so a background window parked there
+    // keeps the bar down even while you use something else entirely.
+    CONFIG_PROPERTY(bool, dodgeFocusedOnly, false)
     CONFIG_PROPERTY(bool, showOnHover, true)
     CONFIG_PROPERTY(int, dragThreshold, 20)
     CONFIG_PROPERTY(QString, position, u"bottom"_s)

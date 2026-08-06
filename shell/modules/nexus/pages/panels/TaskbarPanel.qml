@@ -63,6 +63,14 @@ PageBase {
             onToggled: GlobalConfig.bar.dodgeWindows = checked
         }
 
+        ToggleRow {
+            text: qsTr("Dodge focused window only")
+            subtext: qsTr("Ignore background windows over the bar, and dodge only what you are using")
+            enabled: GlobalConfig.bar.persistent && GlobalConfig.bar.dodgeWindows
+            checked: GlobalConfig.bar.dodgeFocusedOnly
+            onToggled: GlobalConfig.bar.dodgeFocusedOnly = checked
+        }
+
         SelectRow {
             Layout.fillWidth: true
             label: qsTr("Position")

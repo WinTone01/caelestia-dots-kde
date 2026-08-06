@@ -37,7 +37,7 @@ Item {
             return Qt.rect(ox, oy, contentWidth, screen.height);
         return Qt.rect(ox + screen.width - contentWidth, oy, contentWidth, screen.height);
     }
-    readonly property bool dodging: dodgeEnabled && Hypr.hasWindowOverlapping(screen.name, dodgeRect.x, dodgeRect.y, dodgeRect.width, dodgeRect.height)
+    readonly property bool dodging: dodgeEnabled && Hypr.hasWindowOverlapping(screen.name, dodgeRect.x, dodgeRect.y, dodgeRect.width, dodgeRect.height, Config.bar.dodgeFocusedOnly)
     // Treat a dodging bar as non-persistent: it stays out of the way but is
     // still reachable through the hover edge and the usual toggles.
     readonly property bool keptOpen: Config.bar.persistent && !dodging
