@@ -55,6 +55,14 @@ PageBase {
             onToggled: GlobalConfig.bar.persistent = checked
         }
 
+        ToggleRow {
+            text: qsTr("Dodge windows")
+            subtext: qsTr("Retract the bar while a window covers it, and let windows sit underneath")
+            enabled: GlobalConfig.bar.persistent
+            checked: GlobalConfig.bar.dodgeWindows
+            onToggled: GlobalConfig.bar.dodgeWindows = checked
+        }
+
         SelectRow {
             Layout.fillWidth: true
             label: qsTr("Position")

@@ -219,6 +219,15 @@ class BarConfig : public ConfigObject {
     CONFIG_SUBOBJECT(BarPreviewScales, previewScales)
     CONFIG_SUBOBJECT(BarPreviewFontScales, previewFontScales)
     CONFIG_PROPERTY(bool, persistent, true)
+    // Retract the bar while a window overlaps the strip it occupies, and let it
+    // come back when nothing is under it. Only meaningful together with
+    // persistent — a non-persistent bar is already hidden by default.
+    //
+    // The bar stops reserving an exclusive zone in this mode: windows have to
+    // be allowed to sit under it for the overlap to mean anything, and a
+    // reserved zone would push every window off the bar and make the two
+    // oscillate.
+    CONFIG_PROPERTY(bool, dodgeWindows, false)
     CONFIG_PROPERTY(bool, showOnHover, true)
     CONFIG_PROPERTY(int, dragThreshold, 20)
     CONFIG_PROPERTY(QString, position, u"bottom"_s)

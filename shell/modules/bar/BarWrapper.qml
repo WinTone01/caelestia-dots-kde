@@ -7,6 +7,7 @@ import Quickshell.Wayland
 import Caelestia.Config
 import qs.components
 import qs.components.controls
+import qs.services
 import qs.utils
 import qs.modules.bar.popouts as BarPopouts
 
@@ -22,8 +23,28 @@ Item {
     readonly property real barScale: Math.max(0.6, !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0)
     readonly property int padding: Math.max(Tokens.padding.small, Config.border.thickness)
     readonly property int contentWidth: Math.round(Tokens.sizes.bar.innerWidth * barScale) + padding * 2
-    readonly property int exclusiveZone: !disabled && (Config.bar.persistent || visibilities.bar) ? contentWidth : Config.border.thickness
-    readonly property bool shouldBeVisible: !fullscreen && !disabled && !visibilities.overview && (Config.bar.persistent || visibilities.bar || isHovered)
+    readonly property bool dodgeEnabled: Config.bar.dodgeWindows && Config.bar.persistent && !disabled
+    // The strip the bar occupies, in the absolute multi-monitor coordinates
+    // KWin reports window geometry in — hence the screen origin offset.
+    readonly property rect dodgeRect: {
+        const ox = screen.x ?? 0;
+        const oy = screen.y ?? 0;
+        if (position === "top")
+            return Qt.rect(ox, oy, screen.width, contentWidth);
+        if (position === "bottom")
+            return Qt.rect(ox, oy + screen.height - contentWidth, screen.width, contentWidth);
+        if (position === "left")
+            return Qt.rect(ox, oy, contentWidth, screen.height);
+        return Qt.rect(ox + screen.width - contentWidth, oy, contentWidth, screen.height);
+    }
+    readonly property bool dodging: dodgeEnabled && Hypr.hasWindowOverlapping(screen.name, dodgeRect.x, dodgeRect.y, dodgeRect.width, dodgeRect.height)
+    // Treat a dodging bar as non-persistent: it stays out of the way but is
+    // still reachable through the hover edge and the usual toggles.
+    readonly property bool keptOpen: Config.bar.persistent && !dodging
+    // Reserving space while dodging would keep windows off the bar, so nothing
+    // would ever overlap it and the mode would never engage.
+    readonly property int exclusiveZone: !disabled && !dodgeEnabled && (Config.bar.persistent || visibilities.bar) ? contentWidth : Config.border.thickness
+    readonly property bool shouldBeVisible: !fullscreen && !disabled && !visibilities.overview && (keptOpen || visibilities.bar || isHovered)
     property bool isHovered
     readonly property bool isHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
     readonly property int clampedThickness: Math.max(Config.border.minThickness, isHorizontal ? implicitHeight : implicitWidth)
