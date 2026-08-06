@@ -88,13 +88,29 @@ Item {
             // The nearest edge is where it would scroll back in from.
             const offset = Math.max(0, Math.min(i * step - scrolled, span - size));
 
-            const x = Math.round(horizontal ? origin.x + offset : origin.x);
-            const y = Math.round(horizontal ? origin.y : origin.y + offset);
+            let x = Math.round(horizontal ? origin.x + offset : origin.x);
+            let y = Math.round(horizontal ? origin.y : origin.y + offset);
+            let w = size;
+            let h = size;
+
+            if (Config.bar.position === "left") {
+                w = x + size;
+                x = 0;
+            } else if (Config.bar.position === "right") {
+                const winW = win ? win.width : 0;
+                w = winW > 0 ? winW - x : size;
+            } else if (Config.bar.position === "top") {
+                h = y + size;
+                y = 0;
+            } else if (Config.bar.position === "bottom") {
+                const winH = win ? win.height : 0;
+                h = winH > 0 ? winH - y : size;
+            }
 
             for (let j = 0; j < tops.length; j++) {
                 const address = tops[j]?.address;
                 if (address)
-                    MinimizeGeometry.setGeometry(root, String(address), x, y, size, size);
+                    MinimizeGeometry.setGeometry(root, String(address), x, y, w, h);
             }
         }
     }
