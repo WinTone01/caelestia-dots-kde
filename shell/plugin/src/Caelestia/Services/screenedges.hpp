@@ -4,10 +4,11 @@
 // Takes screen corners away from KWin for as long as Caelestia wants them.
 //
 // A corner can be claimed by several unrelated bits of KWin config at once:
-// the built-in actions in [ElectricBorders], and a BorderActivate int-list in
-// any [Effect-*], [Script-*] or [TabBox] group. KDE's own Overview effect
-// defaults to [Effect-overview] BorderActivate=7 (top-left), which is why the
-// overview kept firing alongside ours no matter what [ElectricBorders] said.
+// the built-in actions in [ElectricBorders], and a BorderActivate int-list —
+// pointer or touch — in any [Effect-*], [Script-*] or [TabBox] group. KDE's
+// own Overview effect defaults to [Effect-overview] BorderActivate=7
+// (top-left), which is why the overview kept firing alongside ours no matter
+// what [ElectricBorders] said.
 //
 // So claiming a corner means neutralising every claimant of that edge, not
 // one key. The originals are stashed on disk and put back on release, on clean

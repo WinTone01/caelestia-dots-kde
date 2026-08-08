@@ -41,12 +41,15 @@ bool ownsEdges(const QString& group) {
         || group == QStringLiteral("TabBox") || group == QStringLiteral("TabBoxAlternative");
 }
 
-/// Every key shape KWin reads an edge int-list out of: BorderActivate,
-/// GridBorderActivate, BorderActivateAll, BorderAlternativeActivate, ...
-/// Touch borders are deliberately left alone — a corner is not touchable.
+/// Every key shape KWin reads an edge int-list out of, pointer and touch
+/// alike: BorderActivate, GridBorderActivate, BorderActivateAll,
+/// BorderAlternativeActivate, TouchBorderActivate, GridTouchBorderActivate,
+/// TouchBorderAlternativeActivate, ...
+///
+/// The separate [TouchEdges] group needs no handling: it only has Top/Right/
+/// Bottom/Left keys, so a corner cannot be bound there in the first place.
 bool isEdgeListKey(const QString& key) {
-    return key.contains(QStringLiteral("BorderActivate")) && !key.startsWith(QStringLiteral("Touch"))
-        && !key.contains(QStringLiteral("TouchBorder"));
+    return key.contains(QStringLiteral("BorderActivate")) || key.contains(QStringLiteral("BorderAlternativeActivate"));
 }
 
 /// KWin writes these lists as comma-separated ints; ElectricNone is 9.
