@@ -11,6 +11,11 @@ Singleton {
     property string initialSidebarTab: "notifications"
     property bool isCaelestiaMode: false
 
+    // Raised when the overview shortcut is pressed while the overview is
+    // already up: the grid moves its selection on instead of the drawer
+    // closing under the user.
+    signal cycleOverview(bool backwards)
+
     function load(screen: ShellScreen, visibilities: DrawerVisibilities): void {
         screens.set(Hypr.monitorFor(screen), visibilities);
         screens = new Map(screens); // Force QML property change notification

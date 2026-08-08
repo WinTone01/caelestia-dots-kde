@@ -27,16 +27,52 @@ Item {
     // How much a hovered card grows. The grid reserves room for exactly this, so
     // keep the two in step.
     readonly property real hoverScale: 1.02
-    // Whether thumbnails may ask KWin to start capturing them yet. Setting up a
-    // screencast per window is by far the most expensive thing the overview
-    // does, and doing it while the open animation is still running drops the
-    // frames the user is actually watching. Cards show their app icon until
-    // then — the same fallback they already use when a stream is unavailable.
-    property bool streamsAllowed: false
+    // Keyboard selection within the page in view. -1 is "nothing picked yet",
+    // which is how the overview opens: an outline before the user has chosen
+    // anything reads as "this one is selected" and sends them looking for a
+    // selection they never made.
+    property int selectedIndex: -1
+    readonly property var currentWindows: {
+        if (typeof KWinWorkspaceState === "undefined" || listView.currentIndex < 0)
+            return [];
+        const wsList = KWinWorkspaceState.workspaces;
+        if (listView.currentIndex >= wsList.length)
+            return [];
+        const wsId = wsList[listView.currentIndex].index;
+        const all = typeof KWinActiveWindowBridge !== "undefined" ? KWinActiveWindowBridge.windowList : null;
+        const out = [];
+        if (all)
+            for (let i = 0; i < all.length; ++i)
+                if (all[i].workspace && (all[i].workspace.id === wsId || all[i].workspace.index === wsId))
+                    out.push(all[i]);
+        return out;
+    }
 
     signal requestWindowInfo(var client)
     signal requestClose()
 
+    function cycleSelection(backwards: bool): void {
+        const n = root.currentWindows.length;
+        if (n === 0)
+            return;
+        if (backwards)
+            root.selectedIndex = root.selectedIndex <= 0 ? n - 1 : root.selectedIndex - 1;
+        else
+            root.selectedIndex = root.selectedIndex >= n - 1 ? 0 : root.selectedIndex + 1;
+    }
+    function activateSelected(): void {
+        const wins = root.currentWindows;
+        if (root.selectedIndex < 0 || root.selectedIndex >= wins.length)
+            return;
+        const addr = wins[root.selectedIndex].address;
+        if (!addr)
+            return;
+        if (typeof KWinActiveWindowBridge !== "undefined")
+            KWinActiveWindowBridge.focusWindow(addr);
+        if (typeof KWinWorkspaceState !== "undefined" && listView.currentIndex >= 0)
+            KWinWorkspaceState.switchTo(KWinWorkspaceState.workspaces[listView.currentIndex].index);
+        root.requestClose();
+    }
     function syncPage() {
         if (typeof KWinWorkspaceState === "undefined") return;
         for (let i = 0; i < KWinWorkspaceState.workspaces.length; ++i) {
@@ -55,12 +91,8 @@ Item {
     }
 
     onOpacityChanged: {
-        if (opacity <= 0) {
-            streamsAllowed = false;
-            streamGate.stop();
-        } else if (!streamsAllowed && !streamGate.running) {
-            streamGate.restart();
-        }
+        if (opacity <= 0)
+            selectedIndex = -1;
     }
     onActiveWsIdChanged: Qt.callLater(syncPage)
     Component.onCompleted: {
@@ -75,12 +107,28 @@ Item {
         Qt.callLater(syncPage);
     }
 
-    Timer {
-        id: streamGate
+    Connections {
+        function onCycleOverview(backwards) {
+            if (root.opacity > 0)
+                root.cycleSelection(backwards);
+        }
 
-        // Just past the fade, so capture setup lands on an idle frame.
-        interval: 350
-        onTriggered: root.streamsAllowed = true
+        target: Visibilities
+    }
+    Shortcut {
+        sequences: ["Return", "Enter"]
+        enabled: root.opacity > 0
+        onActivated: root.activateSelected()
+    }
+    Shortcut {
+        sequences: ["Tab", "Right"]
+        enabled: root.opacity > 0
+        onActivated: root.cycleSelection(false)
+    }
+    Shortcut {
+        sequences: ["Shift+Tab", "Left"]
+        enabled: root.opacity > 0
+        onActivated: root.cycleSelection(true)
     }
     ListModel {
         id: workspaceModel
@@ -195,6 +243,7 @@ Item {
                         id: activeWin
 
                         required property var modelData
+                        required property int index
                         readonly property string clientAddress: modelData.address
                         readonly property int wsId: page.wsId
                             readonly property var layoutProps: gridItem.windowLayout && gridItem.windowLayout[modelData.address] ? gridItem.windowLayout[modelData.address] : { x: 0, y: 0, width: 200, height: 150 }
@@ -203,16 +252,15 @@ Item {
                                 const h = modelData.height;
                                 return (w > 0 && h > 0) ? (w / h) : (16.0 / 10.0);
                             }
-                            readonly property bool isActive: {
-                                if (typeof KWinActiveWindowBridge === "undefined")
-                                    return false;
-                                const a = KWinActiveWindowBridge.activeWindow;
-                                return !!a && a.address === modelData.address;
-                            }
-                            // Cards below this get the caption dropped — a title
-                            // strip on a thumbnail that small costs more than it
-                            // tells you.
-                            readonly property bool showCaption: height > 96
+                            // Only what the keyboard has picked, never "this is
+                            // the window you were last in" — an outline on the
+                            // latter reads as a selection the user did not make.
+                            readonly property bool isSelected: page.index === listView.currentIndex && activeWin.index === root.selectedIndex
+                            // Chrome stays out of the way until the card is the
+                            // one being looked at. Cards this short lose the
+                            // caption entirely; a title strip on a thumbnail that
+                            // small costs more than it tells you.
+                            readonly property bool showCaption: height > 96 && (hover.hovered || isSelected)
 
                             x: dragHandler.active ? x : layoutProps.x
                             y: dragHandler.active ? y : layoutProps.y
@@ -226,9 +274,9 @@ Item {
                             height: layoutProps.height
                             color: Colours.tPalette.m3surfaceContainer
                             radius: Tokens.rounding.large
-                            scale: hover.hovered && !dragHandler.active ? root.hoverScale : 1
-                            border.width: activeWin.isActive ? 2 : 1
-                            border.color: activeWin.isActive ? Colours.palette.m3primary : Colours.tPalette.m3outlineVariant
+                            scale: (hover.hovered || activeWin.isSelected) && !dragHandler.active ? root.hoverScale : 1
+                            border.width: activeWin.isSelected ? 2 : 0
+                            border.color: Colours.palette.m3primary
 
                             Component.onCompleted: {
                                 root.cardItems = [...root.cardItems, activeWin];
@@ -312,7 +360,7 @@ Item {
                                         // neighbours, so a workspace three swipes
                                         // away is not being captured for nothing.
                                         const nearView = Math.abs(page.index - listView.currentIndex) <= 1;
-                                        if (root.streamsAllowed && nearView && modelData.address && !isStolen) {
+                                        if (root.opacity > 0 && nearView && modelData.address && !isStolen) {
                                             if (!streamRequest) {
                                                 streamRequest = ScreencastManager.requestStream(modelData.address);
                                             }
@@ -336,7 +384,7 @@ Item {
                                     }
 
                                     Connections {
-                                        function onStreamsAllowedChanged() {
+                                        function onOpacityChanged() {
                                             thumb.updateStream();
                                         }
                                         function onActiveInfoClientChanged() {
@@ -443,7 +491,8 @@ Item {
                                     id: caption
 
                                     spacing: Tokens.spacing.small
-                                    visible: activeWin.showCaption
+                                    opacity: activeWin.showCaption ? 1 : 0
+                                    visible: opacity > 0.01
                                     Layout.fillWidth: true
                                     Layout.leftMargin: Tokens.padding.extraSmall
                                     Layout.rightMargin: Tokens.padding.extraSmall
@@ -457,11 +506,13 @@ Item {
                                         id: titleText
 
                                         text: modelData.title || modelData.class || ""
-                                        color: activeWin.isActive ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                                        color: Colours.palette.m3onSurfaceVariant
                                         font: Tokens.font.body.small
                                         elide: Text.ElideRight
                                         Layout.fillWidth: true
                                     }
+
+                                    Behavior on opacity { Anim {} }
                                 }
                             }
                             Drag.active: dragHandler.active
