@@ -24,6 +24,9 @@ Item {
     property bool ignoreNextSwitch: false
     property bool _initialized: false
     property bool isDragging: false
+    // How much a hovered card grows. The grid reserves room for exactly this, so
+    // keep the two in step.
+    readonly property real hoverScale: 1.02
 
     signal requestWindowInfo(var client)
     signal requestClose()
@@ -145,11 +148,24 @@ Item {
             Item {
                 id: gridItem
 
+                readonly property real hoverHeadroom: Math.ceil(Math.max(parent.width, parent.height) * (root.hoverScale - 1) / 2)
                 property var windowLayout: Config.overview.layoutType === 0 ? LayoutKde.calculateLayout(page.wsWindows, width, height, Tokens.spacing.large, Tokens.spacing.large) : LayoutGnome.calculateLayout(page.wsWindows, width, height, Tokens.spacing.large, Tokens.spacing.large)
 
+                // Opening the overview pulls the desktop into a rounded inset —
+                // ContentWindow grows the border to 15% of the short edge — and
+                // that inset is what reads as the stage. The layout fills whatever
+                // area it is handed edge to edge, so hand it the stage rather than
+                // the whole screen, or the outermost cards end up out on the black
+                // frame, past the wallpaper they belong to. The border is the same
+                // on all four sides (the workspace switcher lives out in the frame,
+                // below it), so panels' own margins are the wrong thing to use here:
+                // on whichever edge holds the bar, that margin is the bar's size
+                // instead.
                 anchors.fill: parent
-                anchors.bottomMargin: workspaceIndicator.implicitHeight * 2
-                // Behaviors for smooth resizing of the whole container if needed (though it fills parent)
+                // Plus the headroom a hovered card needs to grow into. Without it
+                // a card sitting on the edge of the stage grows straight off the
+                // wallpaper, which is most obvious on the bottom row.
+                anchors.margins: (root.panels ? root.panels.borderThickness : Tokens.padding.extraLarge) + hoverHeadroom
 
                 Repeater {
                     model: page.wsWindows
@@ -160,20 +176,38 @@ Item {
                         readonly property string clientAddress: modelData.address
                         readonly property int wsId: page.wsId
                             readonly property var layoutProps: gridItem.windowLayout && gridItem.windowLayout[modelData.address] ? gridItem.windowLayout[modelData.address] : { x: 0, y: 0, width: 200, height: 150 }
-                            readonly property int cardWidth: layoutProps.width
-                            readonly property int thumbHeight: layoutProps.height
                             readonly property real windowAspect: {
                                 const w = modelData.width;
                                 const h = modelData.height;
                                 return (w > 0 && h > 0) ? (w / h) : (16.0 / 10.0);
                             }
+                            readonly property bool isActive: {
+                                if (typeof KWinActiveWindowBridge === "undefined")
+                                    return false;
+                                const a = KWinActiveWindowBridge.activeWindow;
+                                return !!a && a.address === modelData.address;
+                            }
+                            // Cards below this get the caption dropped — a title
+                            // strip on a thumbnail that small costs more than it
+                            // tells you.
+                            readonly property bool showCaption: height > 96
 
                             x: dragHandler.active ? x : layoutProps.x
                             y: dragHandler.active ? y : layoutProps.y
-                            implicitWidth: cardLayout.implicitWidth + Tokens.padding.medium * 2
-                            implicitHeight: cardLayout.implicitHeight + Tokens.padding.medium * 2
-                            color: "transparent"
+                            // The layout hands out boxes that tile the page without
+                            // overlapping, so a card has to *be* its box. Sizing from
+                            // content instead made every card wider and taller than
+                            // its slot by the padding and the caption underneath it,
+                            // which is what had them spilling over each other and off
+                            // the page entirely.
+                            width: layoutProps.width
+                            height: layoutProps.height
+                            color: Colours.tPalette.m3surfaceContainer
                             radius: Tokens.rounding.large
+                            scale: hover.hovered && !dragHandler.active ? root.hoverScale : 1
+                            border.width: activeWin.isActive ? 2 : 1
+                            border.color: activeWin.isActive ? Colours.palette.m3primary : Colours.tPalette.m3outlineVariant
+
                             Component.onCompleted: {
                                 root.cardItems = [...root.cardItems, activeWin];
                             }
@@ -215,6 +249,7 @@ Item {
                                     }
                                 }
                             }
+                            Behavior on scale { Anim {} }
                             Behavior on x { enabled: !dragHandler.active && root.opacity > 0.5; NumberAnimation { duration: 250; easing.type: Easing.OutQuad } }
                             Behavior on y { enabled: !dragHandler.active && root.opacity > 0.5; NumberAnimation { duration: 250; easing.type: Easing.OutQuad } }
                             HoverHandler { id: hover }
@@ -239,7 +274,8 @@ Item {
                             ColumnLayout {
                                 id: cardLayout
 
-                                anchors.centerIn: parent
+                                anchors.fill: parent
+                                anchors.margins: Tokens.padding.small
                                 spacing: Tokens.spacing.small
 
                                 StyledClippingRect {
@@ -262,8 +298,10 @@ Item {
                                         }
                                     }
 
+                                    Layout.fillWidth: true
+                                    Layout.fillHeight: true
                                     color: Colours.tPalette.m3surfaceContainerHighest
-                                    radius: Tokens.rounding.large
+                                    radius: Tokens.rounding.medium
                                     Component.onCompleted: updateStream()
                                     Component.onDestruction: {
                                         if (streamRequest && modelData.address) {
@@ -367,18 +405,30 @@ Item {
                                             }
                                         }
                                     }
-                                    Layout.preferredWidth: activeWin.cardWidth
-                                    Layout.preferredHeight: activeWin.thumbHeight
                                 }
-                                StyledText {
-                                    id: titleText
+                                RowLayout {
+                                    id: caption
 
-                                    text: modelData.title || ""
-                                    color: Colours.palette.m3onSurfaceVariant
-                                    font: Tokens.font.body.small
-                                    elide: Text.ElideRight
-                                    horizontalAlignment: Text.AlignHCenter
-                                    Layout.preferredWidth: activeWin.cardWidth
+                                    spacing: Tokens.spacing.small
+                                    visible: activeWin.showCaption
+                                    Layout.fillWidth: true
+                                    Layout.leftMargin: Tokens.padding.extraSmall
+                                    Layout.rightMargin: Tokens.padding.extraSmall
+
+                                    IconImage {
+                                        implicitSize: Math.round(titleText.implicitHeight * 1.1)
+                                        asynchronous: true
+                                        source: modelData.class ? Icons.getAppIcon(modelData.class, "image-missing") : ""
+                                    }
+                                    StyledText {
+                                        id: titleText
+
+                                        text: modelData.title || modelData.class || ""
+                                        color: activeWin.isActive ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                                        font: Tokens.font.body.small
+                                        elide: Text.ElideRight
+                                        Layout.fillWidth: true
+                                    }
                                 }
                             }
                             Drag.active: dragHandler.active

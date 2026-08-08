@@ -1,4 +1,6 @@
 #include "layoutgnome.hpp"
+
+#include "layoututils.hpp"
 #include <QDebug>
 #include <cmath>
 #include <algorithm>
@@ -199,6 +201,8 @@ QVariantMap LayoutGnome::calculateLayout(const QVariantList& windows, double are
             currentX += cellWidth + columnSpacing;
         }
     }
+
+    centreLayout(result, areaWidth, areaHeight);
 
     qDebug() << "LayoutGnome::calculateLayout completed. Returning" << result.size() << "windows.";
     return result;
