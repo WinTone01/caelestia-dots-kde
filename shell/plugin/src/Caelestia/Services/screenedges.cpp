@@ -88,6 +88,57 @@ const QHash<QString, QList<int>>& implicitDefaults() {
     return defaults;
 }
 
+/// org.kde.KWin.reconfigure() is not enough on its own. It reloads the
+/// built-in edge actions, but an effect that has already reserved an edge can
+/// keep that reservation across it — KWin then goes on firing the effect from
+/// a corner its own config says is free, which is exactly the "KDE's overview
+/// opens too" symptom. Effect::reconfigure() is what unreserves and re-reserves
+/// from freshly-read config, and the only way to force it per effect is the
+/// Effects interface.
+void reconfigureEffect(const QString& effect) {
+    QDBusMessage msg = QDBusMessage::createMethodCall(QLatin1String(kwinService), QStringLiteral("/Effects"),
+        QStringLiteral("org.kde.kwin.Effects"), QStringLiteral("reconfigureEffect"));
+    msg << effect;
+    // NoBlock, not asyncCall: this also runs from aboutToQuit, where nothing
+    // is left to deliver a reply to, but the message still has to reach the
+    // socket before the process goes away.
+    QDBusConnection::sessionBus().call(msg, QDBus::NoBlock);
+}
+
+/// Every effect that has any edge key in kwinrc, whether or not we touched it
+/// — a stale reservation has to be flushed even when the value on disk was
+/// already harmless.
+QStringList effectsOwningEdges() {
+    auto config = KSharedConfig::openConfig(QStringLiteral("kwinrc"), KConfig::NoGlobals);
+    QStringList effects;
+    const QStringList groups = config->groupList();
+    for (const QString& groupName : groups) {
+        static const QString prefix = QStringLiteral("Effect-");
+        if (!groupName.startsWith(prefix)) {
+            continue;
+        }
+        const QStringList keys = config->group(groupName).keyList();
+        for (const QString& key : keys) {
+            if (isEdgeListKey(key)) {
+                effects.append(groupName.mid(prefix.size()));
+                break;
+            }
+        }
+    }
+    return effects;
+}
+
+void applyToKwin() {
+    QDBusConnection::sessionBus().call(QDBusMessage::createMethodCall(QLatin1String(kwinService),
+                                           QStringLiteral("/KWin"), QLatin1String(kwinService),
+                                           QStringLiteral("reconfigure")),
+        QDBus::NoBlock);
+    const QStringList effects = effectsOwningEdges();
+    for (const QString& effect : effects) {
+        reconfigureEffect(effect);
+    }
+}
+
 } // namespace
 
 ScreenEdges::ScreenEdges(QObject* parent)
@@ -97,11 +148,7 @@ ScreenEdges::ScreenEdges(QObject* parent)
     // reconfigure, and each one is a full KWin settings reload.
     m_reconfigureTimer->setSingleShot(true);
     m_reconfigureTimer->setInterval(50);
-    connect(m_reconfigureTimer, &QTimer::timeout, this, [] {
-        QDBusConnection::sessionBus().asyncCall(QDBusMessage::createMethodCall(
-            QLatin1String(kwinService), QStringLiteral("/KWin"), QLatin1String(kwinService),
-            QStringLiteral("reconfigure")));
-    });
+    connect(m_reconfigureTimer, &QTimer::timeout, this, [] { applyToKwin(); });
 
     recoverFromCrash();
 
@@ -253,12 +300,8 @@ void ScreenEdges::restoreAll() {
     m_stolen.clear();
     QFile::remove(stolenEdgesPath());
 
-    // Exit path: the coalescing timer will never fire, so reconfigure now and
-    // block just long enough for KWin to have taken the call.
-    QDBusConnection::sessionBus().call(
-        QDBusMessage::createMethodCall(QLatin1String(kwinService), QStringLiteral("/KWin"),
-            QLatin1String(kwinService), QStringLiteral("reconfigure")),
-        QDBus::NoBlock);
+    // Exit path: the coalescing timer will never fire, so push it out now.
+    applyToKwin();
 }
 
 QJsonObject ScreenEdges::toJson(const StolenEdge& stolen) const {
