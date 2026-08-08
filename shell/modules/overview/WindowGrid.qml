@@ -27,6 +27,12 @@ Item {
     // How much a hovered card grows. The grid reserves room for exactly this, so
     // keep the two in step.
     readonly property real hoverScale: 1.02
+    // Whether thumbnails may ask KWin to start capturing them yet. Setting up a
+    // screencast per window is by far the most expensive thing the overview
+    // does, and doing it while the open animation is still running drops the
+    // frames the user is actually watching. Cards show their app icon until
+    // then — the same fallback they already use when a stream is unavailable.
+    property bool streamsAllowed: false
 
     signal requestWindowInfo(var client)
     signal requestClose()
@@ -48,6 +54,14 @@ Item {
         root._initialized = true;
     }
 
+    onOpacityChanged: {
+        if (opacity <= 0) {
+            streamsAllowed = false;
+            streamGate.stop();
+        } else if (!streamsAllowed && !streamGate.running) {
+            streamGate.restart();
+        }
+    }
     onActiveWsIdChanged: Qt.callLater(syncPage)
     Component.onCompleted: {
         if (typeof KWinWorkspaceState !== "undefined") {
@@ -61,6 +75,13 @@ Item {
         Qt.callLater(syncPage);
     }
 
+    Timer {
+        id: streamGate
+
+        // Just past the fade, so capture setup lands on an idle frame.
+        interval: 350
+        onTriggered: root.streamsAllowed = true
+    }
     ListModel {
         id: workspaceModel
     }
@@ -118,12 +139,6 @@ Item {
 
             width: listView.width
             height: listView.height
-            Component.onCompleted: {
-                console.log("WindowGrid Page initialized. wsId:", wsId, "windows found:", wsWindows.length, "Total windows globally:", typeof KWinActiveWindowBridge !== "undefined" ? KWinActiveWindowBridge.windowList.length : -1);
-            }
-            onWsWindowsChanged: {
-                console.log("WindowGrid Page updated. wsId:", wsId, "windows found:", wsWindows.length);
-            }
 
             TapHandler {
                 onTapped: root.requestClose()
@@ -162,10 +177,17 @@ Item {
                 // on whichever edge holds the bar, that margin is the bar's size
                 // instead.
                 anchors.fill: parent
+                // Deliberately the settled border rather than the animating one:
+                // laying out against a rect that is still growing means the first
+                // layout lands on a nearly full-screen area and every card then
+                // slides inward as it shrinks, which is the cards-flying-in-from-
+                // everywhere effect on open. Sized to the destination, they are
+                // simply in the right place from the first frame.
+                //
                 // Plus the headroom a hovered card needs to grow into. Without it
                 // a card sitting on the edge of the stage grows straight off the
                 // wallpaper, which is most obvious on the bottom row.
-                anchors.margins: (root.panels ? root.panels.borderThickness : Tokens.padding.extraLarge) + hoverHeadroom
+                anchors.margins: (root.panels ? root.panels.overviewBorderThickness : Tokens.padding.extraLarge) + hoverHeadroom
 
                 Repeater {
                     model: page.wsWindows
@@ -286,7 +308,11 @@ Item {
 
                                     function updateStream() {
                                         const isStolen = root.activeInfoClient && root.activeInfoClient.address === modelData.address;
-                                        if (root.opacity > 0 && modelData.address && !isStolen) {
+                                        // Only the page in view and its immediate
+                                        // neighbours, so a workspace three swipes
+                                        // away is not being captured for nothing.
+                                        const nearView = Math.abs(page.index - listView.currentIndex) <= 1;
+                                        if (root.streamsAllowed && nearView && modelData.address && !isStolen) {
                                             if (!streamRequest) {
                                                 streamRequest = ScreencastManager.requestStream(modelData.address);
                                             }
@@ -310,7 +336,7 @@ Item {
                                     }
 
                                     Connections {
-                                        function onOpacityChanged() {
+                                        function onStreamsAllowedChanged() {
                                             thumb.updateStream();
                                         }
                                         function onActiveInfoClientChanged() {
@@ -318,6 +344,13 @@ Item {
                                         }
 
                                         target: root
+                                    }
+                                    Connections {
+                                        function onCurrentIndexChanged() {
+                                            thumb.updateStream();
+                                        }
+
+                                        target: listView
                                     }
                                     IconImage {
                                         anchors.centerIn: parent

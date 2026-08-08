@@ -44,7 +44,13 @@ StyledWindow {
     readonly property bool hasFullscreen: actualFullscreen && !hasOpenOverlay
     property real fsTransitionProg: hasFullscreen ? 1 : 0
     readonly property real sdfBorderOffset: 2 * fsTransitionProg // SDFs joins are not exact, so offset by 2px to ensure nothing shows
-    property real dynamicBorderThickness: visibilities.overview ? Math.min(root.width, root.height) * 0.15 : Config.border.thickness
+    // Where dynamicBorderThickness lands once the overview is open. It is the
+    // target of a 300ms animation, and anything that lays content out inside the
+    // overview wants this rather than the animating value — laying out against a
+    // moving rect makes the result slide into place from wherever the first frame
+    // happened to put it.
+    readonly property real overviewBorderThickness: Math.min(root.width, root.height) * 0.15
+    property real dynamicBorderThickness: visibilities.overview ? overviewBorderThickness : Config.border.thickness
     readonly property real borderThickness: dynamicBorderThickness * (1 - fsTransitionProg)
     readonly property real borderRounding: Config.border.rounding * (1 - fsTransitionProg)
     readonly property real shadowOpacity: 0.7 * (1 - fsTransitionProg)
@@ -561,6 +567,7 @@ StyledWindow {
             visibilities: visibilities
             bar: bar
             borderThickness: root.borderThickness
+            overviewBorderThickness: root.overviewBorderThickness
             overviewAnimConfig: root.overviewAnimConfig
             utilities.horizontalStretch: (sidebarBg.rawDeformMatrix.m11 - 1) / 2 + 1
             utilities.deformMatrix: utilsBg.rawDeformMatrix

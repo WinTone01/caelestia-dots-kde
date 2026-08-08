@@ -22,6 +22,10 @@ Item {
     required property DrawerVisibilities visibilities
     required property Bar.BarWrapper bar
     required property real borderThickness
+    // The settled overview border, i.e. what borderThickness animates towards
+    // when the overview opens. Content laid out inside the overview sizes to
+    // this so it does not have to chase the animation.
+    required property real overviewBorderThickness
     property var overviewAnimConfig
     readonly property alias osd: osd
     readonly property alias osdWrapper: osdWrapper
