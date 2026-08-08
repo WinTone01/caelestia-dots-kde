@@ -216,7 +216,13 @@ StyledWindow {
     Item {
         id: overviewWallpaperLayer
 
-        property bool active: visibilities.overview
+        property bool active: visibilities.overview || warming
+        // Paint this layer once, invisibly, shortly after startup. The first
+        // time the shell covers the whole screen the driver has to allocate for
+        // it, and that lands as ~80-100ms of blocked swap on whichever frame
+        // triggers it. Paying it here costs nothing anyone sees; leaving it to
+        // the user's first overview drops most of that transition's frames.
+        property bool warming: false
         property real _maxBorder: Math.max(1, Math.min(root.width, root.height) * 0.15)
         property real bgScale: 1.0 + (dynamicBorderThickness / _maxBorder) * 0.1
 
@@ -224,9 +230,20 @@ StyledWindow {
         visible: active || opacity > 0
         layer.enabled: true
         // Ensure fade-in starts only after the wallpaper has actually loaded
-        opacity: (visibilities.overview && wallpaperLoader.status === Loader.Ready) ? 1 : 0
+        opacity: warming ? 0.004 : ((visibilities.overview && wallpaperLoader.status === Loader.Ready) ? 1 : 0)
 
-        Behavior on opacity { NumberAnimation { duration: animConfig.wallpaperDuration; easing.type: animConfig.easingType } }
+        Behavior on opacity { NumberAnimation { duration: overviewWallpaperLayer.warming ? 0 : animConfig.wallpaperDuration; easing.type: animConfig.easingType } }
+        Timer {
+            running: true
+            interval: 2500
+            onTriggered: { overviewWallpaperLayer.warming = true; warmDone.start(); }
+        }
+        Timer {
+            id: warmDone
+
+            interval: 400
+            onTriggered: overviewWallpaperLayer.warming = false
+        }
         Item {
             id: scaledWallpaperContainer
 
