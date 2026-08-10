@@ -284,8 +284,7 @@ do
 done
 
 # Vicinae integration: launcher shortcut, generated theme and its regenerator
-for f in "$HOME/.local/share/applications/vicinae-toggle.desktop" \
-         "$HOME/.local/share/vicinae/themes/caelestia.toml" \
+for f in "$HOME/.local/share/vicinae/themes/caelestia.toml" \
          "$HOME/.local/bin/caelestia-vicinae-theme" \
          "$HOME/.config/systemd/user/caelestia-vicinae-theme.service" \
          "$HOME/.config/systemd/user/caelestia-vicinae-theme.path" \
@@ -295,9 +294,6 @@ for f in "$HOME/.local/share/applications/vicinae-toggle.desktop" \
         ok "Removed: $f"
     fi
 done
-kwriteconfig6 --file kglobalshortcutsrc --group services \
-    --group "vicinae-toggle.desktop" --key "_launch" --delete 2>/dev/null || true
-
 # Autostart desktop entry
 if [[ -f "$HOME/.config/autostart/caelestiashell.desktop" ]]; then
     rm -f "$HOME/.config/autostart/caelestiashell.desktop"

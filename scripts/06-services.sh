@@ -144,22 +144,6 @@ WantedBy=graphical-session.target
 UNIT
     fi
 
-    # Alt+Space is what KRunner used and is free here; Caelestia keeps Meta and
-    # Meta+Space for its own launcher, so the two do not fight over a key.
-    mkdir -p "$HOME/.local/share/applications"
-    cat > "$HOME/.local/share/applications/vicinae-toggle.desktop" <<'DESKTOP'
-[Desktop Entry]
-Type=Application
-Name=Toggle Vicinae
-Comment=Show or hide the Vicinae launcher
-Exec=vicinae toggle
-Icon=vicinae
-Terminal=false
-NoDisplay=true
-DESKTOP
-    kwriteconfig6 --file kglobalshortcutsrc --group services \
-        --group "vicinae-toggle.desktop" --key "_launch" "Alt+Space,none,Toggle Vicinae"
-
     #  Material palette -> Vicinae theme
     # Vicinae watches its theme directory, so regenerating the file is enough
     # for a running instance to pick the new colours up.

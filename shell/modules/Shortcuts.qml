@@ -264,6 +264,17 @@ Scope {
         description: "Launch Browser"
         onPressed: Quickshell.execDetached(["kstart", "--", "firefox"])
     }
+    // qmllint disable unresolved-type
+    CustomShortcut {
+        // qmllint enable unresolved-type
+        name: "vicinae"
+        description: "Toggle Vicinae launcher"
+        // Registered through the shell's own KGlobalAccel component rather than
+        // a .desktop entry, so it binds at runtime instead of waiting for the
+        // next login, and shows up in the Nexus keybind list like the rest.
+        // A no-op if Vicinae is not installed.
+        onPressed: Quickshell.execDetached(["sh", "-c", "command -v vicinae >/dev/null && vicinae toggle"])
+    }
     CustomShortcut {
         name: "code"
         description: "Launch Editor"
