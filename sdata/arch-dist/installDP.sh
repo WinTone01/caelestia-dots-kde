@@ -46,6 +46,7 @@ THEME_PACKAGES=(
 
 UTILITY_PACKAGES=(
     swappy brightnessctl ddcutil networkmanager imagemagick tesseract tesseract-data-eng satty spectacle xdg-utils sassc
+    vicinae-bin
 )
 
 # Build final package list based on selected group
