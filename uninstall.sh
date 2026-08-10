@@ -219,7 +219,7 @@ restore_or_remove() {
 
 section "Step 1 - Stop and Disable Services"
 
-for svc in qs-kwin-bridge cliphist ydotoold kde-material-you-colors; do
+for svc in qs-kwin-bridge cliphist ydotoold kde-material-you-colors vicinae caelestia-vicinae-theme; do
     if systemctl --user is-enabled --quiet "${svc}.service" 2>/dev/null ||
        systemctl --user is-active  --quiet "${svc}.service" 2>/dev/null; then
         systemctl --user disable --now "${svc}.service" 2>/dev/null || true
@@ -228,6 +228,21 @@ for svc in qs-kwin-bridge cliphist ydotoold kde-material-you-colors; do
         skip "User service not active: $svc"
     fi
 done
+
+if systemctl --user is-enabled --quiet "caelestia-vicinae-theme.path" 2>/dev/null ||
+   systemctl --user is-active  --quiet "caelestia-vicinae-theme.path" 2>/dev/null; then
+    systemctl --user disable --now "caelestia-vicinae-theme.path" 2>/dev/null || true
+    ok "Disabled user path unit: caelestia-vicinae-theme"
+fi
+
+# Setup masked KRunner so Vicinae could take Alt+Space. Give it back, or the
+# machine is left with no launcher at all once Vicinae is gone.
+if systemctl --user is-enabled plasma-krunner.service 2>/dev/null | grep -q masked; then
+    systemctl --user unmask plasma-krunner.service 2>/dev/null || true
+    ok "Unmasked KRunner"
+else
+    skip "KRunner not masked"
+fi
 
 if systemctl --user is-enabled --quiet "caelestia-update-checker.timer" 2>/dev/null ||
    systemctl --user is-active  --quiet "caelestia-update-checker.timer" 2>/dev/null; then
@@ -267,6 +282,21 @@ do
         ok "Removed: $svc_file"
     fi
 done
+
+# Vicinae integration: launcher shortcut, generated theme and its regenerator
+for f in "$HOME/.local/share/applications/vicinae-toggle.desktop" \
+         "$HOME/.local/share/vicinae/themes/caelestia.toml" \
+         "$HOME/.local/bin/caelestia-vicinae-theme" \
+         "$HOME/.config/systemd/user/caelestia-vicinae-theme.service" \
+         "$HOME/.config/systemd/user/caelestia-vicinae-theme.path" \
+         "$HOME/.config/systemd/user/vicinae.service"; do
+    if [[ -f "$f" ]]; then
+        rm -f "$f"
+        ok "Removed: $f"
+    fi
+done
+kwriteconfig6 --file kglobalshortcutsrc --group services \
+    --group "vicinae-toggle.desktop" --key "_launch" --delete 2>/dev/null || true
 
 # Autostart desktop entry
 if [[ -f "$HOME/.config/autostart/caelestiashell.desktop" ]]; then
@@ -562,6 +592,23 @@ if [[ -f /etc/keyd/quickshell.conf ]]; then
     ok "Removed /etc/keyd/quickshell.conf"
     # Remove the directory only if it's now empty
     sudo rmdir /etc/keyd 2>/dev/null || true
+fi
+
+# Vicinae was unpacked from upstream's tarball, so pacman/dnf/apt do not know
+# about it — the files it laid down under /usr/local are listed out by hand.
+if [[ -x /usr/local/bin/vicinae ]]; then
+    sudo rm -rf /usr/local/bin/vicinae \
+                /usr/local/libexec/vicinae \
+                /usr/local/share/vicinae \
+                /usr/local/share/applications/vicinae.desktop \
+                /usr/local/share/applications/vicinae-url-handler.desktop \
+                /usr/local/share/icons/hicolor/512x512/apps/vicinae.png \
+                /usr/local/lib/systemd/user/vicinae.service \
+                /usr/local/lib/modules-load.d/vicinae.conf
+    sudo systemctl daemon-reload 2>/dev/null || true
+    ok "Removed Vicinae from /usr/local"
+else
+    skip "Vicinae not installed under /usr/local"
 fi
 
 # udev rule for uinput
