@@ -54,6 +54,15 @@ install_vicinae_tarball() {
     rm -rf "$tmpdir"
     sudo systemctl daemon-reload 2>/dev/null || true
 
+    # Snippets and paste need the input helper to read /dev/input and inject
+    # through /dev/uinput. The tarball ships the modules-load.d drop-in that
+    # gets uinput loaded at boot, but not the capability, and neither applies
+    # until something does them — the AUR package does both from post_install.
+    sudo setcap "cap_dac_override+ep" /usr/local/libexec/vicinae/vicinae-input-server 2>/dev/null || \
+        err "setcap failed; Vicinae snippets and paste will not work."
+    sudo modprobe uinput 2>/dev/null || \
+        log "Could not load uinput now; snippets and paste will work after a reboot."
+
     # The tarball carries no dependency metadata, so whatever it links against
     # has to be present already. Rather than guess package names for every
     # distro and release, ask the binary what is missing and say so plainly.
