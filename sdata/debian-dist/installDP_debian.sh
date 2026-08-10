@@ -13,6 +13,9 @@ err()  { echo -e "\033[0;31m[ERR]\033[0m  $*"; }
 # tarball for x86_64 only; other architectures get an AppImage instead, which
 # does not fit this layout, so they are left to install it by hand.
 VICINAE_VERSION="0.24.0"
+# sha256 of vicinae-linux-x86_64-v0.24.0.tar.gz as published upstream. The AUR
+# package pins the same digest for the same file; bump the two together.
+VICINAE_SHA256="015a1ef2f8b23ea36a3f831a41de2d138f927cf45c987f62de3ec4add8dbafe7"
 install_vicinae_tarball() {
     if [[ "$(uname -m)" != "x86_64" ]]; then
         err "Vicinae ships an x86_64 tarball only; on $(uname -m) install the AppImage from https://github.com/vicinaehq/vicinae/releases"
@@ -30,6 +33,18 @@ install_vicinae_tarball() {
         return 1
     fi
 
+    # This unpacks as root into /usr/local, so the download is checked before it
+    # is trusted, not after.
+    local got
+    got="$(sha256sum "$tmpdir/vicinae.tar.gz" | cut -d" " -f1)"
+    if [[ "$got" != "$VICINAE_SHA256" ]]; then
+        err "Vicinae checksum mismatch - refusing to install."
+        err "  expected $VICINAE_SHA256"
+        err "  got      $got"
+        rm -rf "$tmpdir"
+        return 1
+    fi
+
     if ! sudo tar -xzf "$tmpdir/vicinae.tar.gz" -C /usr/local --strip-components=1; then
         err "Failed to unpack Vicinae into /usr/local."
         rm -rf "$tmpdir"
@@ -38,6 +53,19 @@ install_vicinae_tarball() {
 
     rm -rf "$tmpdir"
     sudo systemctl daemon-reload 2>/dev/null || true
+
+    # The tarball carries no dependency metadata, so whatever it links against
+    # has to be present already. Rather than guess package names for every
+    # distro and release, ask the binary what is missing and say so plainly.
+    local missing
+    missing="$(ldd /usr/local/bin/vicinae 2>/dev/null | awk '/not found/ {print "    " $1}')"
+    if [[ -n "$missing" ]]; then
+        err "Vicinae installed but is missing shared libraries:"
+        printf '%s\n' "$missing"
+        err "Install the packages providing those, then: systemctl --user restart vicinae"
+        return 1
+    fi
+
     log "Vicinae ${VICINAE_VERSION} installed to /usr/local."
     return 0
 }
