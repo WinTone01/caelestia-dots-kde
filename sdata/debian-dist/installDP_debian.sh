@@ -6,6 +6,43 @@ set -uo pipefail
 log()  { echo -e "\033[0;36m[INFO]\033[0m $*"; }
 err()  { echo -e "\033[0;31m[ERR]\033[0m  $*"; }
 
+# Vicinae publishes no .deb or .rpm, only a relocatable tarball laid out as a
+# prefix (bin/, libexec/, share/, lib/systemd/user/), so it unpacks straight
+# into /usr/local — which is already on systemd's user unit search path, so the
+# service it ships is picked up without further work. Upstream builds the
+# tarball for x86_64 only; other architectures get an AppImage instead, which
+# does not fit this layout, so they are left to install it by hand.
+VICINAE_VERSION="0.24.0"
+install_vicinae_tarball() {
+    if [[ "$(uname -m)" != "x86_64" ]]; then
+        err "Vicinae ships an x86_64 tarball only; on $(uname -m) install the AppImage from https://github.com/vicinaehq/vicinae/releases"
+        return 1
+    fi
+
+    local url="https://github.com/vicinaehq/vicinae/releases/download/v${VICINAE_VERSION}/vicinae-linux-x86_64-v${VICINAE_VERSION}.tar.gz"
+    local tmpdir
+    tmpdir="$(mktemp -d)"
+
+    log "Downloading Vicinae ${VICINAE_VERSION}..."
+    if ! curl -fsSL "$url" -o "$tmpdir/vicinae.tar.gz"; then
+        err "Failed to download Vicinae."
+        rm -rf "$tmpdir"
+        return 1
+    fi
+
+    if ! sudo tar -xzf "$tmpdir/vicinae.tar.gz" -C /usr/local --strip-components=1; then
+        err "Failed to unpack Vicinae into /usr/local."
+        rm -rf "$tmpdir"
+        return 1
+    fi
+
+    rm -rf "$tmpdir"
+    sudo systemctl daemon-reload 2>/dev/null || true
+    log "Vicinae ${VICINAE_VERSION} installed to /usr/local."
+    return 0
+}
+
+
 log "Installing Debian packages..."
 
 INSTALL_FISH="${INSTALL_FISH:-true}"
@@ -35,6 +72,7 @@ THEME_PACKAGES=(
 
 UTILITY_PACKAGES=(
     fuzzel swappy brightnessctl ddcutil network-manager imagemagick tesseract-ocr tesseract-ocr-eng kde-spectacle slurp grim xdg-utils sassc python3-venv uv konsave
+    vicinae
 )
 
 # Packages that need manual build or script fallback on Debian if apt package missing
@@ -49,9 +87,9 @@ case "$PACKAGE_GROUP" in
     core)   PACKAGES=("${CORE_PACKAGES[@]}");   FALLBACK_TARGETS=("libcava" "app2unit") ;;
     shell)  PACKAGES=("${SHELL_PACKAGES[@]}");  FALLBACK_TARGETS=("quickshell" "starship") ;;
     themes) PACKAGES=("${THEME_PACKAGES[@]}");  FALLBACK_TARGETS=("adw-gtk3") ;;
-    utils)  PACKAGES=("${UTILITY_PACKAGES[@]}"); FALLBACK_TARGETS=("gpu-screen-recorder" "wl-clip-persist" "satty" "uv" "konsave") ;;
+    utils)  PACKAGES=("${UTILITY_PACKAGES[@]}"); FALLBACK_TARGETS=("gpu-screen-recorder" "wl-clip-persist" "satty" "uv" "konsave" "vicinae") ;;
     all|*)  PACKAGES=("${CORE_PACKAGES[@]}" "${SHELL_PACKAGES[@]}" "${THEME_PACKAGES[@]}" "${UTILITY_PACKAGES[@]}")
-            FALLBACK_TARGETS=("quickshell" "starship" "libcava" "app2unit" "gpu-screen-recorder" "wl-clip-persist" "satty" "adw-gtk3" "uv" "konsave") ;;
+            FALLBACK_TARGETS=("quickshell" "starship" "libcava" "app2unit" "gpu-screen-recorder" "wl-clip-persist" "satty" "adw-gtk3" "uv" "konsave" "vicinae") ;;
 esac
 
 log "Installing packages (group: $PACKAGE_GROUP)..."
@@ -241,6 +279,9 @@ for pkg in "${FALLBACK_TARGETS[@]}"; do
                 err "uv is required to install $pkg, but it is not available."
                 FAILED_PKGS+=("$pkg")
             fi
+            ;;
+        vicinae)
+            install_vicinae_tarball || FAILED_PKGS+=("$pkg")
             ;;
         adw-gtk3)
             tmpdir="$(mktemp -d)"

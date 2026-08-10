@@ -120,8 +120,11 @@ pkill -x krunner 2>/dev/null || true
 
 if command -v vicinae >/dev/null 2>&1; then
     echo "  Enabling Vicinae launcher daemon..."
-    # The package ships its own unit; only write one if it did not.
-    if [[ ! -f /usr/lib/systemd/user/vicinae.service && ! -f "$HOME/.config/systemd/user/vicinae.service" ]]; then
+    # Both the AUR package and the upstream tarball ship a unit — /usr/lib for
+    # the former, /usr/local/lib for the latter. Only write one if neither did.
+    if [[ ! -f /usr/lib/systemd/user/vicinae.service \
+       && ! -f /usr/local/lib/systemd/user/vicinae.service \
+       && ! -f "$HOME/.config/systemd/user/vicinae.service" ]]; then
         mkdir -p "$HOME/.config/systemd/user"
         cat > "$HOME/.config/systemd/user/vicinae.service" <<'UNIT'
 [Unit]

@@ -6,6 +6,43 @@ set -uo pipefail
 log()  { echo -e "\033[0;36m[INFO]\033[0m $*"; }
 err()  { echo -e "\033[0;31m[ERR]\033[0m  $*"; }
 
+# Vicinae publishes no .deb or .rpm, only a relocatable tarball laid out as a
+# prefix (bin/, libexec/, share/, lib/systemd/user/), so it unpacks straight
+# into /usr/local — which is already on systemd's user unit search path, so the
+# service it ships is picked up without further work. Upstream builds the
+# tarball for x86_64 only; other architectures get an AppImage instead, which
+# does not fit this layout, so they are left to install it by hand.
+VICINAE_VERSION="0.24.0"
+install_vicinae_tarball() {
+    if [[ "$(uname -m)" != "x86_64" ]]; then
+        err "Vicinae ships an x86_64 tarball only; on $(uname -m) install the AppImage from https://github.com/vicinaehq/vicinae/releases"
+        return 1
+    fi
+
+    local url="https://github.com/vicinaehq/vicinae/releases/download/v${VICINAE_VERSION}/vicinae-linux-x86_64-v${VICINAE_VERSION}.tar.gz"
+    local tmpdir
+    tmpdir="$(mktemp -d)"
+
+    log "Downloading Vicinae ${VICINAE_VERSION}..."
+    if ! curl -fsSL "$url" -o "$tmpdir/vicinae.tar.gz"; then
+        err "Failed to download Vicinae."
+        rm -rf "$tmpdir"
+        return 1
+    fi
+
+    if ! sudo tar -xzf "$tmpdir/vicinae.tar.gz" -C /usr/local --strip-components=1; then
+        err "Failed to unpack Vicinae into /usr/local."
+        rm -rf "$tmpdir"
+        return 1
+    fi
+
+    rm -rf "$tmpdir"
+    sudo systemctl daemon-reload 2>/dev/null || true
+    log "Vicinae ${VICINAE_VERSION} installed to /usr/local."
+    return 0
+}
+
+
 log "Installing Fedora packages..."
 
 INSTALL_FISH="${INSTALL_FISH:-true}"
@@ -31,12 +68,13 @@ THEME_PACKAGES=(
 
 UTILITY_PACKAGES=(
     fuzzel swappy brightnessctl ddcutil NetworkManager ImageMagick tesseract tesseract-langpack-eng spectacle gpu-screen-recorder slurp grim xdg-utils sassc
+    vicinae
 )
 
 # Packages known to need copr or manual fallback
 COPR_CORE=(app2unit libcava)
 COPR_SHELL=(quickshell-git)
-COPR_UTILS=()
+COPR_UTILS=(vicinae)
 
 # Build final package list based on selected group
 PACKAGES=()
@@ -168,6 +206,9 @@ for pkg in "${COPR_PKGS[@]}"; do
 
     log "Copr fallback failed or not defined for $pkg. Attempting manual build..."
     case "$pkg" in
+        vicinae)
+            install_vicinae_tarball || FAILED_PKGS+=("$pkg")
+            ;;
         libcava)
             tmpdir="$(mktemp -d)"
             sudo dnf install -y alsa-lib-devel fftw-devel pulseaudio-libs-devel iniparser-devel meson ninja-build cmake gcc-c++
