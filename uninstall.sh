@@ -235,15 +235,6 @@ if systemctl --user is-enabled --quiet "caelestia-vicinae-theme.path" 2>/dev/nul
     ok "Disabled user path unit: caelestia-vicinae-theme"
 fi
 
-# Setup masked KRunner so Vicinae could take Alt+Space. Give it back, or the
-# machine is left with no launcher at all once Vicinae is gone.
-if systemctl --user is-enabled plasma-krunner.service 2>/dev/null | grep -q masked; then
-    systemctl --user unmask plasma-krunner.service 2>/dev/null || true
-    ok "Unmasked KRunner"
-else
-    skip "KRunner not masked"
-fi
-
 if systemctl --user is-enabled --quiet "caelestia-update-checker.timer" 2>/dev/null ||
    systemctl --user is-active  --quiet "caelestia-update-checker.timer" 2>/dev/null; then
     systemctl --user disable --now "caelestia-update-checker.timer" 2>/dev/null || true

@@ -110,14 +110,12 @@ systemctl --user start ydotoold.service 2>/dev/null || \
     echo "  [INFO] ydotoold will start on next login."
 echo "  [OK]  ydotoold service configured."
 
-#  Vicinae (replaces KRunner)
-# KRunner is D-Bus activated, so stopping it is not enough — the next lookup
-# would start it straight back up. Masking is what actually keeps it down.
-echo "  Disabling KRunner..."
-systemctl --user mask plasma-krunner.service 2>/dev/null || true
-systemctl --user stop plasma-krunner.service 2>/dev/null || true
-pkill -x krunner 2>/dev/null || true
-
+#  Vicinae
+# KRunner is left alone. The shell binds Alt+Space through its own
+# GlobalShortcut, which takes the key off whoever holds it and hands it back
+# when the shell exits — KRunner included. Masking the service would disable it
+# outright and only be undone by the uninstaller, so a machine that simply
+# stopped running Caelestia would be left without it.
 if command -v vicinae >/dev/null 2>&1; then
     echo "  Enabling Vicinae launcher daemon..."
     # Both the AUR package and the upstream tarball ship a unit — /usr/lib for
