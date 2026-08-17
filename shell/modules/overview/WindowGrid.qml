@@ -121,12 +121,24 @@ Item {
         onActivated: root.activateSelected()
     }
     Shortcut {
-        sequences: ["Tab", "Right"]
+        sequences: {
+            const s = ["Tab", "Right", "Down"];
+            if (GlobalConfig.launcher.vimKeybinds) {
+                s.push("Ctrl+J", "Ctrl+N");
+            }
+            return s;
+        }
         enabled: root.opacity > 0
         onActivated: root.cycleSelection(false)
     }
     Shortcut {
-        sequences: ["Shift+Tab", "Left"]
+        sequences: {
+            const s = ["Shift+Tab", "Backtab", "Left", "Up"];
+            if (GlobalConfig.launcher.vimKeybinds) {
+                s.push("Ctrl+K", "Ctrl+P");
+            }
+            return s;
+        }
         enabled: root.opacity > 0
         onActivated: root.cycleSelection(true)
     }
@@ -315,7 +327,7 @@ Item {
                                         if (dropAction !== Qt.IgnoreAction) {
                                             return; // Handled by DropArea
                                         }
-                                        
+
                                         if (typeof KWinWorkspaceState === "undefined" || typeof KWinActiveWindowBridge === "undefined") return;
                                         const targetWsId = KWinWorkspaceState.workspaces[listView.currentIndex].index;
                                         if (targetWsId !== page.wsId) {
@@ -347,12 +359,11 @@ Item {
                                     if (v) v.overview = false;
                                 }
                             }
-                            ColumnLayout {
+                            Item {
                                 id: cardLayout
 
                                 anchors.fill: parent
                                 anchors.margins: Tokens.padding.small
-                                spacing: Tokens.spacing.small
 
                                 StyledClippingRect {
                                     id: thumb
@@ -378,8 +389,10 @@ Item {
                                         }
                                     }
 
-                                    Layout.fillWidth: true
-                                    Layout.fillHeight: true
+                                    anchors.top: parent.top
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    height: parent.height - (caption.opacity * (caption.implicitHeight + Tokens.padding.extraSmall * 2))
                                     color: Colours.tPalette.m3surfaceContainerHighest
                                     radius: Tokens.rounding.medium
                                     Component.onCompleted: updateStream()
@@ -417,12 +430,12 @@ Item {
                                         width: {
                                             const wAspect = activeWin.windowAspect;
                                             const containerAspect = thumb.width / Math.max(1, thumb.height);
-                                            return (wAspect > containerAspect) ? thumb.width : thumb.height * wAspect;
+                                            return (wAspect > containerAspect) ? thumb.height * wAspect : thumb.width;
                                         }
                                         height: {
                                             const wAspect = activeWin.windowAspect;
                                             const containerAspect = thumb.width / Math.max(1, thumb.height);
-                                            return (wAspect > containerAspect) ? thumb.width / wAspect : thumb.height;
+                                            return (wAspect > containerAspect) ? thumb.height : thumb.width / wAspect;
                                         }
                                         anchors.centerIn: parent
                                         visible: thumb.screencastSerial !== 0
@@ -499,9 +512,14 @@ Item {
                                     spacing: Tokens.spacing.small
                                     opacity: activeWin.showCaption ? 1 : 0
                                     visible: opacity > 0.01
-                                    Layout.fillWidth: true
-                                    Layout.leftMargin: Tokens.padding.extraSmall
-                                    Layout.rightMargin: Tokens.padding.extraSmall
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.bottom: parent.bottom
+                                    anchors.leftMargin: Tokens.padding.extraSmall
+                                    anchors.rightMargin: Tokens.padding.extraSmall
+                                    anchors.bottomMargin: Tokens.padding.extraSmall
+
+                                    Behavior on opacity { Anim {} }
 
                                     IconImage {
                                         implicitSize: Math.round(titleText.implicitHeight * 1.1)
@@ -546,7 +564,7 @@ Item {
             acceptedButtons: Qt.NoButton
             onWheel: event => {
                 if (!Config.bar.scrollActions.workspaces) return;
-                
+
                 if (event.angleDelta.y > 0 || event.angleDelta.x > 0) {
                     if (listView.currentIndex > 0) {
                         listView.currentIndex -= 1;
