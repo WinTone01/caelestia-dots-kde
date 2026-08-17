@@ -91,8 +91,26 @@ Item {
     }
 
     onOpacityChanged: {
-        if (opacity <= 0)
+        if (opacity <= 0) {
             selectedIndex = -1;
+        } else {
+            if (Visibilities.preOverviewActiveWindowAddress !== "") {
+                const targetAddress = Visibilities.preOverviewActiveWindowAddress;
+                let foundIndex = -1;
+                const wins = root.currentWindows;
+                if (wins) {
+                    for (let i = 0; i < wins.length; ++i) {
+                        if (wins[i].address === targetAddress) {
+                            foundIndex = i;
+                            break;
+                        }
+                    }
+                }
+                root.selectedIndex = foundIndex; // -1 if not found
+            } else {
+                root.selectedIndex = -1;
+            }
+        }
     }
     onActiveWsIdChanged: Qt.callLater(syncPage)
     Component.onCompleted: {
@@ -273,7 +291,7 @@ Item {
                             // Only what the keyboard has picked, never "this is
                             // the window you were last in" — an outline on the
                             // latter reads as a selection the user did not make.
-                            readonly property bool isSelected: page.index === listView.currentIndex && activeWin.index === root.selectedIndex
+                            readonly property bool isSelected: page.index === listView.currentIndex && activeWin.index === root.selectedIndex && !root.activeInfoClient
                             // Chrome stays out of the way until the card is the
                             // one being looked at. Cards this short lose the
                             // caption entirely; a title strip on a thumbnail that
@@ -290,9 +308,9 @@ Item {
                             // the page entirely.
                             width: layoutProps.width
                             height: layoutProps.height
-                            color: Colours.tPalette.m3surfaceContainer
+                            color: Colours.palette.m3surfaceContainer
                             radius: Tokens.rounding.large
-                            scale: (hover.hovered || activeWin.isSelected) && !dragHandler.active ? root.hoverScale : 1
+                            scale: activeWin.isSelected && !dragHandler.active ? root.hoverScale : 1
                             border.width: activeWin.isSelected ? 2 : 0
                             border.color: Colours.palette.m3primary
 
@@ -340,25 +358,20 @@ Item {
                             Behavior on scale { Anim {} }
                             Behavior on x { enabled: !dragHandler.active && root.opacity > 0.5; NumberAnimation { duration: 250; easing.type: Easing.OutQuad } }
                             Behavior on y { enabled: !dragHandler.active && root.opacity > 0.5; NumberAnimation { duration: 250; easing.type: Easing.OutQuad } }
-                            HoverHandler { id: hover }
-                            StateLayer {
-                                anchors.fill: parent
-                                radius: Tokens.rounding.large
-                                onClicked: {
-                                    if (modelData.address) {
-                                        if (typeof KWinActiveWindowBridge !== "undefined") {
-                                            KWinActiveWindowBridge.focusWindow(modelData.address);
-                                        } else {
-                                            Hypr.dispatch(Hypr.usingLua ? `hl.dsp.focus({ window = "address:0x${modelData.address}" })` : `focuswindow address:0x${modelData.address}`);
-                                        }
-                                        if (typeof KWinWorkspaceState !== "undefined") {
-                                            KWinWorkspaceState.switchTo(page.wsId);
+                            HoverHandler {
+                                id: hover
+
+                                onHoveredChanged: {
+                                    if (page.index === listView.currentIndex) {
+                                        if (hovered) {
+                                            root.selectedIndex = activeWin.index;
+                                        } else if (root.selectedIndex === activeWin.index) {
+                                            root.selectedIndex = -1;
                                         }
                                     }
-                                    const v = typeof Visibilities !== "undefined" ? Visibilities.getForActive() : null;
-                                    if (v) v.overview = false;
                                 }
                             }
+
                             Item {
                                 id: cardLayout
 
@@ -447,64 +460,6 @@ Item {
                                         }
                                     }
                                     }
-                                    RowLayout {
-                                        anchors.top: parent.top
-                                        anchors.right: parent.right
-                                        anchors.margins: Tokens.padding.small
-                                        spacing: Tokens.spacing.small
-                                        opacity: hover.hovered ? 1 : 0
-                                        visible: opacity > 0.01
-
-                                        Behavior on opacity { Anim {} }
-                                        StyledRect {
-                                            implicitWidth: infoIcon.implicitHeight + Tokens.padding.small * 2
-                                            implicitHeight: infoIcon.implicitHeight + Tokens.padding.small * 2
-                                            radius: Tokens.rounding.small
-                                            color: Colours.palette.m3secondaryContainer
-
-                                            StateLayer {
-                                                anchors.fill: parent
-                                                radius: Tokens.rounding.small
-                                                onClicked: root.requestWindowInfo(modelData)
-                                            }
-                                            MaterialIcon {
-                                                id: infoIcon
-
-                                                anchors.centerIn: parent
-                                                text: "chevron_right"
-                                                color: Colours.palette.m3onSecondaryContainer
-                                                fontStyle.pointSize: Tokens.font.body.medium.pointSize
-                                            }
-                                        }
-                                        StyledRect {
-                                            implicitWidth: closeIcon.implicitHeight + Tokens.padding.small * 2
-                                            implicitHeight: closeIcon.implicitHeight + Tokens.padding.small * 2
-                                            radius: Tokens.rounding.small
-                                            color: Colours.palette.m3errorContainer
-
-                                            StateLayer {
-                                                anchors.fill: parent
-                                                radius: Tokens.rounding.small
-                                                onClicked: {
-                                                    if (modelData.address) {
-                                                        if (typeof KWinActiveWindowBridge !== "undefined") {
-                                                            KWinActiveWindowBridge.closeWindow(modelData.address);
-                                                        } else {
-                                                            Hypr.dispatch(Hypr.usingLua ? `hl.dsp.window.close({ window = "address:0x${modelData.address}" })` : `closewindow address:0x${modelData.address}`);
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            MaterialIcon {
-                                                id: closeIcon
-
-                                                anchors.centerIn: parent
-                                                text: "close"
-                                                color: Colours.palette.m3onErrorContainer
-                                                fontStyle.pointSize: Tokens.font.body.medium.pointSize
-                                            }
-                                        }
-                                    }
                                 }
                                 RowLayout {
                                     id: caption
@@ -530,7 +485,7 @@ Item {
                                         id: titleText
 
                                         text: modelData.title || modelData.class || ""
-                                        color: Colours.palette.m3onSurfaceVariant
+                                        color: Colours.palette.m3primary
                                         font: Tokens.font.body.small
                                         elide: Text.ElideRight
                                         Layout.fillWidth: true
@@ -539,6 +494,86 @@ Item {
                                     Behavior on opacity { Anim {} }
                                 }
                             }
+
+                            StateLayer {
+                                anchors.fill: parent
+                                radius: Tokens.rounding.large
+                                stateOpacity: containsMouse || manualHoverOverride ? 0.02 : 0
+                                onClicked: {
+                                    if (modelData.address) {
+                                        if (typeof KWinActiveWindowBridge !== "undefined") {
+                                            KWinActiveWindowBridge.focusWindow(modelData.address);
+                                        } else {
+                                            Hypr.dispatch(Hypr.usingLua ? `hl.dsp.focus({ window = "address:0x${modelData.address}" })` : `focuswindow address:0x${modelData.address}`);
+                                        }
+                                        if (typeof KWinWorkspaceState !== "undefined") {
+                                            KWinWorkspaceState.switchTo(page.wsId);
+                                        }
+                                    }
+                                    const v = typeof Visibilities !== "undefined" ? Visibilities.getForActive() : null;
+                                    if (v) v.overview = false;
+                                }
+                            }
+
+                            RowLayout {
+                                anchors.top: cardLayout.top
+                                anchors.right: cardLayout.right
+                                anchors.margins: Tokens.padding.small
+                                spacing: Tokens.spacing.small
+                                opacity: hover.hovered ? 1 : 0
+                                visible: opacity > 0.01
+
+                                Behavior on opacity { Anim {} }
+                                StyledRect {
+                                    implicitWidth: infoIcon.implicitHeight + Tokens.padding.small * 2
+                                    implicitHeight: infoIcon.implicitHeight + Tokens.padding.small * 2
+                                    radius: Tokens.rounding.small
+                                    color: Colours.palette.m3secondaryContainer
+
+                                    StateLayer {
+                                        anchors.fill: parent
+                                        radius: Tokens.rounding.small
+                                        onClicked: root.requestWindowInfo(modelData)
+                                    }
+                                    MaterialIcon {
+                                        id: infoIcon
+
+                                        anchors.centerIn: parent
+                                        text: "chevron_right"
+                                        color: Colours.palette.m3onSecondaryContainer
+                                        fontStyle.pointSize: Tokens.font.body.medium.pointSize
+                                    }
+                                }
+                                StyledRect {
+                                    implicitWidth: closeIcon.implicitHeight + Tokens.padding.small * 2
+                                    implicitHeight: closeIcon.implicitHeight + Tokens.padding.small * 2
+                                    radius: Tokens.rounding.small
+                                    color: Colours.palette.m3errorContainer
+
+                                    StateLayer {
+                                        anchors.fill: parent
+                                        radius: Tokens.rounding.small
+                                        onClicked: {
+                                            if (modelData.address) {
+                                                if (typeof KWinActiveWindowBridge !== "undefined") {
+                                                    KWinActiveWindowBridge.closeWindow(modelData.address);
+                                                } else {
+                                                    Hypr.dispatch(Hypr.usingLua ? `hl.dsp.window.close({ window = "address:0x${modelData.address}" })` : `closewindow address:0x${modelData.address}`);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    MaterialIcon {
+                                        id: closeIcon
+
+                                        anchors.centerIn: parent
+                                        text: "close"
+                                        color: Colours.palette.m3onErrorContainer
+                                        fontStyle.pointSize: Tokens.font.body.medium.pointSize
+                                    }
+                                }
+                            }
+
                             Drag.active: dragHandler.active
                             Drag.source: activeWin
                             Drag.hotSpot: dragHandler.centroid.position

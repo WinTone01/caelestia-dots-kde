@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import qs.components
+import qs.services
 import qs.modules.windowinfo as WInfo
 
 Item {
@@ -82,6 +83,8 @@ Item {
 
                 anchors.fill: parent
                 clientAddress: windowInfoOverlay.clientAddress
+                border.width: 2
+                border.color: Colours.palette.m3primary
                 onCloseRequested: {
                     windowInfoOverlay.clientAddress = ""
                     windowGrid.activeInfoClient = null

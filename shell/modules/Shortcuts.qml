@@ -55,13 +55,16 @@ Scope {
         description: "Toggle overview"
         onPressed: {
             const visibilities = Visibilities.getForActive();
-            // Pressing it again while the overview is up steps through the
-            // windows rather than dismissing it, so the same key that opened
-            // the grid also walks it — the thing every task switcher does.
-            if (visibilities.overview)
-                Visibilities.cycleOverview(false);
-            else
+            if (visibilities.overview) {
+                visibilities.overview = false;
+            } else {
+                if (typeof KWinActiveWindowBridge !== "undefined" && KWinActiveWindowBridge.activeWindow && KWinActiveWindowBridge.activeWindow.address) {
+                    Visibilities.preOverviewActiveWindowAddress = KWinActiveWindowBridge.activeWindow.address;
+                } else {
+                    Visibilities.preOverviewActiveWindowAddress = "";
+                }
                 visibilities.overview = true;
+            }
         }
     }
     // qmllint disable unresolved-type
