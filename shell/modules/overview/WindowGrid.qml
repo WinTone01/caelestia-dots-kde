@@ -24,13 +24,7 @@ Item {
     property bool ignoreNextSwitch: false
     property bool _initialized: false
     property bool isDragging: false
-    // How much a hovered card grows. The grid reserves room for exactly this, so
-    // keep the two in step.
     readonly property real hoverScale: 1.02
-    // Keyboard selection within the page in view. -1 is "nothing picked yet",
-    // which is how the overview opens: an outline before the user has chosen
-    // anything reads as "this one is selected" and sends them looking for a
-    // selection they never made.
     property int selectedIndex: -1
     readonly property var currentWindows: {
         if (typeof KWinWorkspaceState === "undefined" || listView.currentIndex < 0)
@@ -179,15 +173,26 @@ Item {
     ListView {
         id: listView
 
+        property real rawSwipeOffset: typeof KWinWorkspaceState !== "undefined" ? KWinWorkspaceState.swipeOffset : 0.0
+
         anchors.fill: parent
         orientation: ListView.Horizontal
-        snapMode: ListView.SnapOneItem
-        highlightRangeMode: ListView.StrictlyEnforceRange
+        highlightRangeMode: ListView.NoHighlightRange
         cacheBuffer: 100000 // Keep all pages instantiated to prevent drag-and-drop interruption
-        preferredHighlightBegin: 0
-        preferredHighlightEnd: 0
-        highlightMoveDuration: root._initialized ? 250 : 0
         boundsBehavior: Flickable.StopAtBounds
+        interactive: false // Disable native scroll to prevent fighting KWin swipe tracking
+
+        property real targetContentX: (currentIndex + rawSwipeOffset) * width
+        contentX: root._initialized ? targetContentX : currentIndex * width
+
+        Behavior on contentX {
+            enabled: root._initialized
+            NumberAnimation {
+                duration: rawSwipeOffset === 0.0 ? 300 : 0
+                easing.type: rawSwipeOffset === 0.0 ? Easing.OutCubic : Easing.Linear
+            }
+        }
+
         onCountChanged: Qt.callLater(root.syncPage)
         onCurrentIndexChanged: {
             if (root.ignoreNextSwitch) return;
@@ -198,8 +203,8 @@ Item {
             id: page
 
             required property int index
-            readonly property int wsId: typeof KWinWorkspaceState !== "undefined" ? KWinWorkspaceState.workspaces[index].index : index + 1
-            readonly property string wsName: typeof KWinWorkspaceState !== "undefined" ? KWinWorkspaceState.workspaces[index].name : wsId.toString()
+            readonly property int wsId: (typeof KWinWorkspaceState !== "undefined" && KWinWorkspaceState.workspaces && index < KWinWorkspaceState.workspaces.length) ? KWinWorkspaceState.workspaces[index].index : index + 1
+            readonly property string wsName: (typeof KWinWorkspaceState !== "undefined" && KWinWorkspaceState.workspaces && index < KWinWorkspaceState.workspaces.length) ? KWinWorkspaceState.workspaces[index].name : wsId.toString()
             property var cachedWsWindows: []
             readonly property var wsWindows: {
                 const kwinList = typeof KWinActiveWindowBridge !== "undefined" ? KWinActiveWindowBridge.windowList : null;
@@ -268,27 +273,7 @@ Item {
                 readonly property real hoverHeadroom: Math.ceil(Math.max(parent.width, parent.height) * (root.hoverScale - 1) / 2)
                 property var windowLayout: Config.overview.layoutType === 0 ? LayoutKde.calculateLayout(page.wsWindows, width, height, Tokens.spacing.large, Tokens.spacing.large) : LayoutGnome.calculateLayout(page.wsWindows, width, height, Tokens.spacing.large, Tokens.spacing.large)
 
-                // Opening the overview pulls the desktop into a rounded inset —
-                // ContentWindow grows the border to 15% of the short edge — and
-                // that inset is what reads as the stage. The layout fills whatever
-                // area it is handed edge to edge, so hand it the stage rather than
-                // the whole screen, or the outermost cards end up out on the black
-                // frame, past the wallpaper they belong to. The border is the same
-                // on all four sides (the workspace switcher lives out in the frame,
-                // below it), so panels' own margins are the wrong thing to use here:
-                // on whichever edge holds the bar, that margin is the bar's size
-                // instead.
                 anchors.fill: parent
-                // Deliberately the settled border rather than the animating one:
-                // laying out against a rect that is still growing means the first
-                // layout lands on a nearly full-screen area and every card then
-                // slides inward as it shrinks, which is the cards-flying-in-from-
-                // everywhere effect on open. Sized to the destination, they are
-                // simply in the right place from the first frame.
-                //
-                // Plus the headroom a hovered card needs to grow into. Without it
-                // a card sitting on the edge of the stage grows straight off the
-                // wallpaper, which is most obvious on the bottom row.
                 anchors.margins: (root.panels ? root.panels.overviewBorderThickness : Tokens.padding.extraLarge) + hoverHeadroom
 
                 Repeater {
@@ -306,24 +291,11 @@ Item {
                                 const h = modelData.height;
                                 return (w > 0 && h > 0) ? (w / h) : (16.0 / 10.0);
                             }
-                            // Only what the keyboard has picked, never "this is
-                            // the window you were last in" — an outline on the
-                            // latter reads as a selection the user did not make.
                             readonly property bool isSelected: page.index === listView.currentIndex && activeWin.index === root.selectedIndex && !root.activeInfoClient
-                            // Chrome stays out of the way until the card is the
-                            // one being looked at. Cards this short lose the
-                            // caption entirely; a title strip on a thumbnail that
-                            // small costs more than it tells you.
                             readonly property bool showCaption: height > 96 && (hover.hovered || isSelected)
 
                             x: dragHandler.active ? x : layoutProps.x
                             y: dragHandler.active ? y : layoutProps.y
-                            // The layout hands out boxes that tile the page without
-                            // overlapping, so a card has to *be* its box. Sizing from
-                            // content instead made every card wider and taller than
-                            // its slot by the padding and the caption underneath it,
-                            // which is what had them spilling over each other and off
-                            // the page entirely.
                             width: layoutProps.width
                             height: layoutProps.height
                             color: Colours.palette.m3surfaceContainer
@@ -602,6 +574,7 @@ Item {
                     }
                 }
             }
+
         Timer {
             id: switchTimer
 
@@ -632,7 +605,7 @@ Item {
                 }
             }
         }
-        }
+    }
     StyledRect {
         id: indicatorContainer
 
