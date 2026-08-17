@@ -184,7 +184,6 @@ Item {
         snapMode: ListView.SnapOneItem
         highlightRangeMode: ListView.StrictlyEnforceRange
         cacheBuffer: 100000 // Keep all pages instantiated to prevent drag-and-drop interruption
-        interactive: !root.isDragging // Prevent ListView from stealing grab during drag
         preferredHighlightBegin: 0
         preferredHighlightEnd: 0
         highlightMoveDuration: root._initialized ? 250 : 0
@@ -201,6 +200,7 @@ Item {
             required property int index
             readonly property int wsId: typeof KWinWorkspaceState !== "undefined" ? KWinWorkspaceState.workspaces[index].index : index + 1
             readonly property string wsName: typeof KWinWorkspaceState !== "undefined" ? KWinWorkspaceState.workspaces[index].name : wsId.toString()
+            property var cachedWsWindows: []
             readonly property var wsWindows: {
                 const kwinList = typeof KWinActiveWindowBridge !== "undefined" ? KWinActiveWindowBridge.windowList : null;
                 let arr = [];
@@ -212,7 +212,21 @@ Item {
                         }
                     }
                 }
-                return arr;
+
+                let changed = arr.length !== cachedWsWindows.length;
+                if (!changed) {
+                    for (let i = 0; i < arr.length; ++i) {
+                        if (arr[i].address !== cachedWsWindows[i].address) {
+                            changed = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (changed) {
+                    cachedWsWindows = arr;
+                }
+                return cachedWsWindows;
             }
 
             width: listView.width
@@ -234,11 +248,15 @@ Item {
                     if (sourceItem && sourceItem.clientAddress) {
                         if (sourceItem.wsId !== undefined && sourceItem.wsId !== page.wsId) {
                             sourceItem.visible = false;
-                            if (typeof KWinActiveWindowBridge !== "undefined") {
-                                KWinActiveWindowBridge.setWindowDesktop(sourceItem.clientAddress, page.wsId);
-                            } else {
-                                Hypr.dispatch(Hypr.usingLua ? `hl.dsp.movetoworkspace({ workspace = "${page.wsId}", window = "address:0x${sourceItem.clientAddress}" })` : `movetoworkspace ${page.wsId},address:0x${sourceItem.clientAddress}`);
-                            }
+                            const addr = sourceItem.clientAddress;
+                            const targetId = page.wsId;
+                            Qt.callLater(() => {
+                                if (typeof KWinActiveWindowBridge !== "undefined") {
+                                    KWinActiveWindowBridge.setWindowDesktop(addr, targetId);
+                                } else {
+                                    Hypr.dispatch(Hypr.usingLua ? `hl.dsp.movetoworkspace({ workspace = "${targetId}", window = "address:0x${addr}" })` : `movetoworkspace ${targetId},address:0x${addr}`);
+                                }
+                            });
                         }
                         drop.accept();
                     }
@@ -350,7 +368,10 @@ Item {
                                         const targetWsId = KWinWorkspaceState.workspaces[listView.currentIndex].index;
                                         if (targetWsId !== page.wsId) {
                                             activeWin.visible = false;
-                                            KWinActiveWindowBridge.setWindowDesktop(clientAddress, targetWsId);
+                                            const addr = clientAddress;
+                                            Qt.callLater(() => {
+                                                KWinActiveWindowBridge.setWindowDesktop(addr, targetWsId);
+                                            });
                                         }
                                     }
                                 }
