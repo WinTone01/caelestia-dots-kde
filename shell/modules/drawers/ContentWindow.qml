@@ -51,6 +51,13 @@ StyledWindow {
     // happened to put it.
     readonly property real overviewBorderThickness: Math.min(root.width, root.height) * 0.15
     property real dynamicBorderThickness: visibilities.overview ? overviewBorderThickness : Config.border.thickness
+    property real overviewVerticalOffset: {
+        if (!visibilities.overview) return 0;
+        const grid = panels && panels.overview ? panels.overview.windowGrid : null;
+        const indicator = grid ? grid.indicatorContainer : null;
+        const indicatorSpace = indicator ? indicator.height + Tokens.padding.large * 2 : 100;
+        return indicatorSpace - overviewBorderThickness;
+    }
     readonly property real borderThickness: dynamicBorderThickness * (1 - fsTransitionProg)
     readonly property real borderRounding: Config.border.rounding * (1 - fsTransitionProg)
     readonly property real shadowOpacity: 0.7 * (1 - fsTransitionProg)
@@ -121,6 +128,7 @@ StyledWindow {
         category: "Blur"
     }
     Behavior on dynamicBorderThickness { NumberAnimation { duration: animConfig.blobDuration; easing.type: animConfig.easingType } }
+    Behavior on overviewVerticalOffset { NumberAnimation { duration: animConfig.blobDuration; easing.type: animConfig.easingType } }
     Behavior on fsTransitionProg {
         Anim {}
     }
@@ -277,8 +285,8 @@ StyledWindow {
                 radius: root.borderRounding
                 borderLeft: Math.max(Config.bar.position === "left" ? bar.implicitWidth : 0, root.borderThickness) - anchors.margins - root.sdfBorderOffset
                 borderRight: Math.max(Config.bar.position === "right" ? bar.implicitWidth : 0, root.borderThickness) - anchors.margins - root.sdfBorderOffset
-                borderTop: Math.max(Config.bar.position === "top" ? bar.implicitHeight : 0, root.borderThickness) - anchors.margins - root.sdfBorderOffset
-                borderBottom: Math.max(Config.bar.position === "bottom" ? bar.implicitHeight : 0, root.borderThickness) - anchors.margins - root.sdfBorderOffset
+                borderTop: Math.max(Config.bar.position === "top" ? bar.implicitHeight : 0, root.borderThickness) - root.overviewVerticalOffset - anchors.margins - root.sdfBorderOffset
+                borderBottom: Math.max(Config.bar.position === "bottom" ? bar.implicitHeight : 0, root.borderThickness) + root.overviewVerticalOffset - anchors.margins - root.sdfBorderOffset
                 Config.screen: root.screen.name
             }
         }
@@ -330,8 +338,8 @@ StyledWindow {
             radius: root.borderRounding
             borderLeft: Math.max(Config.bar.position === "left" ? bar.implicitWidth : 0, root.borderThickness) - anchors.margins - root.sdfBorderOffset
             borderRight: Math.max(Config.bar.position === "right" ? bar.implicitWidth : 0, root.borderThickness) - anchors.margins - root.sdfBorderOffset
-            borderTop: Math.max(Config.bar.position === "top" ? bar.implicitHeight : 0, root.borderThickness) - anchors.margins - root.sdfBorderOffset
-            borderBottom: Math.max(Config.bar.position === "bottom" ? bar.implicitHeight : 0, root.borderThickness) - anchors.margins - root.sdfBorderOffset
+            borderTop: Math.max(Config.bar.position === "top" ? bar.implicitHeight : 0, root.borderThickness) - root.overviewVerticalOffset - anchors.margins - root.sdfBorderOffset
+            borderBottom: Math.max(Config.bar.position === "bottom" ? bar.implicitHeight : 0, root.borderThickness) + root.overviewVerticalOffset - anchors.margins - root.sdfBorderOffset
             Config.screen: root.screen.name
         }
         BlobRect {
