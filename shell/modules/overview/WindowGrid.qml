@@ -22,8 +22,8 @@ Item {
     property var panels: null
     property alias indicatorContainer: indicatorContainer
     readonly property real overviewBorderThickness: Math.min(width, height) * 0.15
-    readonly property real indicatorSpace: indicatorContainer.height + Tokens.padding.large
-    readonly property real verticalOffset: Math.max(0, indicatorSpace - overviewBorderThickness)
+    readonly property real indicatorSpace: indicatorContainer.height + Tokens.padding.large * 2
+    readonly property real verticalOffset: indicatorSpace - overviewBorderThickness
     readonly property int activeWsId: typeof KWinWorkspaceState !== "undefined" ? KWinWorkspaceState.activeId : 1
     property bool ignoreNextSwitch: false
     property bool _initialized: false

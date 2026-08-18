@@ -54,9 +54,7 @@ StyledWindow {
     property real overviewVerticalOffset: {
         if (!visibilities.overview) return 0;
         const grid = panels && panels.overview ? panels.overview.windowGrid : null;
-        const indicator = grid ? grid.indicatorContainer : null;
-        const indicatorSpace = indicator ? indicator.height + Tokens.padding.large * 2 : 100;
-        return indicatorSpace - overviewBorderThickness;
+        return grid ? grid.verticalOffset : 0;
     }
     readonly property real borderThickness: dynamicBorderThickness * (1 - fsTransitionProg)
     readonly property real borderRounding: Config.border.rounding * (1 - fsTransitionProg)
