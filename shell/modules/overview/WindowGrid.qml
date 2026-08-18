@@ -20,6 +20,7 @@ Item {
     property var cardItems: []
     property var activeInfoClient: null
     property var panels: null
+    property var closingWindows: []
     property alias indicatorContainer: indicatorContainer
     readonly property real overviewBorderThickness: Math.min(width, height) * 0.15
     readonly property real indicatorSpace: indicatorContainer.height + Tokens.padding.large * 2
@@ -306,7 +307,9 @@ Item {
                             height: layoutProps.height
                             color: Colours.palette.m3surfaceContainer
                             radius: Tokens.rounding.large
-                            scale: activeWin.isSelected && !dragHandler.active ? root.hoverScale : 1
+                            property bool closing: false
+                            scale: closing ? 0 : (activeWin.isSelected && !dragHandler.active ? root.hoverScale : 1)
+                            opacity: closing ? 0 : 1
                             border.width: activeWin.isSelected ? 2 : 0
                             border.color: Colours.palette.m3primary
 
@@ -355,6 +358,25 @@ Item {
                                 }
                             }
                             Behavior on scale { Anim {} }
+                            Behavior on opacity {
+                                NumberAnimation {
+                                    id: opacityAnim
+                                    duration: 250
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
+                            Connections {
+                                target: opacityAnim
+                                function onRunningChanged() {
+                                    if (!opacityAnim.running && activeWin.closing) {
+                                        if (typeof KWinActiveWindowBridge !== "undefined") {
+                                            KWinActiveWindowBridge.closeWindow(modelData.address);
+                                        } else {
+                                            Hypr.dispatch(Hypr.usingLua ? `hl.dsp.window.close({ window = "address:0x${modelData.address}" })` : `closewindow address:0x${modelData.address}`);
+                                        }
+                                    }
+                                }
+                            }
                             Behavior on x { enabled: !dragHandler.active && root.opacity > 0.5; NumberAnimation { duration: 250; easing.type: Easing.OutQuad } }
                             Behavior on y { enabled: !dragHandler.active && root.opacity > 0.5; NumberAnimation { duration: 250; easing.type: Easing.OutQuad } }
                             HoverHandler {
@@ -554,11 +576,8 @@ Item {
                                         radius: Tokens.rounding.small
                                         onClicked: {
                                             if (modelData.address) {
-                                                if (typeof KWinActiveWindowBridge !== "undefined") {
-                                                    KWinActiveWindowBridge.closeWindow(modelData.address);
-                                                } else {
-                                                    Hypr.dispatch(Hypr.usingLua ? `hl.dsp.window.close({ window = "address:0x${modelData.address}" })` : `closewindow address:0x${modelData.address}`);
-                                                }
+                                                activeWin.closing = true;
+                                                root.closingWindows = root.closingWindows.concat([modelData.address]);
                                             }
                                         }
                                     }
@@ -630,6 +649,7 @@ Item {
             maxWidth: Math.max(200, root.width - 100)
             count: listView.count
             currentIndex: listView.currentIndex
+            closingWindows: root.closingWindows
             onWorkspaceSelected: index => {
                 root.ignoreNextSwitch = false;
                 listView.currentIndex = index;
