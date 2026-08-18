@@ -104,7 +104,18 @@ StyledWindow {
     // visibly wrong one for left/right, and a degenerate, invisible one for
     // top, since Bottom's math assumes the icon is below the window, the
     // opposite of where it actually is.
-    WlrLayershell.namespace: "panel"
+    //
+    // Reporting as Dock also keeps Alt+F4 off the shell. KWin gates its window
+    // actions behind USABLE_ACTIVE_WINDOW, which is
+    //   m_activeWindow && !(isDesktop() || isDock())
+    // so a dock is skipped before isCloseable() is ever consulted — that returns
+    // an unconditional true for every layer-shell surface, and window rules are
+    // never evaluated for them either, so this type is the only thing standing
+    // between "close window" and the shell losing a surface. The drawers take
+    // keyboard focus while open, which makes this surface the active window, so
+    // without it Alt+F4 over an open dashboard tears one screen's shell down and
+    // leaves the rest of the process running.
+    WlrLayershell.namespace: "dock"
     mask: {
         if (hasOpenOverlay) return fullRegion;
         if (hasFullscreen) return emptyRegion;
