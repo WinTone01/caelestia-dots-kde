@@ -205,9 +205,14 @@ Item {
             required property int index
             readonly property int wsId: (typeof KWinWorkspaceState !== "undefined" && KWinWorkspaceState.workspaces && index < KWinWorkspaceState.workspaces.length) ? KWinWorkspaceState.workspaces[index].index : index + 1
             readonly property string wsName: (typeof KWinWorkspaceState !== "undefined" && KWinWorkspaceState.workspaces && index < KWinWorkspaceState.workspaces.length) ? KWinWorkspaceState.workspaces[index].name : wsId.toString()
-            property var cachedWsWindows: []
-            readonly property var wsWindows: {
+            property var wsWindows: []
+            readonly property var _winTrigger: typeof KWinActiveWindowBridge !== "undefined" ? KWinActiveWindowBridge.windowList : null
+            readonly property var _hyprTrigger: (typeof Hypr !== "undefined" && Hypr.toplevels) ? Hypr.toplevels.values : null
+
+            function _updateWsWindows() {
                 const kwinList = typeof KWinActiveWindowBridge !== "undefined" ? KWinActiveWindowBridge.windowList : null;
+                const hyprList = (typeof Hypr !== "undefined" && Hypr.toplevels) ? Hypr.toplevels.values : null;
+
                 let arr = [];
                 if (kwinList) {
                     for (let i = 0; i < kwinList.length; ++i) {
@@ -216,12 +221,19 @@ Item {
                             arr.push(w);
                         }
                     }
+                } else if (hyprList) {
+                    for (let i = 0; i < hyprList.length; ++i) {
+                        const w = hyprList[i];
+                        if (w.workspace && w.workspace.id === wsId) {
+                            arr.push(w);
+                        }
+                    }
                 }
 
-                let changed = arr.length !== cachedWsWindows.length;
+                let changed = arr.length !== wsWindows.length;
                 if (!changed) {
                     for (let i = 0; i < arr.length; ++i) {
-                        if (arr[i].address !== cachedWsWindows[i].address) {
+                        if (arr[i].address !== wsWindows[i].address) {
                             changed = true;
                             break;
                         }
@@ -229,14 +241,18 @@ Item {
                 }
 
                 if (changed) {
-                    cachedWsWindows = arr;
+                    wsWindows = arr;
                 }
-                return cachedWsWindows;
             }
+            
+            on_WinTriggerChanged: _updateWsWindows()
+            on_HyprTriggerChanged: _updateWsWindows()
+            onWsIdChanged: _updateWsWindows()
 
             width: listView.width
             height: listView.height
             Component.onCompleted: {
+                _updateWsWindows();
                 //console.log("WindowGrid Page initialized. wsId:", wsId, "windows found:", wsWindows.length, "Total windows globally:", typeof KWinActiveWindowBridge !== "undefined" ? KWinActiveWindowBridge.windowList.length : -1);
             }
             onWsWindowsChanged: {
