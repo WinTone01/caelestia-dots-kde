@@ -255,9 +255,7 @@ StyledRect {
                 scale: closing ? 0.0 : 1.0
                 opacity: closing ? 0.0 : 1.0
                 
-                Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-                Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-                
+
                 Drag.active: dragHandler.active
                 Drag.source: iconDelegate
                 Drag.hotSpot.x: width / 2
@@ -281,6 +279,10 @@ StyledRect {
                         }
                     }
                 ]
+
+                Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+                Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+
 
                 DragHandler {
                     id: dragHandler

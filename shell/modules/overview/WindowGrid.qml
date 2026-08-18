@@ -180,6 +180,8 @@ Item {
 
         property real rawSwipeOffset: typeof KWinWorkspaceState !== "undefined" ? KWinWorkspaceState.swipeOffset : 0.0
 
+        property real targetContentX: (currentIndex + rawSwipeOffset) * width
+
         anchors.fill: parent
         anchors.topMargin: -verticalOffset
         anchors.bottomMargin: verticalOffset
@@ -188,24 +190,15 @@ Item {
         cacheBuffer: 100000 // Keep all pages instantiated to prevent drag-and-drop interruption
         boundsBehavior: Flickable.StopAtBounds
         interactive: false // Disable native scroll to prevent fighting KWin swipe tracking
-
-        property real targetContentX: (currentIndex + rawSwipeOffset) * width
         contentX: root._initialized ? targetContentX : currentIndex * width
-
-        Behavior on contentX {
-            enabled: root._initialized
-            NumberAnimation {
-                duration: rawSwipeOffset === 0.0 ? 300 : 0
-                easing.type: rawSwipeOffset === 0.0 ? Easing.OutCubic : Easing.Linear
-            }
-        }
+        model: workspaceModel
 
         onCountChanged: Qt.callLater(root.syncPage)
         onCurrentIndexChanged: {
             if (root.ignoreNextSwitch) return;
             switchTimer.restart();
         }
-        model: workspaceModel
+
         delegate: Item {
             id: page
 
@@ -301,13 +294,15 @@ Item {
                             readonly property bool isSelected: page.index === listView.currentIndex && activeWin.index === root.selectedIndex && !root.activeInfoClient
                             readonly property bool showCaption: height > 96 && (hover.hovered || isSelected)
 
+                            property bool closing: false
+                            property url infoScreenshot: ""
+
                             x: dragHandler.active ? x : layoutProps.x
                             y: dragHandler.active ? y : layoutProps.y
                             width: layoutProps.width
                             height: layoutProps.height
                             color: Colours.palette.m3surfaceContainer
                             radius: Tokens.rounding.large
-                            property bool closing: false
                             scale: closing ? 0 : (activeWin.isSelected && !dragHandler.active ? root.hoverScale : 1)
                             opacity: closing ? 0 : 1
                             border.width: activeWin.isSelected ? 2 : 0
@@ -361,12 +356,12 @@ Item {
                             Behavior on opacity {
                                 NumberAnimation {
                                     id: opacityAnim
+
                                     duration: 250
                                     easing.type: Easing.OutCubic
                                 }
                             }
                             Connections {
-                                target: opacityAnim
                                 function onRunningChanged() {
                                     if (!opacityAnim.running && activeWin.closing) {
                                         if (typeof KWinActiveWindowBridge !== "undefined") {
@@ -376,6 +371,8 @@ Item {
                                         }
                                     }
                                 }
+
+                                target: opacityAnim
                             }
                             Behavior on x { enabled: !dragHandler.active && root.opacity > 0.5; NumberAnimation { duration: 250; easing.type: Easing.OutQuad } }
                             Behavior on y { enabled: !dragHandler.active && root.opacity > 0.5; NumberAnimation { duration: 250; easing.type: Easing.OutQuad } }
@@ -481,6 +478,13 @@ Item {
                                         }
                                     }
                                     }
+
+                                    Image {
+                                        anchors.fill: parent
+                                        source: activeWin.infoScreenshot
+                                        visible: root.activeInfoClient && root.activeInfoClient.address === modelData.address && activeWin.infoScreenshot !== ""
+                                        fillMode: Image.PreserveAspectCrop
+                                    }
                                 }
                                 RowLayout {
                                     id: caption
@@ -554,7 +558,13 @@ Item {
                                     StateLayer {
                                         anchors.fill: parent
                                         radius: Tokens.rounding.small
-                                        onClicked: root.requestWindowInfo(modelData)
+
+                                        onClicked: {
+                                            thumb.grabToImage(function(result) {
+                                                activeWin.infoScreenshot = result.url;
+                                                root.requestWindowInfo(modelData);
+                                            });
+                                        }
                                     }
                                     MaterialIcon {
                                         id: infoIcon
@@ -628,6 +638,15 @@ Item {
                         listView.currentIndex += 1;
                     }
                 }
+            }
+        }
+
+        Behavior on contentX {
+            enabled: root._initialized
+
+            NumberAnimation {
+                duration: rawSwipeOffset === 0.0 ? 300 : 0
+                easing.type: rawSwipeOffset === 0.0 ? Easing.OutCubic : Easing.Linear
             }
         }
     }
