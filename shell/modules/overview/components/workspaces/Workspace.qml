@@ -233,6 +233,7 @@ StyledRect {
                 id: iconDelegate
 
                 required property var modelData
+                required property int index
                 readonly property string clientAddress: modelData.address || ""
                 readonly property int wsId: root.ws
                 property real dragStartX: 0
@@ -252,6 +253,7 @@ StyledRect {
                 color: Colours.tPalette.m3surfaceContainerHigh
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                Layout.rowSpan: (repeater.count >= 3 && repeater.count % 2 !== 0 && index === 0) ? 2 : 1
                 scale: closing ? 0.0 : 1.0
                 opacity: closing ? 0.0 : 1.0
                 
