@@ -906,8 +906,16 @@ StyledWindow {
 
         // Whatever the user switched to while the drawer was open wins, so this
         // only falls back to what was remembered.
+        const pending = KWinActiveWindowBridge.pendingFocusAddress ?? "";
         const addr = (KWinActiveWindowBridge.activeWindow?.address ?? "") || focusReturn;
         focusReturn = "";
+        
+        if (pending) {
+            // A focus switch was explicitly requested by the shell (e.g., clicking
+            // a preview), let it happen.
+            return;
+        }
+
         if (addr)
             KWinActiveWindowBridge.focusWindow(addr);
     }
