@@ -73,6 +73,8 @@ qml_module(caelestia-services
         plasmawindowicon.hpp
         screenedges.cpp
         screenedges.hpp
+        windowthumbnail.cpp
+        windowthumbnail.hpp
         NmQt.cpp
         NmQt.hpp
     LIBRARIES

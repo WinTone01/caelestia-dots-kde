@@ -3,6 +3,8 @@
 #include <effect/effect.h>
 #include <effect/effecthandler.h>
 #include <QLocalSocket>
+
+#include "window_thumbnailer.hpp"
 #include <QPointer>
 #include <QObject>
 #include <QPointF>
@@ -23,6 +25,11 @@ public:
     WorkspaceTrackerEffect();
     ~WorkspaceTrackerEffect() override;
 
+public:
+    // Captures need a live GL context and a settled frame, so the thumbnailer
+    // drains its queue here rather than from the D-Bus callback it arrived on.
+    void postPaintScreen() override;
+
 private Q_SLOTS:
     void onDesktopChanging(KWin::VirtualDesktop* desktop, QPointF offset);
     void onDesktopChangingCancelled();
@@ -33,6 +40,7 @@ private:
     void sendPayload(int desktop, float x, float y);
 
     QLocalSocket* m_socket;
+    WindowThumbnailer* m_thumbnailer;
 };
 
 } // namespace caelestia

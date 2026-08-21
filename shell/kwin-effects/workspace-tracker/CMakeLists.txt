@@ -15,12 +15,13 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(QT_NO_CREATE_VERSIONLESS_FUNCTIONS TRUE)
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Network Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core DBus Gui Network Widgets)
 find_package(KF6 REQUIRED COMPONENTS CoreAddons)
 find_package(KWin REQUIRED)
 
 set(workspace_tracker_SRCS
     workspace_tracker.cpp
+    window_thumbnailer.cpp
 )
 
 kcoreaddons_add_plugin(kwin_workspace_tracker
@@ -30,6 +31,7 @@ kcoreaddons_add_plugin(kwin_workspace_tracker
 
 target_link_libraries(kwin_workspace_tracker
     Qt::Core
+    Qt::DBus
     Qt::Gui
     Qt::Network
     KF6::CoreAddons

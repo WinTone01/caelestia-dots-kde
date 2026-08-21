@@ -421,11 +421,36 @@ Item {
                                     color: Colours.tPalette.m3surfaceContainerHighest
                                     radius: Tokens.rounding.medium
 
+                                    WindowThumbnail {
+                                        id: shot
+
+                                        // Only the page in view and its immediate
+                                        // neighbours: a workspace three swipes away
+                                        // is not worth a readback inside KWin. The
+                                        // window being shown in the info panel is
+                                        // excluded too -- that panel puts up its own
+                                        // frozen frame, and capturing underneath it
+                                        // would fight for the same slot.
+                                        active: root.opacity > 0 && Math.abs(page.index - listView.currentIndex) <= 1
+                                            && !(root.activeInfoClient && root.activeInfoClient.address === modelData.address)
+                                        address: modelData.address ?? ""
+                                        maxSize: 640
+                                    }
+
                                     IconImage {
                                         anchors.centerIn: parent
                                         implicitSize: thumb.height * 0.5
                                         asynchronous: true
+                                        visible: !shot.available
                                         source: modelData.iconName ? Icons.getAppIcon(modelData.iconName, "image-missing") : (modelData.class ? Icons.getAppIcon(modelData.class, "image-missing") : "")
+                                    }
+                                    Image {
+                                        anchors.fill: parent
+                                        asynchronous: true
+                                        cache: false
+                                        fillMode: Image.PreserveAspectFit
+                                        source: shot.source
+                                        visible: shot.available
                                     }
 
                                     Image {

@@ -11,6 +11,7 @@ namespace caelestia {
 
 WorkspaceTrackerEffect::WorkspaceTrackerEffect()
     : m_socket(new QLocalSocket(this))
+    , m_thumbnailer(new WindowThumbnailer(this))
 {
     connect(KWin::effects, &KWin::EffectsHandler::desktopChanging,
             this, &WorkspaceTrackerEffect::onDesktopChanging);
@@ -41,6 +42,12 @@ WorkspaceTrackerEffect::~WorkspaceTrackerEffect()
     if (m_socket->isOpen()) {
         m_socket->close();
     }
+}
+
+void WorkspaceTrackerEffect::postPaintScreen()
+{
+    m_thumbnailer->processQueue();
+    KWin::Effect::postPaintScreen();
 }
 
 void WorkspaceTrackerEffect::connectSocket()

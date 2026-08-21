@@ -108,11 +108,27 @@ Item {
         color: "transparent"
         radius: Tokens.rounding.medium
 
+        WindowThumbnail {
+            id: shot
+
+            address: root.modelData?.address ?? ""
+            maxSize: 720
+        }
+
         IconImage {
             anchors.centerIn: parent
             implicitSize: previewBox.height * 0.5
             asynchronous: true
+            visible: !shot.available
             source: root.modelData ? WinIcons.sourceFor(null, root.modelData.class, root.modelData.iconName, root.modelData.pid ?? 0) : ""
+        }
+        Image {
+            anchors.fill: parent
+            asynchronous: true
+            cache: false
+            fillMode: Image.PreserveAspectFit
+            source: shot.source
+            visible: shot.available
         }
 
         // Close button — only revealed while hovering this tile, same convention as

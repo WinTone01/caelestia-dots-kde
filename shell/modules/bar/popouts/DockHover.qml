@@ -190,11 +190,30 @@ StyledRect {
                             color: Colours.tPalette.m3surfaceContainerHighest
                             radius: Tokens.rounding.small
 
+                            WindowThumbnail {
+                                id: shot
+
+                                address: card.modelData?.address ?? ""
+                                maxSize: 512
+                            }
+
                             IconImage {
                                 anchors.centerIn: parent
                                 implicitSize: thumb.height * 0.5
                                 asynchronous: true
+                                visible: !shot.available
                                 source: root.iconSource
+                            }
+                            Image {
+                                anchors.fill: parent
+                                asynchronous: true
+                                // The capture is written to a new path each time,
+                                // so a cache entry can never be refreshed in place
+                                // and would only hold the old frames in memory.
+                                cache: false
+                                fillMode: Image.PreserveAspectFit
+                                source: shot.source
+                                visible: shot.available
                             }
                             // Close button - only revealed while hovering this thumbnail
                             StyledRect {

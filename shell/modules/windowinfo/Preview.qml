@@ -82,16 +82,31 @@ Item {
                         }
                     }
                 }
-                // Live capture is gone with the screencast protocol; a window that
-                // exists still deserves to be identified, so stand its icon in for
-                // the missing frames rather than showing the empty-state text, which
-                // would claim there is no client at all.
+                WindowThumbnail {
+                    id: shot
+
+                    address: root.client?.address ?? ""
+                    maxSize: 1024
+                }
+
+                // A window that exists but cannot be captured -- minimised, or gone
+                // between the request and the reply -- still deserves to be
+                // identified, so its icon stands in. The empty-state text above is
+                // not the right answer there: it claims there is no client at all.
                 IconImage {
                     anchors.centerIn: parent
                     implicitSize: Math.min(preview.width, preview.height) * 0.4
                     asynchronous: true
-                    visible: !!root.client
+                    visible: !!root.client && !shot.available
                     source: root.client ? WinIcons.sourceFor(null, root.client.class, root.client.iconName, root.client.pid ?? 0) : ""
+                }
+                Image {
+                    anchors.fill: parent
+                    asynchronous: true
+                    cache: false
+                    fillMode: Image.PreserveAspectFit
+                    source: shot.source
+                    visible: shot.available
                 }
     }
 }
