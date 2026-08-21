@@ -70,12 +70,18 @@ Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
 X-KDE-AutostartPhase=2
-X-KDE-Wayland-Interfaces=zkde_screencast_unstable_v1
 EOF
 echo "  [OK]  Quickshell autostart created."
 
-# KWin restricts privileged Wayland protocols (like zkde_screencast_unstable_v1,
-# used for live window thumbnails). For every such protocol, KWin's
+# KWin restricts privileged Wayland protocols. The shell needs exactly one of
+# them, org_kde_plasma_window_management, which is what KWinActiveWindowBridge
+# is built on: the window list, focusing, closing and minimising all come
+# through it, so the taskbar, window switcher and overview stop working without
+# it. It does NOT ask for zkde_screencast_unstable_v1 -- live window thumbnails
+# were removed along with the screencast protocol, so nothing needs that
+# privilege any more and the shell should not hold it.
+#
+# For every such protocol, KWin's
 # allowInterface() calls KWin::fetchRequestedInterfaces(client->executablePath()),
 # which uses KApplicationTrader::query() to find an installed .desktop file whose
 # Exec= *first token*, resolved via QFileInfo::canonicalFilePath(), matches the
@@ -94,7 +100,7 @@ Type=Application
 Name=Quickshell
 NoDisplay=true
 Exec=$QUICKSHELL_CANONICAL_PATH
-X-KDE-Wayland-Interfaces=zkde_screencast_unstable_v1,org_kde_plasma_window_management
+X-KDE-Wayland-Interfaces=org_kde_plasma_window_management
 DESKEOF
 update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
 # KApplicationTrader/KService resolve through the ksycoca cache, not just the
@@ -152,28 +158,11 @@ else
     echo "  [SKIP] Skipping kde-material-you-colors systemd service."
 fi
 
-# Live window thumbnails.
-#
-# KWin only advertises its privileged Wayland interfaces to clients whose
-# desktop file requests them: it resolves the client's /proc/<pid>/exe, then
-# looks for an installed .desktop whose Exec resolves to that same binary and
-# reads X-KDE-Wayland-Interfaces from it. Quickshell's packaged entry has no
-# Exec line at all, so the shell matches nothing and zkde_screencast_unstable_v1
-# is never offered — the dock hover popup and window switcher then fall back to
-# drawing the app icon instead of a live preview.
-#
-# Note this cannot live on the autostart entry above: KWin matches on the
-# resolved executable, and that entry's Exec is the wrapper script rather than
-# the quickshell binary, so it never matches.
-if [[ -f "$BUNDLE_DIR/assets/org.quickshell.desktop" ]]; then
-    echo "  Requesting KWin screencast interface for window previews..."
-    mkdir -p "$HOME/.local/share/applications"
-    sed "s|^Exec=.*|Exec=$QUICKSHELL_CANONICAL_PATH|" \
-        "$BUNDLE_DIR/assets/org.quickshell.desktop" \
-        > "$HOME/.local/share/applications/org.quickshell.desktop" 2>/dev/null || true
-    # KWin reads this through KService, which needs its cache rebuilt.
-    kbuildsycoca6 >/dev/null 2>&1 || true
-    echo "  [OK]  Window preview interface requested."
-fi
+# Any org.quickshell.desktop override written by an older install asked KWin for
+# zkde_screencast_unstable_v1 so the dock and switcher could show live window
+# thumbnails. That protocol is gone, so the override is now nothing but a
+# standing privilege grant -- drop it on upgrade.
+rm -f "$HOME/.local/share/applications/org.quickshell.desktop"
+kbuildsycoca6 >/dev/null 2>&1 || true
 
 echo "[OK]  Autostart entries configured."

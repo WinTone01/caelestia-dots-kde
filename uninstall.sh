@@ -649,7 +649,7 @@ if [[ "$REMOVE_PACKAGES" == "true" ]]; then
         libaubio-dev aubio-tools lm-sensors libsensors-dev
         libpipewire-0.3-dev pipewire
         qt6-base-dev qt6-base-private-dev qt6-declarative-dev qml6-module-qtquick qt6-wayland qt6-wayland-dev qt6-svg-dev qt6-shadertools-dev
-        libkf6globalaccel-dev libkf6windowsystem-dev libkf6kpipewire-dev libsecret-1-dev libkirigami-dev libkdecorations3-dev libkf6style-dev libkf6kcmutils-dev libkf6colorscheme-dev
+        libkf6globalaccel-dev libkf6windowsystem-dev libsecret-1-dev libkirigami-dev libkdecorations3-dev libkf6style-dev libkf6kcmutils-dev libkf6colorscheme-dev
         ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libqalculate-dev qalc
         foot fish eza fastfetch btop bash
         adw-gtk3-theme fonts-rubik papirus-icon-theme
@@ -749,6 +749,18 @@ if [[ -d "$CACHE_DIR" ]]; then
         skip "Kept installer cache at $CACHE_DIR"
     fi
 fi
+
+# KWin privilege grants. 10-autostart.sh writes desktop overrides whose
+# X-KDE-Wayland-Interfaces line is what makes KWin advertise a restricted
+# protocol to the shell. Leaving them behind would keep granting that to
+# whatever quickshell binary sits at the same path after Caelestia is gone.
+for _desktop in "$HOME/.local/share/applications/quickshell.desktop" \
+                "$HOME/.local/share/applications/org.quickshell.desktop"; do
+    if [[ -f "$_desktop" ]]; then
+        rm -f "$_desktop"
+        ok "Removed KWin interface declaration: $_desktop"
+    fi
+done
 
 section "Step 11 - Reload KDE"
 

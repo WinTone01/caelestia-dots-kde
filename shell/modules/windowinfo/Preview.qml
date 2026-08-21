@@ -1,6 +1,5 @@
 pragma ComponentBehavior: Bound
 
-import org.kde.pipewire as Pipewire
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -36,24 +35,6 @@ Item {
                 const h = root.client ? (root.client.height > 0 ? root.client.height : 10) : 10;
                 return w / h;
             }
-                        property var streamRequest: null
-                        property string lastRequestedAddress: ""
-                readonly property int screencastSerial: streamRequest ? (streamRequest.objectSerial || streamRequest.nodeId) : 0
-
-                        function updateStream() {
-                            const addr = (root.client && root.client.address) ? root.client.address : "";
-                            if (addr !== lastRequestedAddress) {
-                                if (lastRequestedAddress !== "") {
-                                    ScreencastManager.releaseStream(lastRequestedAddress);
-                                }
-                                if (addr !== "") {
-                                    streamRequest = ScreencastManager.requestStream(addr);
-                                } else {
-                                    streamRequest = null;
-                                }
-                                lastRequestedAddress = addr;
-                            }
-                        }
 
             width: {
                 const containerAspect = previewContainer.width / previewContainer.height;
@@ -74,25 +55,10 @@ Item {
             anchors.centerIn: parent
             radius: Tokens.rounding.medium
 
-                        // Deferred out of incubation: see ScreencastManager.
-                        Component.onCompleted: Qt.callLater(updateStream)
-                        Component.onDestruction: {
-                            if (lastRequestedAddress !== "") {
-                                ScreencastManager.releaseStream(lastRequestedAddress);
-                            }
-                        }
-
-                Connections {
-                    function onClientChanged() {
-                        preview.updateStream();
-                    }
-
-                    target: root
-                }
                 Loader {
                     asynchronous: true
                     anchors.centerIn: parent
-                    active: !root.client || parent.screencastSerial === 0
+                    active: !root.client
                     sourceComponent: ColumnLayout {
                         spacing: 0
 
@@ -116,18 +82,16 @@ Item {
                         }
                     }
                 }
-                Pipewire.PipeWireSourceItem {
-                    id: view
-
-                    anchors.fill: parent
-                    visible: preview.screencastSerial !== 0
-                    Component.onCompleted: {
-                        if ("objectSerial" in this) {
-                            this.objectSerial = Qt.binding(() => preview.streamRequest ? preview.streamRequest.objectSerial : 0)
-                        } else if ("nodeId" in this) {
-                            this.nodeId = Qt.binding(() => preview.streamRequest ? preview.streamRequest.nodeId : 0)
-                        }
-                    }
+                // Live capture is gone with the screencast protocol; a window that
+                // exists still deserves to be identified, so stand its icon in for
+                // the missing frames rather than showing the empty-state text, which
+                // would claim there is no client at all.
+                IconImage {
+                    anchors.centerIn: parent
+                    implicitSize: Math.min(preview.width, preview.height) * 0.4
+                    asynchronous: true
+                    visible: !!root.client
+                    source: root.client ? WinIcons.sourceFor(null, root.client.class, root.client.iconName, root.client.pid ?? 0) : ""
                 }
     }
 }

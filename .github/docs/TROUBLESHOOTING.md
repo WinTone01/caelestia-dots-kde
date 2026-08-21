@@ -50,7 +50,6 @@ The shell build (`08-build-shell.sh`) requires **Qt 6.9+** and several system li
 | Qt6::WaylandClient | Wayland client plugin | `qt6-wayland` | `qt6-qtwayland-devel` |
 | KF6WindowSystem | KWindowSystem not found | `kwindowsystem` | `kf6-kwindowsystem-devel` |
 | KGlobalAccel | kglobalaccel not found | `kglobalaccel` | `kf6-kglobalaccel-devel` |
-| KPipeWire | pipewire integration | `kpipewire` | `kf6-kpipewire-devel` |
 
 #### Library Dependencies (pkg_check_modules)
 
@@ -178,37 +177,24 @@ export CAELESTIA_LIB_DIR="$HOME/.local/lib/caelestia"
 - **Duplicate lines:** Running the installer multiple times adds duplicate exports
 - **Fish users:** The grep check may miss existing entries if they're set via a different mechanism
 
-### 3.3 Window Thumbnails / Screencast Not Working
+### 3.3 Window Thumbnails Show App Icons, Not Live Previews
 
-KWin only grants `zkde_screencast_unstable_v1` to clients whose `.desktop` file lists the protocol.
+That is now the only behaviour. The shell used to draw live thumbnails in the
+dock hover popup, the overview and the window switcher by asking KWin for a
+PipeWire feed of each window over `zkde_screencast_unstable_v1`. That protocol,
+the `livePreviews` setting and the KWin privilege behind them have all been
+removed; every thumbnail is the application's icon.
 
-**Fix:**
-```bash
-# Verify the desktop file exists
-cat ~/.local/share/applications/quickshell.desktop
-# Rebuild KService cache
-kbuildsycoca6 --noincremental
-# Reload KWin
-qdbus6 org.kde.KWin /KWin reconfigure
-```
+Two things drove the removal. The protocol is privileged, so using it meant
+installing a `.desktop` override whose only purpose was to make KWin hand the
+shell a capability it would otherwise refuse -- a standing grant that outlived
+any single feature. And it was implicated in crashes and in the screen-sharing
+conflict that used to be documented here: on some NVIDIA + KWin setups a second
+client using the same protocol (Vesktop screen share, a camera app going
+through xdg-desktop-portal-kde) would freeze or crash.
 
-If the desktop file is missing, re-run `scripts/10-autostart.sh`.
-
-### 3.3.1 Screen Sharing / Camera Freezes Vesktop (or other apps)
-
-Some NVIDIA + KWin setups cannot handle two separate clients using KWin's
-privileged `zkde_screencast_unstable_v1` protocol at the same time. Caelestia
-uses this protocol for live taskbar/overview/alt-tab window thumbnails, which
-can conflict with another app's screencast (e.g. Vesktop screen share with
-audio, or camera) using the same KWin subsystem via xdg-desktop-portal-kde,
-causing that app to freeze or crash.
-
-**Fix:** Disable live window previews:
-- Nexus -> Taskbar -> "Live window previews" toggle, or
-- Set `"bar": { "livePreviews": false }` in `shell.json` and reload
-
-This falls back to static app icons for thumbnails instead of live video and
-avoids Caelestia's use of the protocol entirely.
+Nothing needs configuring, and if you are upgrading, re-running
+`scripts/10-autostart.sh` removes the old override for you.
 
 ### 3.4 Material You Colors Not Working
 
