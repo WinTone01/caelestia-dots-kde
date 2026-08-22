@@ -38,4 +38,18 @@ Singleton {
         const monitor = Hypr.monitors[KWinActiveWindowBridge.cursorOutputName()] || Hypr.focusedMonitor;
         return screens.get(monitor) || screens.values().next().value;
     }
+    /**
+     * Opens or closes the overview on every screen at once.
+     *
+     * Unlike the other drawers, the overview is a place you drag things across:
+     * a window can be moved to another monitor, or to a desktop that only exists
+     * on that monitor, and neither is possible if the destination is still
+     * showing the desktop underneath. Opening it on the focused screen alone
+     * also reads as broken on a multi-monitor setup -- one screen goes to the
+     * overview and the other carries on as if nothing happened.
+     */
+    function setOverview(visible: bool): void {
+        for (const visibilities of screens.values())
+            visibilities.overview = visible;
+    }
 }

@@ -33,9 +33,20 @@ Item {
             return Config.bar.workspaces.shown;
         }
         property int activeWsId: {
-            if (typeof KWinWorkspaceState !== "undefined" && KWinWorkspaceState.activeId > 0) {
+            if (typeof KWinWorkspaceState === "undefined")
+                return 1;
+            // With KWin's per-output virtual desktops each screen has its own
+            // current desktop, and activeId -- which comes from D-Bus -- only
+            // ever reports the focused screen's. Reading it here showed that one
+            // on every bar, and made all of them appear to switch whenever the
+            // pointer crossed to another monitor.
+            const perOutput = KWinWorkspaceState.activeByOutput[root.screen.name];
+            if (perOutput > 0)
+                return perOutput;
+            // Nothing from the tracker yet, or per-output desktops are off, in
+            // which case one current desktop is the truth for every screen.
+            if (KWinWorkspaceState.activeId > 0)
                 return KWinWorkspaceState.activeId;
-            }
             return 1;
         }
         readonly property var occupied: {

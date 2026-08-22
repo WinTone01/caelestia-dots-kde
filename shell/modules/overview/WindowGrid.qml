@@ -19,12 +19,27 @@ Item {
     property var cardItems: []
     property var activeInfoClient: null
     property var panels: null
+    /// The screen this overview belongs to. Everything below is scoped to it:
+    /// KWin gives each output its own current desktop, and each window lives on
+    /// one output, so an overview that ignores this shows the other monitor's
+    /// desktop and the other monitor's windows.
+    required property ShellScreen screen
     property var closingWindows: []
     property alias indicatorContainer: indicatorContainer
     readonly property real overviewBorderThickness: Math.min(width, height) * 0.15
     readonly property real indicatorSpace: indicatorContainer.height + Tokens.padding.large * 2
     readonly property real verticalOffset: indicatorSpace - overviewBorderThickness
-    readonly property int activeWsId: typeof KWinWorkspaceState !== "undefined" ? KWinWorkspaceState.activeId : 1
+    readonly property int activeWsId: {
+        if (typeof KWinWorkspaceState === "undefined")
+            return 1;
+        // activeId comes from D-Bus, which exposes a single current desktop and
+        // reports whichever output is focused. Per screen, only the tracker
+        // knows.
+        const perOutput = KWinWorkspaceState.activeByOutput[root.screen.name];
+        if (perOutput > 0)
+            return perOutput;
+        return KWinWorkspaceState.activeId > 0 ? KWinWorkspaceState.activeId : 1;
+    }
     property bool ignoreNextSwitch: false
     property bool _initialized: false
     property bool isDragging: false
@@ -41,13 +56,48 @@ Item {
         const out = [];
         if (all)
             for (let i = 0; i < all.length; ++i)
-                if (all[i].workspace && (all[i].workspace.id === wsId || all[i].workspace.index === wsId))
+                if (all[i].output === root.screen.name && all[i].workspace && (all[i].workspace.id === wsId || all[i].workspace.index === wsId))
                     out.push(all[i]);
         return out;
     }
 
+    /// Whether another screen sits immediately to this one's left/right.
+    ///
+    /// The edge drop areas below page through workspaces when a drag reaches
+    /// them, which is the only way out of the screen on that side -- so on a
+    /// side that has another monitor, they swallow exactly the gesture that
+    /// means "put this over there". Where there is a neighbour, the edge belongs
+    /// to it; where there is not, paging is still the useful thing to do.
+    readonly property bool hasScreenLeft: {
+        const all = Quickshell.screens;
+        for (let i = 0; i < all.length; ++i)
+            if (all[i].name !== root.screen.name && all[i].x + all[i].width <= root.screen.x + 1
+                && all[i].y < root.screen.y + root.screen.height && all[i].y + all[i].height > root.screen.y)
+                return true;
+        return false;
+    }
+    readonly property bool hasScreenRight: {
+        const all = Quickshell.screens;
+        for (let i = 0; i < all.length; ++i)
+            if (all[i].name !== root.screen.name && all[i].x >= root.screen.x + root.screen.width - 1
+                && all[i].y < root.screen.y + root.screen.height && all[i].y + all[i].height > root.screen.y)
+                return true;
+        return false;
+    }
+
     signal requestWindowInfo(var client)
     signal requestClose()
+
+    /// The screen containing a point in global coordinates, or null.
+    function screenAtGlobal(gx: real, gy: real): var {
+        const all = Quickshell.screens;
+        for (let i = 0; i < all.length; ++i) {
+            const s = all[i];
+            if (gx >= s.x && gx < s.x + s.width && gy >= s.y && gy < s.y + s.height)
+                return s;
+        }
+        return null;
+    }
 
     function cycleSelection(backwards: bool): void {
         const n = root.currentWindows.length;
@@ -68,7 +118,7 @@ Item {
         if (typeof KWinActiveWindowBridge !== "undefined")
             KWinActiveWindowBridge.focusWindow(addr);
         if (typeof KWinWorkspaceState !== "undefined" && listView.currentIndex >= 0)
-            KWinWorkspaceState.switchTo(KWinWorkspaceState.workspaces[listView.currentIndex].index);
+            KWinWorkspaceState.switchTo(KWinWorkspaceState.workspaces[listView.currentIndex].index, root.screen.name);
         root.requestClose();
     }
     function syncPage() {
@@ -216,6 +266,8 @@ Item {
                 if (kwinList) {
                     for (let i = 0; i < kwinList.length; ++i) {
                         const w = kwinList[i];
+                        if (w.output !== root.screen.name)
+                            continue;
                         if (w.workspace && (w.workspace.id === wsId || w.workspace.index === wsId)) {
                             arr.push(w);
                         }
@@ -311,16 +363,37 @@ Item {
 
                             property bool closing: false
                             property url infoScreenshot: ""
+                            /// Set by a workspace thumbnail's DropArea while the
+                            /// card hovers it, so the card shrinks to the size it
+                            /// would occupy there. 0 means "not over one".
+                            property real dropTargetScale: 0
+                            /// Over a workspace thumbnail: the preview collapses
+                            /// into the application's icon, the way a window does
+                            /// when it is dropped onto a workspace in GNOME. It is
+                            /// what the slot will actually contain once dropped, so
+                            /// the drag shows its own result; dragging back out
+                            /// reverses it.
+                            readonly property bool morphed: dragHandler.active && activeWin.dropTargetScale > 0
 
                             x: dragHandler.active ? x : layoutProps.x
                             y: dragHandler.active ? y : layoutProps.y
                             width: layoutProps.width
                             height: layoutProps.height
-                            color: Colours.palette.m3surfaceContainer
+                            color: activeWin.morphed ? "transparent" : Colours.palette.m3surfaceContainer
                             radius: Tokens.rounding.large
-                            scale: closing ? 0 : (activeWin.isSelected && !dragHandler.active ? root.hoverScale : 1)
+                            scale: {
+                                if (closing)
+                                    return 0;
+                                // Dragged onto a workspace thumbnail: shrink to
+                                // roughly what it will look like once dropped, so
+                                // the target reads as a target rather than the
+                                // card just floating over it.
+                                if (dragHandler.active && activeWin.dropTargetScale > 0)
+                                    return activeWin.dropTargetScale;
+                                return activeWin.isSelected && !dragHandler.active ? root.hoverScale : 1;
+                            }
                             opacity: closing ? 0 : 1
-                            border.width: activeWin.isSelected ? 2 : 0
+                            border.width: activeWin.isSelected && !activeWin.morphed ? 2 : 0
                             border.color: Colours.palette.m3primary
 
                             Component.onCompleted: {
@@ -350,12 +423,40 @@ Item {
                                 onActiveChanged: {
                                     root.isDragging = active;
                                     if (!active) {
+                                        activeWin.dropTargetScale = 0;
+
+                                        if (typeof KWinWorkspaceState === "undefined" || typeof KWinActiveWindowBridge === "undefined") return;
+
+                                        // Checked before Drag.drop(), not after.
+                                        // Each screen has its own overview in its
+                                        // own window, so a drag can never be handed
+                                        // to the other one's drop areas -- but the
+                                        // pointer does travel there and the card
+                                        // goes with it, so where it was let go is
+                                        // enough to act on. This one's drop areas
+                                        // still claim a release out there, though,
+                                        // and one of them answering first is what
+                                        // made a window dragged to the next monitor
+                                        // land on a workspace of the monitor it came
+                                        // from. Leaving the screen is the stronger
+                                        // signal, so it is read first.
+                                        const centre = activeWin.mapToItem(null, activeWin.width / 2, activeWin.height / 2);
+                                        const target = root.screenAtGlobal(root.screen.x + centre.x, root.screen.y + centre.y);
+                                        if (target && target.name !== root.screen.name) {
+                                            const addr = clientAddress;
+                                            activeWin.Drag.cancel();
+                                            activeWin.visible = false;
+                                            Qt.callLater(() => {
+                                                KWinActiveWindowBridge.sendToOutput(addr, target.name);
+                                            });
+                                            return;
+                                        }
+
                                         let dropAction = activeWin.Drag.drop();
                                         if (dropAction !== Qt.IgnoreAction) {
                                             return; // Handled by DropArea
                                         }
 
-                                        if (typeof KWinWorkspaceState === "undefined" || typeof KWinActiveWindowBridge === "undefined") return;
                                         const targetWsId = KWinWorkspaceState.workspaces[listView.currentIndex].index;
                                         if (targetWsId !== page.wsId) {
                                             activeWin.visible = false;
@@ -405,11 +506,35 @@ Item {
                                 }
                             }
 
+                            // The icon the card collapses into over a workspace
+                            // thumbnail. Sized as a share of the card so that the
+                            // card's own drop scale carries it down to icon size --
+                            // one animation drives both, and they cannot drift.
+                            IconImage {
+                                anchors.centerIn: parent
+                                asynchronous: true
+                                implicitSize: Math.round(Math.min(activeWin.width, activeWin.height) * 0.62)
+                                opacity: activeWin.morphed ? 1 : 0
+                                source: modelData.iconName ? Icons.getAppIcon(modelData.iconName, "image-missing") : (modelData.class ? Icons.getAppIcon(modelData.class, "image-missing") : "")
+                                visible: opacity > 0.01
+                                z: 10
+
+                                Behavior on opacity {
+                                    Anim {}
+                                }
+                            }
+
                             Item {
                                 id: cardLayout
 
                                 anchors.fill: parent
                                 anchors.margins: Tokens.padding.small
+                                opacity: activeWin.morphed ? 0 : 1
+                                visible: opacity > 0.01
+
+                                Behavior on opacity {
+                                    Anim {}
+                                }
 
                                 StyledClippingRect {
                                     id: thumb
@@ -488,11 +613,11 @@ Item {
                                             Hypr.dispatch(Hypr.usingLua ? `hl.dsp.focus({ window = "address:0x${modelData.address}" })` : `focuswindow address:0x${modelData.address}`);
                                         }
                                         if (typeof KWinWorkspaceState !== "undefined") {
-                                            KWinWorkspaceState.switchTo(page.wsId);
+                                            KWinWorkspaceState.switchTo(page.wsId, root.screen.name);
                                         }
                                     }
-                                    const v = typeof Visibilities !== "undefined" ? Visibilities.getForActive() : null;
-                                    if (v) v.overview = false;
+                                    if (typeof Visibilities !== "undefined")
+                                        Visibilities.setOverview(false);
                                 }
                             }
 
@@ -573,8 +698,13 @@ Item {
             onTriggered: {
                 if (typeof KWinWorkspaceState !== "undefined" && KWinWorkspaceState.workspaces.length > listView.currentIndex) {
                     const wId = KWinWorkspaceState.workspaces[listView.currentIndex].index;
-                    if (KWinWorkspaceState.activeId !== wId) {
-                        KWinWorkspaceState.switchTo(wId);
+                    // Compared against this screen's desktop, not the global
+                    // activeId: with per-output desktops the global one belongs
+                    // to whichever screen is focused, so testing against it made
+                    // this fire on the screen that had not moved and stay quiet
+                    // on the one that had.
+                    if (root.activeWsId !== wId) {
+                        KWinWorkspaceState.switchTo(wId, root.screen.name);
                     }
                 }
             }
@@ -622,6 +752,7 @@ Item {
 
             anchors.centerIn: parent
             maxWidth: Math.max(200, root.width - 100)
+            screenName: root.screen.name
             count: listView.count
             currentIndex: listView.currentIndex
             closingWindows: root.closingWindows
@@ -657,6 +788,7 @@ Item {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         width: 100
+        enabled: !root.hasScreenLeft
         onEntered: {
             if (!edgeScrollCooldown.running && listView.currentIndex > 0) {
                 listView.currentIndex -= 1;
@@ -669,6 +801,7 @@ Item {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         width: 100
+        enabled: !root.hasScreenRight
         onEntered: {
             if (!edgeScrollCooldown.running && listView.currentIndex < listView.count - 1) {
                 listView.currentIndex += 1;

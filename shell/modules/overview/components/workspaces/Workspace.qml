@@ -16,6 +16,8 @@ StyledRect {
 
     required property int index
     required property int activeWsId
+    /// Screen this overview belongs to; window icons are limited to it.
+    required property string screenName
     required property var occupied
     required property int groupOffset
     readonly property bool isWorkspace: true
@@ -122,7 +124,7 @@ StyledRect {
             } else {
                 if (typeof KWinWorkspaceState !== "undefined") {
                     const wId = KWinWorkspaceState.workspaces[root.ws - 1]?.id || root.ws.toString();
-                    KWinWorkspaceState.switchTo(wId);
+                    KWinWorkspaceState.switchTo(wId, root.screenName);
                 } else {
                     const isKWin = typeof KWinActiveWindowBridge !== "undefined" && KWinActiveWindowBridge.windowList;
                     if (isKWin) {
@@ -176,8 +178,30 @@ StyledRect {
         opacity: 0.3
     }
     DropArea {
+        id: windowDropArea
+
+        // Remembered because onExited carries no drag argument.
+        property var hovering: null
+
         anchors.fill: parent
+        onEntered: drag => {
+            if (!drag.source || drag.source.clientAddress === undefined)
+                return;
+            windowDropArea.hovering = drag.source;
+            // Fit inside the thumbnail with a little room, so it reads as
+            // landing in the slot rather than filling it exactly.
+            drag.source.dropTargetScale = Math.min(width / Math.max(1, drag.source.width), height / Math.max(1, drag.source.height)) * 0.85;
+        }
+        onExited: {
+            if (windowDropArea.hovering)
+                windowDropArea.hovering.dropTargetScale = 0;
+            windowDropArea.hovering = null;
+        }
         onDropped: drop => {
+            if (windowDropArea.hovering) {
+                windowDropArea.hovering.dropTargetScale = 0;
+                windowDropArea.hovering = null;
+            }
             const sourceItem = drop.source;
             if (sourceItem && sourceItem.clientAddress) {
                 if (sourceItem.wsId !== root.ws) {
@@ -213,6 +237,8 @@ StyledRect {
                         const wins = kwinList;
                         for (let i = 0; i < wins.length; ++i) {
                             const w = wins[i];
+                            if (w.output !== root.screenName)
+                                continue;
                             if (w.workspace && (w.workspace.id === wsId || w.workspace.index === wsId) && w["class"] !== "quickshell" && w["class"] !== "plasmashell") {
                                 windows.push(w);
                             }

@@ -1,5 +1,7 @@
 #include "kwinactivewindowbridge.hpp"
 #include "plasmawindows.hpp"
+#include <QDBusMessage>
+#include <QDBusConnection>
 #include "kwinworkspacestate.hpp"
 #include <QGuiApplication>
 #include <QScreen>
@@ -70,6 +72,16 @@ void KWinActiveWindowBridge::scheduleWindowListUpdate() {
     if (!m_updateTimer.isActive()) {
         m_updateTimer.start();
     }
+}
+
+void KWinActiveWindowBridge::sendToOutput(const QString &address, const QString &outputName) {
+    if (address.isEmpty() || outputName.isEmpty()) {
+        return;
+    }
+    QDBusMessage msg = QDBusMessage::createMethodCall(
+        "org.kde.KWin", "/Caelestia/Workspaces", "org.caelestia.Workspaces", "SendToOutput");
+    msg << address << outputName;
+    QDBusConnection::sessionBus().call(msg, QDBus::NoBlock);
 }
 
 QString KWinActiveWindowBridge::getOutputNameForGeometry(int x, int y, int w, int h) const {

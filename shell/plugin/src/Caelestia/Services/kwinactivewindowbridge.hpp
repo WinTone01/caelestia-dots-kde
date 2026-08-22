@@ -38,6 +38,14 @@ public:
     Q_INVOKABLE void raiseWindow(const QString &address);
     Q_INVOKABLE void setWindowProperty(const QString &address, const QString &property, bool enable);
     Q_INVOKABLE void setWindowDesktop(const QString &address, int desktopId);
+    /**
+     * Moves a window to another screen.
+     *
+     * Routed through the workspace-tracker effect: plasma-window-management can
+     * move a window between desktops but not between outputs, and there is no
+     * D-Bus surface for it either. Inside the compositor it is one call.
+     */
+    Q_INVOKABLE void sendToOutput(const QString &address, const QString &outputName);
     Q_INVOKABLE void setFullscreen(const QString& address, bool fullscreen);
     Q_INVOKABLE void setMaximized(const QString& address, bool maximized);
 
