@@ -187,6 +187,15 @@ StyledRect {
         onEntered: drag => {
             if (!drag.source || drag.source.clientAddress === undefined)
                 return;
+            // Icons dragged out of another thumbnail are sources too, and they
+            // have no preview to collapse -- only window cards carry this.
+            if (!("dropTargetScale" in drag.source))
+                return;
+            // Nothing to preview when it is already here: a card hovering its
+            // own workspace would shrink to say it is about to go somewhere it
+            // already is.
+            if (drag.source.wsId === root.ws)
+                return;
             windowDropArea.hovering = drag.source;
             // Fit inside the thumbnail with a little room, so it reads as
             // landing in the slot rather than filling it exactly.

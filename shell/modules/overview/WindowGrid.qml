@@ -43,6 +43,9 @@ Item {
     property bool ignoreNextSwitch: false
     property bool _initialized: false
     property bool isDragging: false
+    /// -1 while a drag rests against the left edge, +1 against the right, 0
+    /// otherwise. Drives the dwell that pages through workspaces.
+    property int edgeDirection: 0
     readonly property real hoverScale: 1.02
     property int selectedIndex: -1
     readonly property var currentWindows: {
@@ -59,30 +62,6 @@ Item {
                 if (all[i].output === root.screen.name && all[i].workspace && (all[i].workspace.id === wsId || all[i].workspace.index === wsId))
                     out.push(all[i]);
         return out;
-    }
-
-    /// Whether another screen sits immediately to this one's left/right.
-    ///
-    /// The edge drop areas below page through workspaces when a drag reaches
-    /// them, which is the only way out of the screen on that side -- so on a
-    /// side that has another monitor, they swallow exactly the gesture that
-    /// means "put this over there". Where there is a neighbour, the edge belongs
-    /// to it; where there is not, paging is still the useful thing to do.
-    readonly property bool hasScreenLeft: {
-        const all = Quickshell.screens;
-        for (let i = 0; i < all.length; ++i)
-            if (all[i].name !== root.screen.name && all[i].x + all[i].width <= root.screen.x + 1
-                && all[i].y < root.screen.y + root.screen.height && all[i].y + all[i].height > root.screen.y)
-                return true;
-        return false;
-    }
-    readonly property bool hasScreenRight: {
-        const all = Quickshell.screens;
-        for (let i = 0; i < all.length; ++i)
-            if (all[i].name !== root.screen.name && all[i].x >= root.screen.x + root.screen.width - 1
-                && all[i].y < root.screen.y + root.screen.height && all[i].y + all[i].height > root.screen.y)
-                return true;
-        return false;
     }
 
     signal requestWindowInfo(var client)
@@ -375,6 +354,13 @@ Item {
                             /// reverses it.
                             readonly property bool morphed: dragHandler.active && activeWin.dropTargetScale > 0
 
+                            function publishDrag(): void {
+                                if (!dragHandler.active)
+                                    return;
+                                const p = activeWin.mapToItem(null, activeWin.width / 2, activeWin.height / 2);
+                                Visibilities.setDrag(activeWin.clientAddress, root.screen.x + p.x, root.screen.y + p.y, root.screen.name);
+                            }
+
                             x: dragHandler.active ? x : layoutProps.x
                             y: dragHandler.active ? y : layoutProps.y
                             width: layoutProps.width
@@ -395,6 +381,12 @@ Item {
                             opacity: closing ? 0 : 1
                             border.width: activeWin.isSelected && !activeWin.morphed ? 2 : 0
                             border.color: Colours.palette.m3primary
+
+                            // Published on every move so the screen the pointer
+                            // has reached can draw what is coming; this one cannot
+                            // draw past its own edge.
+                            onXChanged: activeWin.publishDrag()
+                            onYChanged: activeWin.publishDrag()
 
                             Component.onCompleted: {
                                 root.cardItems = [...root.cardItems, activeWin];
@@ -424,6 +416,7 @@ Item {
                                     root.isDragging = active;
                                     if (!active) {
                                         activeWin.dropTargetScale = 0;
+                                        Visibilities.clearDrag();
 
                                         if (typeof KWinWorkspaceState === "undefined" || typeof KWinActiveWindowBridge === "undefined") return;
 
@@ -468,7 +461,15 @@ Item {
                                     }
                                 }
                             }
-                            Behavior on scale { Anim {} }
+                            Behavior on scale {
+                                // Slower while a drag is in progress: this is the
+                                // preview collapsing into its icon and opening back
+                                // out, which is meant to be read, not the snap of a
+                                // hover highlight.
+                                Anim {
+                                    type: dragHandler.active ? Anim.SlowSpatial : Anim.DefaultSpatial
+                                }
+                            }
                             Behavior on opacity {
                                 NumberAnimation {
                                     id: opacityAnim
@@ -520,7 +521,9 @@ Item {
                                 z: 10
 
                                 Behavior on opacity {
-                                    Anim {}
+                                    Anim {
+                                        type: Anim.SlowEffects
+                                    }
                                 }
                             }
 
@@ -533,7 +536,9 @@ Item {
                                 visible: opacity > 0.01
 
                                 Behavior on opacity {
-                                    Anim {}
+                                    Anim {
+                                        type: Anim.SlowEffects
+                                    }
                                 }
 
                                 StyledClippingRect {
@@ -778,22 +783,98 @@ Item {
         interval: 500
         onTriggered: root.ignoreNextSwitch = false
     }
-    Timer {
-        id: edgeScrollCooldown
+    // What a drag arriving from another screen looks like here.
+    //
+    // The card itself belongs to the overview it started in and is clipped at
+    // that screen's edge, so without this a window dragged across simply
+    // disappears halfway and is released onto nothing visible. This follows the
+    // published pointer position and shows the application it is carrying.
+    Item {
+        id: incoming
 
-        interval: 1000
+        readonly property var window: {
+            const addr = Visibilities.dragAddress;
+            if (!addr || typeof KWinActiveWindowBridge === "undefined")
+                return null;
+            const all = KWinActiveWindowBridge.windowList || [];
+            for (let i = 0; i < all.length; ++i)
+                if (all[i].address === addr)
+                    return all[i];
+            return null;
+        }
+        readonly property bool arriving: Visibilities.dragAddress !== ""
+            && Visibilities.dragOriginScreen !== root.screen.name
+            && Visibilities.dragX >= root.screen.x
+            && Visibilities.dragX < root.screen.x + root.screen.width
+            && Visibilities.dragY >= root.screen.y
+            && Visibilities.dragY < root.screen.y + root.screen.height
+
+        height: Math.round(Math.min(root.width, root.height) * 0.18)
+        opacity: arriving ? 1 : 0
+        visible: opacity > 0.01
+        width: height
+        x: Visibilities.dragX - root.screen.x - width / 2
+        y: Visibilities.dragY - root.screen.y - height / 2
+        z: 1000
+
+        Behavior on opacity {
+            Anim {
+                type: Anim.DefaultEffects
+            }
+        }
+
+        StyledRect {
+            anchors.fill: parent
+            color: Colours.tPalette.m3surfaceContainerHigh
+            radius: Tokens.rounding.large
+
+            IconImage {
+                anchors.centerIn: parent
+                asynchronous: true
+                implicitSize: Math.round(parent.height * 0.62)
+                source: {
+                    const w = incoming.window;
+                    if (!w)
+                        return "";
+                    return w.iconName ? Icons.getAppIcon(w.iconName, "image-missing") : (w.class ? Icons.getAppIcon(w.class, "image-missing") : "");
+                }
+            }
+        }
+    }
+
+    // Holding a drag against an edge pages through workspaces, one step at a
+    // time for as long as it is held.
+    //
+    // It used to page the instant the drag touched the edge, which made the
+    // edge unusable as a way off the screen: on a side with another monitor,
+    // simply travelling towards it paged a workspace on the way past. Waiting
+    // for the drag to actually rest there separates the two gestures -- pass
+    // through and you reach the next monitor, stop and you page -- so both work
+    // on the same edge without a mode.
+    Timer {
+        id: edgeDwell
+
+        interval: 700
+        repeat: true
+        onTriggered: {
+            if (root.edgeDirection < 0 && listView.currentIndex > 0)
+                listView.currentIndex -= 1;
+            else if (root.edgeDirection > 0 && listView.currentIndex < listView.count - 1)
+                listView.currentIndex += 1;
+        }
     }
     DropArea {
         anchors.left: parent.left
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         width: 100
-        enabled: !root.hasScreenLeft
         onEntered: {
-            if (!edgeScrollCooldown.running && listView.currentIndex > 0) {
-                listView.currentIndex -= 1;
-                edgeScrollCooldown.start();
-            }
+            root.edgeDirection = -1;
+            edgeDwell.restart();
+        }
+        onExited: {
+            root.edgeDirection = 0;
+            edgeDwell.stop();
         }
     }
     DropArea {
@@ -801,12 +882,13 @@ Item {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         width: 100
-        enabled: !root.hasScreenRight
         onEntered: {
-            if (!edgeScrollCooldown.running && listView.currentIndex < listView.count - 1) {
-                listView.currentIndex += 1;
-                edgeScrollCooldown.start();
-            }
+            root.edgeDirection = 1;
+            edgeDwell.restart();
+        }
+        onExited: {
+            root.edgeDirection = 0;
+            edgeDwell.stop();
         }
     }
     StyledRect {

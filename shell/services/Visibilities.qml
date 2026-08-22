@@ -12,6 +12,19 @@ Singleton {
     property string initialSidebarTab: "notifications"
     property bool isCaelestiaMode: false
     property string preOverviewActiveWindowAddress: ""
+    // A window card being dragged, shared so every screen's overview knows about
+    // it.
+    //
+    // Each overview is its own window and can only draw on its own screen, so a
+    // card dragged towards the next monitor simply vanishes at the edge -- the
+    // drag is still running and still lands correctly, but there is nothing to
+    // see, and it reads as having dropped the window into nowhere. Publishing
+    // the position here lets the screen the pointer has reached draw what is
+    // arriving.
+    property string dragAddress: ""
+    property string dragOriginScreen: ""
+    property real dragX: 0
+    property real dragY: 0
 
     // Raised when the overview shortcut is pressed while the overview is
     // already up: the grid moves its selection on instead of the drawer
@@ -37,6 +50,16 @@ Singleton {
     function getForActive(): DrawerVisibilities {
         const monitor = Hypr.monitors[KWinActiveWindowBridge.cursorOutputName()] || Hypr.focusedMonitor;
         return screens.get(monitor) || screens.values().next().value;
+    }
+    function setDrag(address: string, x: real, y: real, originScreen: string): void {
+        dragAddress = address;
+        dragX = x;
+        dragY = y;
+        dragOriginScreen = originScreen;
+    }
+    function clearDrag(): void {
+        dragAddress = "";
+        dragOriginScreen = "";
     }
     /**
      * Opens or closes the overview on every screen at once.
