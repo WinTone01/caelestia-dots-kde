@@ -5,6 +5,7 @@
 #include "kwinworkspacestate.hpp"
 #include <QGuiApplication>
 #include <QScreen>
+#include <QTimer>
 #include <QtDBus/QDBusConnection>
 #include <QtDBus/QDBusMessage>
 
@@ -78,10 +79,73 @@ void KWinActiveWindowBridge::sendToOutput(const QString &address, const QString 
     if (address.isEmpty() || outputName.isEmpty()) {
         return;
     }
-    QDBusMessage msg = QDBusMessage::createMethodCall(
-        "org.kde.KWin", "/Caelestia/Workspaces", "org.caelestia.Workspaces", "SendToOutput");
-    msg << address << outputName;
-    QDBusConnection::sessionBus().call(msg, QDBus::NoBlock);
+
+    QScreen *target = nullptr;
+    for (QScreen *screen : QGuiApplication::screens()) {
+        if (screen->name() == outputName) {
+            target = screen;
+            break;
+        }
+    }
+    if (!target) {
+        return;
+    }
+
+    QVariantMap window;
+    for (const QVariant &entry : m_windowList) {
+        const QVariantMap map = entry.toMap();
+        if (map.value(QStringLiteral("address")).toString() == address) {
+            window = map;
+            break;
+        }
+    }
+    if (window.isEmpty()) {
+        return;
+    }
+
+    const QString currentName = window.value(QStringLiteral("output")).toString();
+    QScreen *current = nullptr;
+    for (QScreen *screen : QGuiApplication::screens()) {
+        if (screen->name() == currentName) {
+            current = screen;
+            break;
+        }
+    }
+    if (!current || current == target) {
+        return;
+    }
+
+    // KWin's own "move the window one screen over" actions, driven through
+    // kglobalaccel.
+    //
+    // There is no direct way to ask for this: plasma-window-management moves a
+    // window between desktops but not between outputs, and no D-Bus interface
+    // exposes it either. These actions do exactly the right thing, they are
+    // part of KWin proper rather than anything this shell has to install, and
+    // they need no privilege. The cost is that they act on the active window,
+    // so the window has to be focused first -- which is what dragging a window
+    // to another monitor implies anyway.
+    const QPoint from = current->geometry().center();
+    const QPoint to = target->geometry().center();
+    QString action;
+    if (qAbs(to.x() - from.x()) >= qAbs(to.y() - from.y())) {
+        action = to.x() > from.x() ? QStringLiteral("Window One Screen to the Right")
+                                   : QStringLiteral("Window One Screen to the Left");
+    } else {
+        action = to.y() > from.y() ? QStringLiteral("Window One Screen Down")
+                                   : QStringLiteral("Window One Screen Up");
+    }
+
+    focusWindow(address);
+
+    // Focus has to have landed before the action fires, or it moves whatever
+    // was focused before.
+    QTimer::singleShot(120, this, [action]() {
+        QDBusMessage msg = QDBusMessage::createMethodCall("org.kde.kglobalaccel", "/component/kwin",
+            "org.kde.kglobalaccel.Component", "invokeShortcut");
+        msg << action;
+        QDBusConnection::sessionBus().call(msg, QDBus::NoBlock);
+    });
 }
 
 QString KWinActiveWindowBridge::getOutputNameForGeometry(int x, int y, int w, int h) const {

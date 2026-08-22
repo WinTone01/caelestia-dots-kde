@@ -97,6 +97,8 @@ private:
     QString m_currentUuid;
     int m_activeId = 0;
     QVariantMap m_activeByOutput;
+    // -1 unknown, 0 absent, 1 present. See switchTo().
+    int m_perOutputSwitchAvailable = -1;
     uint m_rows = 1;
     double m_swipeOffset = 0.0;
     ::QLocalServer* m_trackerServer = nullptr;

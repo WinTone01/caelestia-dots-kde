@@ -260,13 +260,36 @@ void KWinWorkspaceState::switchTo(const QString& id, const QString& output) {
     }
 
     if (!targetUuid.isEmpty()) {
+        // Naming the screen needs the workspace-tracker effect, which can target
+        // an output directly; D-Bus can only set the desktop of whichever output
+        // is active. The effect is installed system-wide and a rebuilt one does
+        // not load until the session restarts, so a shell update routinely runs
+        // against a version without this method -- and a fire-and-forget call to
+        // a method that is not there fails silently, which would leave switching
+        // workspaces doing nothing at all. Probed once, then remembered.
         if (!output.isEmpty()) {
-            // Effect route: names the screen, so the other one stays put.
-            QDBusMessage msg = QDBusMessage::createMethodCall(
-                "org.kde.KWin", "/Caelestia/Workspaces", "org.caelestia.Workspaces", "SetDesktop");
-            msg << output << indexForId(targetUuid);
-            QDBusConnection::sessionBus().call(msg, QDBus::NoBlock);
-            return;
+            if (m_perOutputSwitchAvailable == -1) {
+                QDBusMessage probe = QDBusMessage::createMethodCall("org.kde.KWin",
+                    "/Caelestia/Workspaces", "org.freedesktop.DBus.Introspectable", "Introspect");
+                const QDBusMessage reply = QDBusConnection::sessionBus().call(probe, QDBus::Block, 1000);
+                m_perOutputSwitchAvailable = (reply.type() == QDBusMessage::ReplyMessage
+                                                 && reply.arguments().value(0).toString().contains(
+                                                     QStringLiteral("SetDesktop")))
+                    ? 1
+                    : 0;
+                if (!m_perOutputSwitchAvailable) {
+                    qWarning() << "KWinWorkspaceState: workspace-tracker effect has no SetDesktop; "
+                                  "falling back to switching the active output's desktop";
+                }
+            }
+
+            if (m_perOutputSwitchAvailable == 1) {
+                QDBusMessage msg = QDBusMessage::createMethodCall(
+                    "org.kde.KWin", "/Caelestia/Workspaces", "org.caelestia.Workspaces", "SetDesktop");
+                msg << output << indexForId(targetUuid);
+                QDBusConnection::sessionBus().call(msg, QDBus::NoBlock);
+                return;
+            }
         }
 
         QDBusMessage msg = QDBusMessage::createMethodCall("org.kde.KWin", "/VirtualDesktopManager", "org.freedesktop.DBus.Properties", "Set");
