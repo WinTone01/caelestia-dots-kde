@@ -117,6 +117,8 @@ Item {
         root._initialized = true;
     }
 
+    onIsDraggingChanged: if (!isDragging) edgeDirection = 0
+
     onOpacityChanged: {
         if (opacity <= 0) {
             selectedIndex = -1;
@@ -556,9 +558,15 @@ Item {
                                         // neighbours: a workspace three swipes away
                                         // is not worth a stream. The window shown in
                                         // the info panel is excluded too -- that
-                                        // panel puts up its own frozen frame.
+                                        // panel puts up its own frozen frame. And
+                                        // not while something outside the grid has
+                                        // claimed the stream: KWin serves one node
+                                        // per window and a node feeds one consumer,
+                                        // so holding on would leave the other one
+                                        // drawing black.
                                         active: root.opacity > 0 && Math.abs(page.index - listView.currentIndex) <= 1
                                             && !(root.activeInfoClient && root.activeInfoClient.address === modelData.address)
+                                            && Visibilities.streamClaim !== modelData.address
                                         address: modelData.address ?? ""
                                         anchors.fill: parent
                                         fallbackIcon: modelData.iconName ? Icons.getAppIcon(modelData.iconName, "image-missing") : (modelData.class ? Icons.getAppIcon(modelData.class, "image-missing") : "")
@@ -788,7 +796,9 @@ Item {
     // The card itself belongs to the overview it started in and is clipped at
     // that screen's edge, so without this a window dragged across simply
     // disappears halfway and is released onto nothing visible. This follows the
-    // published pointer position and shows the application it is carrying.
+    // published pointer position and shows the same live preview the card was
+    // showing, so the window keeps its identity across the gap rather than
+    // turning into an icon on the way.
     Item {
         id: incoming
 
@@ -808,14 +818,26 @@ Item {
             && Visibilities.dragX < root.screen.x + root.screen.width
             && Visibilities.dragY >= root.screen.y
             && Visibilities.dragY < root.screen.y + root.screen.height
+        readonly property real aspect: {
+            const w = incoming.window;
+            if (w && w.width > 0 && w.height > 0)
+                return w.width / w.height;
+            return 16 / 9;
+        }
 
-        height: Math.round(Math.min(root.width, root.height) * 0.18)
+        // The size the card had on the screen it left, so crossing the gap does
+        // not resize the thing being carried.
+        height: Visibilities.dragHeight > 0 ? Visibilities.dragHeight : Math.round(width / Math.max(0.2, incoming.aspect))
         opacity: arriving ? 1 : 0
         visible: opacity > 0.01
-        width: height
+        width: Visibilities.dragWidth > 0 ? Visibilities.dragWidth : Math.round(Math.min(root.width, root.height) * 0.32)
         x: Visibilities.dragX - root.screen.x - width / 2
         y: Visibilities.dragY - root.screen.y - height / 2
         z: 1000
+
+        // Claimed while it is here so the card back on the origin screen gives
+        // the stream up; a node feeds one consumer.
+        onArrivingChanged: Visibilities.streamClaim = incoming.arriving ? Visibilities.dragAddress : ""
 
         Behavior on opacity {
             Anim {
@@ -823,21 +845,22 @@ Item {
             }
         }
 
-        StyledRect {
+        StyledClippingRect {
             anchors.fill: parent
-            color: Colours.tPalette.m3surfaceContainerHigh
+            color: Colours.palette.m3surfaceContainer
             radius: Tokens.rounding.large
 
-            IconImage {
-                anchors.centerIn: parent
-                asynchronous: true
-                implicitSize: Math.round(parent.height * 0.62)
-                source: {
+            WindowPreview {
+                active: incoming.arriving
+                address: Visibilities.dragAddress
+                anchors.fill: parent
+                fallbackIcon: {
                     const w = incoming.window;
                     if (!w)
                         return "";
                     return w.iconName ? Icons.getAppIcon(w.iconName, "image-missing") : (w.class ? Icons.getAppIcon(w.class, "image-missing") : "");
                 }
+                sourceAspect: incoming.aspect
             }
         }
     }
@@ -854,8 +877,15 @@ Item {
     Timer {
         id: edgeDwell
 
-        interval: 700
+        // running is bound rather than started and stopped by hand. A drag
+        // released while still inside an edge area never delivers an exit, so
+        // the stop call that was meant to pair with the start never arrived and
+        // the timer kept paging on its own long after the pointer was gone --
+        // workspaces flipping by themselves with nothing held. Tying it to the
+        // drag itself means it cannot outlive one.
+        interval: 900
         repeat: true
+        running: root.isDragging && root.edgeDirection !== 0
         onTriggered: {
             if (root.edgeDirection < 0 && listView.currentIndex > 0)
                 listView.currentIndex -= 1;
@@ -868,28 +898,16 @@ Item {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         width: 100
-        onEntered: {
-            root.edgeDirection = -1;
-            edgeDwell.restart();
-        }
-        onExited: {
-            root.edgeDirection = 0;
-            edgeDwell.stop();
-        }
+        onEntered: root.edgeDirection = -1
+        onExited: root.edgeDirection = 0
     }
     DropArea {
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         width: 100
-        onEntered: {
-            root.edgeDirection = 1;
-            edgeDwell.restart();
-        }
-        onExited: {
-            root.edgeDirection = 0;
-            edgeDwell.stop();
-        }
+        onEntered: root.edgeDirection = 1
+        onExited: root.edgeDirection = 0
     }
     StyledRect {
         anchors.left: parent.left

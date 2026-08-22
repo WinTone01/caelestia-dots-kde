@@ -1,5 +1,6 @@
 pragma ComponentBehavior: Bound
 
+import org.kde.pipewire as Pipewire
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -182,13 +183,31 @@ StyledRect {
 
         // Remembered because onExited carries no drag argument.
         property var hovering: null
+        property var hoveringIcon: null
+
+        function clearHover(): void {
+            if (windowDropArea.hovering) {
+                windowDropArea.hovering.dropTargetScale = 0;
+                windowDropArea.hovering = null;
+            }
+            if (windowDropArea.hoveringIcon) {
+                windowDropArea.hoveringIcon.overThumbnail = false;
+                windowDropArea.hoveringIcon = null;
+            }
+        }
 
         anchors.fill: parent
         onEntered: drag => {
             if (!drag.source || drag.source.clientAddress === undefined)
                 return;
-            // Icons dragged out of another thumbnail are sources too, and they
-            // have no preview to collapse -- only window cards carry this.
+            // An icon dragged out of a thumbnail is a source too. It has no
+            // preview to collapse -- it is already collapsed -- so being over a
+            // slot is simply what keeps it that way.
+            if ("overThumbnail" in drag.source) {
+                windowDropArea.hoveringIcon = drag.source;
+                drag.source.overThumbnail = true;
+                return;
+            }
             if (!("dropTargetScale" in drag.source))
                 return;
             // Nothing to preview when it is already here: a card hovering its
@@ -201,16 +220,9 @@ StyledRect {
             // landing in the slot rather than filling it exactly.
             drag.source.dropTargetScale = Math.min(width / Math.max(1, drag.source.width), height / Math.max(1, drag.source.height)) * 0.85;
         }
-        onExited: {
-            if (windowDropArea.hovering)
-                windowDropArea.hovering.dropTargetScale = 0;
-            windowDropArea.hovering = null;
-        }
+        onExited: windowDropArea.clearHover()
         onDropped: drop => {
-            if (windowDropArea.hovering) {
-                windowDropArea.hovering.dropTargetScale = 0;
-                windowDropArea.hovering = null;
-            }
+            windowDropArea.clearHover();
             const sourceItem = drop.source;
             if (sourceItem && sourceItem.clientAddress) {
                 if (sourceItem.wsId !== root.ws) {
@@ -271,6 +283,18 @@ StyledRect {
                 required property int index
                 readonly property string clientAddress: modelData.address || ""
                 readonly property int wsId: root.ws
+                /// Whether the drag currently rests on a workspace slot. An icon
+                /// pulled up out of the strip is on its way back to being a
+                /// window, so it opens into the live preview it stands for; put
+                /// back down on a slot it collapses again.
+                property bool overThumbnail: true
+                readonly property bool expanded: dragHandler.active && !iconDelegate.overThumbnail
+                readonly property real windowAspect: {
+                    const w = modelData.width, h = modelData.height;
+                    return (w > 0 && h > 0) ? w / h : 16 / 9;
+                }
+                property var streamRequest: null
+                readonly property int serial: streamRequest ? (streamRequest.objectSerial || streamRequest.nodeId) : 0
                 property real dragStartX: 0
                 property real dragStartY: 0
                 property real dragStartWidth: 0
@@ -282,6 +306,19 @@ StyledRect {
                         if (root.closingWindows[i] === modelData.address) return true;
                     }
                     return false;
+                }
+
+                // Deferred: ScreencastManager must not be reached while QML is
+                // still building the caller.
+                function updateStream(): void {
+                    if (iconDelegate.expanded && !iconDelegate.streamRequest && iconDelegate.clientAddress) {
+                        Visibilities.streamClaim = iconDelegate.clientAddress;
+                        iconDelegate.streamRequest = ScreencastManager.requestStream(iconDelegate.clientAddress);
+                    } else if (!iconDelegate.expanded && iconDelegate.streamRequest) {
+                        ScreencastManager.releaseStream(iconDelegate.clientAddress);
+                        iconDelegate.streamRequest = null;
+                        Visibilities.streamClaim = "";
+                    }
                 }
 
                 radius: Tokens.rounding.small
@@ -306,19 +343,30 @@ StyledRect {
                             parent: topLevel
                             x: iconDelegate.dragStartX
                             y: iconDelegate.dragStartY
-                            width: iconDelegate.dragStartWidth
-                            height: iconDelegate.dragStartHeight
                         }
                         PropertyChanges {
                             target: iconDelegate
+                            // Bound rather than set by ParentChange, so growing
+                            // and shrinking follow the drag instead of being
+                            // fixed once when it starts.
+                            height: iconDelegate.expanded ? Math.round(360 / Math.max(0.2, iconDelegate.windowAspect)) : iconDelegate.dragStartHeight
                             opacity: 0.8
+                            width: iconDelegate.expanded ? 360 : iconDelegate.dragStartWidth
                             z: 999
                         }
                     }
                 ]
 
+                onExpandedChanged: Qt.callLater(iconDelegate.updateStream)
+                Component.onDestruction: {
+                    if (iconDelegate.streamRequest && iconDelegate.clientAddress)
+                        ScreencastManager.releaseStream(iconDelegate.clientAddress);
+                }
+
                 Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
                 Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+                Behavior on width { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+                Behavior on height { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
 
 
                 DragHandler {
@@ -347,6 +395,18 @@ StyledRect {
                     implicitSize: Math.min(parent.width, parent.height) * 0.6
                     asynchronous: true
                     source: modelData.iconName ? Icons.getAppIcon(modelData.iconName, "image-missing") : (modelData.class ? Icons.getAppIcon(modelData.class, "image-missing") : "")
+                    visible: iconDelegate.serial === 0
+                }
+                Pipewire.PipeWireSourceItem {
+                    anchors.fill: parent
+                    visible: iconDelegate.serial !== 0
+
+                    Component.onCompleted: {
+                        if ("objectSerial" in this)
+                            this.objectSerial = Qt.binding(() => iconDelegate.streamRequest ? iconDelegate.streamRequest.objectSerial : 0);
+                        else if ("nodeId" in this)
+                            this.nodeId = Qt.binding(() => iconDelegate.streamRequest ? iconDelegate.streamRequest.nodeId : 0);
+                    }
                 }
                 StateLayer {
                     anchors.fill: parent

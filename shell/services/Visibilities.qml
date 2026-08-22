@@ -25,6 +25,16 @@ Singleton {
     property string dragOriginScreen: ""
     property real dragX: 0
     property real dragY: 0
+    /// Address of a window whose screencast is claimed by something other than
+    /// its card in the grid -- the preview shown on the screen a drag has been
+    /// carried to, or an icon pulled up out of the strip.
+    ///
+    /// KWin serves one node per window and a node feeds one consumer: a second
+    /// PipeWireSourceItem bound to the same stream draws black, which is what
+    /// both of those did. The card gives it up while the claim stands, and takes
+    /// it back afterwards. It is off screen or covered at that point, so there
+    /// is nothing to lose.
+    property string streamClaim: ""
 
     // Raised when the overview shortcut is pressed while the overview is
     // already up: the grid moves its selection on instead of the drawer
