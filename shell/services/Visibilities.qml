@@ -25,6 +25,8 @@ Singleton {
     property string dragOriginScreen: ""
     property real dragX: 0
     property real dragY: 0
+    property real dragWidth: 0
+    property real dragHeight: 0
     /// Address of a window whose screencast is claimed by something other than
     /// its card in the grid -- the preview shown on the screen a drag has been
     /// carried to, or an icon pulled up out of the strip.
@@ -61,10 +63,12 @@ Singleton {
         const monitor = Hypr.monitors[KWinActiveWindowBridge.cursorOutputName()] || Hypr.focusedMonitor;
         return screens.get(monitor) || screens.values().next().value;
     }
-    function setDrag(address: string, x: real, y: real, originScreen: string): void {
+    function setDrag(address: string, x: real, y: real, w: real, h: real, originScreen: string): void {
         dragAddress = address;
         dragX = x;
         dragY = y;
+        dragWidth = w;
+        dragHeight = h;
         dragOriginScreen = originScreen;
     }
     function clearDrag(): void {

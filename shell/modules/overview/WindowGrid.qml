@@ -45,7 +45,29 @@ Item {
     property bool isDragging: false
     /// -1 while a drag rests against the left edge, +1 against the right, 0
     /// otherwise. Drives the dwell that pages through workspaces.
-    property int edgeDirection: 0
+    ///
+    /// Read from the drag's own position rather than from drop areas at the
+    /// edges. Those reported entry and exit, and paging moves the grid under the
+    /// pointer, which counted as leaving -- so the second page never came while
+    /// the drag was held perfectly still. A position cannot be confused that way.
+    readonly property real edgeBand: 60
+    readonly property int edgeDirection: {
+        if (!root.isDragging || Visibilities.dragAddress === "" || Visibilities.dragOriginScreen !== root.screen.name)
+            return 0;
+        // Screen coordinates on both sides. The published position is relative
+        // to the window, which covers the screen; root is an item inside it and
+        // narrower, so measuring one against the other put the edge in the wrong
+        // place -- far enough out that it was never reached.
+        const local = Visibilities.dragX - root.screen.x;
+        const span = root.screen.width;
+        if (local < 0 || local >= span)
+            return 0; // gone to another screen; that is a move, not a page
+        if (local < root.edgeBand)
+            return -1;
+        if (local > span - root.edgeBand)
+            return 1;
+        return 0;
+    }
     readonly property real hoverScale: 1.02
     property int selectedIndex: -1
     readonly property var currentWindows: {
@@ -116,8 +138,6 @@ Item {
         ignoreTimer.stop();
         root._initialized = true;
     }
-
-    onIsDraggingChanged: if (!isDragging) edgeDirection = 0
 
     onOpacityChanged: {
         if (opacity <= 0) {
@@ -356,11 +376,17 @@ Item {
                             /// reverses it.
                             readonly property bool morphed: dragHandler.active && activeWin.dropTargetScale > 0
 
+                            // The pointer, not the card's middle. The card is held
+                            // wherever it was grabbed, so its centre sits at an
+                            // offset that drifts across boundaries on its own --
+                            // enough to cross the screen edge while the pointer was
+                            // still well inside it, which read as leaving the screen
+                            // and reset the edge dwell every time it wobbled.
                             function publishDrag(): void {
                                 if (!dragHandler.active)
                                     return;
-                                const p = activeWin.mapToItem(null, activeWin.width / 2, activeWin.height / 2);
-                                Visibilities.setDrag(activeWin.clientAddress, root.screen.x + p.x, root.screen.y + p.y, root.screen.name);
+                                const p = dragHandler.centroid.scenePosition;
+                                Visibilities.setDrag(activeWin.clientAddress, root.screen.x + p.x, root.screen.y + p.y, activeWin.width, activeWin.height, root.screen.name);
                             }
 
                             x: dragHandler.active ? x : layoutProps.x
@@ -380,7 +406,10 @@ Item {
                                     return activeWin.dropTargetScale;
                                 return activeWin.isSelected && !dragHandler.active ? root.hoverScale : 1;
                             }
-                            opacity: closing ? 0 : 1
+                            // Once the drag is over another screen that screen
+                            // draws it, and the half still poking out here would
+                            // otherwise sit there as a stream-less icon.
+                            opacity: closing || Visibilities.streamClaim === activeWin.clientAddress ? 0 : 1
                             border.width: activeWin.isSelected && !activeWin.morphed ? 2 : 0
                             border.color: Colours.palette.m3primary
 
@@ -435,8 +464,7 @@ Item {
                                         // land on a workspace of the monitor it came
                                         // from. Leaving the screen is the stronger
                                         // signal, so it is read first.
-                                        const centre = activeWin.mapToItem(null, activeWin.width / 2, activeWin.height / 2);
-                                        const target = root.screenAtGlobal(root.screen.x + centre.x, root.screen.y + centre.y);
+                                        const target = root.screenAtGlobal(Visibilities.dragX, Visibilities.dragY);
                                         if (target && target.name !== root.screen.name) {
                                             const addr = clientAddress;
                                             activeWin.Drag.cancel();
@@ -639,7 +667,10 @@ Item {
                                 anchors.right: cardLayout.right
                                 anchors.margins: Tokens.padding.small
                                 spacing: Tokens.spacing.small
-                                opacity: hover.hovered ? 1 : 0
+                                // Hidden for the whole drag: it belongs to the
+                                // card sitting in the grid, and left up it hovers
+                                // over the collapsed icon with nothing to act on.
+                                opacity: hover.hovered && !dragHandler.active ? 1 : 0
                                 visible: opacity > 0.01
 
                                 Behavior on opacity { Anim {} }
@@ -892,22 +923,6 @@ Item {
             else if (root.edgeDirection > 0 && listView.currentIndex < listView.count - 1)
                 listView.currentIndex += 1;
         }
-    }
-    DropArea {
-        anchors.left: parent.left
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        width: 100
-        onEntered: root.edgeDirection = -1
-        onExited: root.edgeDirection = 0
-    }
-    DropArea {
-        anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        width: 100
-        onEntered: root.edgeDirection = 1
-        onExited: root.edgeDirection = 0
     }
     StyledRect {
         anchors.left: parent.left

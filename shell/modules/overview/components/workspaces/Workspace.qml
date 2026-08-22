@@ -183,16 +183,11 @@ StyledRect {
 
         // Remembered because onExited carries no drag argument.
         property var hovering: null
-        property var hoveringIcon: null
 
         function clearHover(): void {
             if (windowDropArea.hovering) {
                 windowDropArea.hovering.dropTargetScale = 0;
                 windowDropArea.hovering = null;
-            }
-            if (windowDropArea.hoveringIcon) {
-                windowDropArea.hoveringIcon.overThumbnail = false;
-                windowDropArea.hoveringIcon = null;
             }
         }
 
@@ -200,14 +195,9 @@ StyledRect {
         onEntered: drag => {
             if (!drag.source || drag.source.clientAddress === undefined)
                 return;
-            // An icon dragged out of a thumbnail is a source too. It has no
-            // preview to collapse -- it is already collapsed -- so being over a
-            // slot is simply what keeps it that way.
-            if ("overThumbnail" in drag.source) {
-                windowDropArea.hoveringIcon = drag.source;
-                drag.source.overThumbnail = true;
-                return;
-            }
+            // An icon dragged out of a thumbnail is a source too, and has no
+            // preview to collapse -- it decides for itself, from how far it has
+            // been lifted.
             if (!("dropTargetScale" in drag.source))
                 return;
             // Nothing to preview when it is already here: a card hovering its
@@ -283,12 +273,17 @@ StyledRect {
                 required property int index
                 readonly property string clientAddress: modelData.address || ""
                 readonly property int wsId: root.ws
-                /// Whether the drag currently rests on a workspace slot. An icon
-                /// pulled up out of the strip is on its way back to being a
-                /// window, so it opens into the live preview it stands for; put
-                /// back down on a slot it collapses again.
-                property bool overThumbnail: true
-                readonly property bool expanded: dragHandler.active && !iconDelegate.overThumbnail
+                /// Whether this icon has been pulled far enough up out of the
+                /// strip to open into the window it stands for.
+                ///
+                /// Measured against where the drag started and switched on two
+                /// thresholds rather than one. Driving it from the slots the drag
+                /// passes over meant it flipped every time one was crossed, and
+                /// each flip tore down and rebuilt the screencast -- the icon
+                /// flickering between itself and the live view. A single
+                /// threshold would do the same to anyone holding near it.
+                property bool expanded: false
+                readonly property real liftedBy: dragHandler.active ? iconDelegate.dragStartY - iconDelegate.y : 0
                 readonly property real windowAspect: {
                     const w = modelData.width, h = modelData.height;
                     return (w > 0 && h > 0) ? w / h : 16 / 9;
@@ -357,6 +352,14 @@ StyledRect {
                     }
                 ]
 
+                onLiftedByChanged: {
+                    if (!dragHandler.active)
+                        iconDelegate.expanded = false;
+                    else if (!iconDelegate.expanded && iconDelegate.liftedBy > 170)
+                        iconDelegate.expanded = true;
+                    else if (iconDelegate.expanded && iconDelegate.liftedBy < 100)
+                        iconDelegate.expanded = false;
+                }
                 onExpandedChanged: Qt.callLater(iconDelegate.updateStream)
                 Component.onDestruction: {
                     if (iconDelegate.streamRequest && iconDelegate.clientAddress)
