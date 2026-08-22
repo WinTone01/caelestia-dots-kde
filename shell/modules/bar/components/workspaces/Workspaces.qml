@@ -48,6 +48,14 @@ Item {
             if (kwinList) {
                 for (let i = 0; i < kwinList.length; ++i) {
                     const w = kwinList[i];
+                    // KDE's virtual desktops span every screen, so a desktop is
+                    // "occupied" globally the moment anything is on it anywhere.
+                    // This bar belongs to one screen, and saying a desktop is
+                    // busy because of a window the user cannot see from here is
+                    // not useful -- it reports a full desktop as full and an
+                    // empty one as full too.
+                    if (w.output !== root.screen.name)
+                        continue;
                     if (w.workspace && typeof w.workspace.id === "number") {
                         occ[w.workspace.id] = true;
                     }
@@ -121,8 +129,9 @@ Item {
 
                     Workspace {
                         activeWsId: container.activeWsId
-                        occupied: container.occupied
                         groupOffset: container.groupOffset
+                        occupied: container.occupied
+                        screenName: root.screen.name
                     }
                 }
             }
