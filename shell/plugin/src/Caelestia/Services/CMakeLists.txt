@@ -66,6 +66,8 @@ qml_module(caelestia-services
         krohnkiteconfig.hpp
         windowscreencast.cpp
         windowscreencast.hpp
+        windowstream.cpp
+        windowstream.hpp
         windowicon.hpp
         minimizegeometry.cpp
         minimizegeometry.hpp
