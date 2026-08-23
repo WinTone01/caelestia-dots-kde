@@ -419,7 +419,7 @@ if [[ "${CAELESTIA_TMUX_MASTER:-0}" == "0" ]]; then
             exit 1
         }
 
-    
+
         kill $SPINNER_PID 2>/dev/null || true
         wait $SPINNER_PID 2>/dev/null || true
         echo ""
@@ -445,7 +445,7 @@ cleanup_install_state() {
         qdbus6 org.freedesktop.ScreenSaver /ScreenSaver org.freedesktop.ScreenSaver.UnInhibit "$(cat /tmp/caelestia_kde_inhibit.cookie)" 2>/dev/null || true
     fi
     rm -f /tmp/caelestia_inhibit.pid /tmp/caelestia_kde_inhibit.cookie
-    
+
     if [[ -n "${TMUX:-}" && "${CAELESTIA_TMUX_MASTER:-0}" == "1" ]]; then
         tmux kill-session -t caelestia_install 2>/dev/null || true
         rm -f /tmp/caelestia_cmd /tmp/caelestia_status
@@ -457,13 +457,13 @@ trap cleanup_install_state EXIT
 if [[ -z "${TMUX:-}" && "${CAELESTIA_NO_TMUX:-0}" == "0" && "${CAELESTIA_USE_TMUX:-1}" == "1" ]]; then
     # Kill any stale session first
     tmux kill-session -t caelestia_install 2>/dev/null || true
-    
+
     export CAELESTIA_TMUX_MASTER=1
     rm -f /tmp/caelestia_cmd /tmp/caelestia_status
     rm -f /tmp/caelestia_installer_err.log
     mkfifo /tmp/caelestia_cmd
     mkfifo /tmp/caelestia_status
-    
+
     # Wrapper keeps the tmux pane alive after exit/crash for diagnostics.
     WRAPPER_SCRIPT="/tmp/caelestia_tmux_wrapper.sh"
     printf -v args_str '%q ' "$0" "$@"
@@ -486,7 +486,7 @@ WRAPPER_EOF
     # Keep pane visible on failure; close normally on success.
     tmux set-option -t caelestia_install remain-on-exit failed
     tmux set-option -t caelestia_install mouse on
-    
+
     tmux attach-session -t caelestia_install
     _tmux_exit=$?
 
