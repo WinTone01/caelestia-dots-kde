@@ -15,6 +15,36 @@
 
 set -eu
 
+{
+# When piped (e.g. `curl ... | sh` or `cat install.sh | sh`), stdin is
+# a pipe — not a TTY.  Re-open /dev/tty as stdin so that the interactive
+# TUI installer and `tmux attach-session` work correctly.
+# This mirrors the approach used by rustup, Homebrew, and similar installers.
+if [ ! -t 0 ]; then
+    # Tmux rejects attachment if `ttyname(0)` literally returns "/dev/tty".
+    # Find the real pseudo-terminal (e.g. /dev/pts/0) from stdout or stderr first.
+    REAL_TTY=""
+    if [ -t 1 ]; then
+        REAL_TTY=$(tty 0>&1 2>/dev/null || true)
+    elif [ -t 2 ]; then
+        REAL_TTY=$(tty 0>&2 2>/dev/null || true)
+    fi
+
+    if [ -n "$REAL_TTY" ] && [ "$REAL_TTY" != "not a tty" ] && [ -e "$REAL_TTY" ]; then
+        exec 0<>"$REAL_TTY"
+    elif [ -e /dev/tty ]; then
+        # If we couldn't resolve the true pseudo-terminal path, fallback to /dev/tty.
+        # Tmux strictly rejects `/dev/tty` via ttyname(0), so we must disable tmux.
+        # The C++ TUI will still run perfectly fine directly on /dev/tty.
+        exec 0<>/dev/tty
+        export CAELESTIA_USE_TMUX=0
+    else
+        echo "[Caelestia] ERROR: stdin is not a terminal and no TTY is available." >&2
+        echo "[Caelestia] Please run the installer directly: bash install.sh" >&2
+        exit 1
+    fi
+fi
+
 REPO="${CAELESTIA_REPO:-https://github.com/ladybug-me/caelestia-dots-kde.git}"
 BRANCH="${CAELESTIA_BRANCH:-main}"
 DEST="${CAELESTIA_DIR:-$HOME/caelestia-dots-kde}"
@@ -27,9 +57,7 @@ fi
 # If run from an existing checkout (e.g. `sh install.sh` inside the repo),
 # reuse it instead of cloning a fresh copy.
 if [ -f "./scripts/setup.sh" ]; then
-    if [ ! -t 0 ] && [ -c /dev/tty ]; then
-        exec bash "$(pwd)/scripts/setup.sh" </dev/tty
-    fi
+    echo "[Caelestia] Using existing checkout at $(pwd)"
     exec bash "$(pwd)/scripts/setup.sh"
 fi
 
@@ -44,7 +72,5 @@ else
     git clone -b "$BRANCH" --single-branch --depth 1 "$REPO" "$DEST"
 fi
 
-if [ ! -t 0 ] && [ -c /dev/tty ]; then
-    exec bash "$DEST/scripts/setup.sh" </dev/tty
-fi
 exec bash "$DEST/scripts/setup.sh"
+}

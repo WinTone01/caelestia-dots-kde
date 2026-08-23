@@ -433,7 +433,11 @@ if [[ "${CAELESTIA_TMUX_MASTER:-0}" == "0" ]]; then
 fi
 
 cleanup_install_state() {
+    # Always reset the terminal state on exit, regardless of how we exited (Ctrl+C, crash, etc.)
+    stty sane 2>/dev/null || true
     tput cnorm 2>/dev/null || true
+    printf '\033[0m\033[?1049l\033[?25h' 2>/dev/null || true
+
     if [[ -f /tmp/caelestia_inhibit.pid ]]; then
         kill -9 "$(cat /tmp/caelestia_inhibit.pid)" 2>/dev/null || true
     fi
@@ -485,6 +489,13 @@ WRAPPER_EOF
     
     tmux attach-session -t caelestia_install
     _tmux_exit=$?
+
+    # Always restore terminal state immediately after tmux exits, regardless of
+    # how it exited (normal, Ctrl+C, crash).  The TUI binary may have left the
+    # terminal in raw mode / alt-screen; without this the shell appears "stuck".
+    stty sane 2>/dev/null || true
+    tput cnorm 2>/dev/null || true
+    printf '\033[0m\033[?1049l\033[?25h' 2>/dev/null || true
 
     # Surface inner-script diagnostics in the outer terminal.
     _needs_pause=0
