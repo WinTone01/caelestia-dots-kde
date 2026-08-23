@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import org.kde.pipewire as Pipewire
 import QtQuick
 import Quickshell.Widgets
+import Caelestia.Config
 import Caelestia.Services
 
 // A window's live preview, with the application icon standing in until there is
@@ -32,7 +33,13 @@ Item {
     WindowStream {
         id: stream
 
-        active: root.active
+        // bar.livePreviews is the user's switch for this whole feature -- it
+        // exists because KWin's screencast protocol cannot always be shared, and
+        // on some setups the shell holding streams breaks another application's
+        // screen share or camera. ScreencastManager used to gate on it; when it
+        // was replaced the gate was not carried over, leaving the setting
+        // writable and read by nothing.
+        active: root.active && GlobalConfig.bar.livePreviews
         address: root.address
     }
 
