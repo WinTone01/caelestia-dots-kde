@@ -243,7 +243,7 @@ Item {
                     wsWindows = arr;
                 }
             }
-            
+
             on_WinTriggerChanged: _updateWsWindows()
             on_HyprTriggerChanged: _updateWsWindows()
             onWsIdChanged: _updateWsWindows()
@@ -430,7 +430,17 @@ Item {
                                         active: root.opacity > 0 && Math.abs(page.index - listView.currentIndex) <= 1
                                             && !(root.activeInfoClient && root.activeInfoClient.address === modelData.address)
                                         address: modelData.address ?? ""
-                                        anchors.fill: parent
+                                        width: {
+                                            const wAspect = activeWin.windowAspect;
+                                            const containerAspect = thumb.width / Math.max(1, thumb.height);
+                                            return (wAspect > containerAspect) ? thumb.height * wAspect : thumb.width;
+                                        }
+                                        height: {
+                                            const wAspect = activeWin.windowAspect;
+                                            const containerAspect = thumb.width / Math.max(1, thumb.height);
+                                            return (wAspect > containerAspect) ? thumb.height : thumb.width / wAspect;
+                                        }
+                                        anchors.centerIn: parent
                                         fallbackIcon: modelData.iconName ? Icons.getAppIcon(modelData.iconName, "image-missing") : (modelData.class ? Icons.getAppIcon(modelData.class, "image-missing") : "")
                                         sourceAspect: activeWin.windowAspect
                                     }
