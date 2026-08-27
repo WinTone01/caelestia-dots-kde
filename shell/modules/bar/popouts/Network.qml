@@ -538,6 +538,7 @@ ColumnLayout {
 
         RowLayout {
             required property var modelData
+
             visible: modelData.value !== ""
 
             Layout.fillWidth: true
@@ -558,7 +559,6 @@ ColumnLayout {
             }
         }
     }
-
         }
     }
 

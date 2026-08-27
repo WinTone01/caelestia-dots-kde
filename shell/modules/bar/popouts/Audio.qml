@@ -31,10 +31,6 @@ ColumnLayout {
     readonly property bool hasSources: Audio.sources.length > 0
     readonly property bool hasStreams: Audio.appStreams.length > 0
 
-    width: Math.max(440 * scaleOffset, _isSidebarOpen ? (Tokens.sizes.sidebar.width * scaleOffset) - Tokens.padding.extraLargeIncreased : 0)
-    implicitWidth: width
-    spacing: Tokens.spacing.small * scaleOffset
-
     function outputIcon(node: PwNode): string {
         if (!node)
             return "speaker";
@@ -61,17 +57,21 @@ ColumnLayout {
         _streamCount = Audio.appStreams.length;
     }
 
+    width: Math.max(440 * scaleOffset, _isSidebarOpen ? (Tokens.sizes.sidebar.width * scaleOffset) - Tokens.padding.extraLargeIncreased : 0)
+    implicitWidth: width
+    spacing: Tokens.spacing.small * scaleOffset
+
     Component.onCompleted: {
         _streamCount = Audio.appStreams.length;
         appsSection.expanded = _streamCount > 0;
     }
 
     Connections {
-        target: Audio
-
         function onStreamsChanged(): void {
             root.syncStreamsSection();
         }
+
+        target: Audio
     }
 
     RowLayout {
@@ -388,7 +388,6 @@ ColumnLayout {
                 label: Audio.getStreamName(modelData)
                 valueLabel: Audio.getAppMuted(modelData) ? qsTr("Muted") : Math.round(value * 100) + "%"
                 value: Audio.getAppVolume(modelData)
-                enabled: !Audio.getAppMuted(modelData)
                 onIconClicked: Audio.setAppMuted(modelData, !Audio.getAppMuted(modelData))
                 onMoved: v => Audio.setAppVolume(modelData, v)
             }

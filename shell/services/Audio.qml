@@ -231,7 +231,7 @@ Singleton {
         const newSources = [];
         const newStreams = [];
         const newAppStreams = [];
-        const seenApps = [];
+        const seenApps = new Set();
 
         for (const node of Pipewire.nodes.values) {
             if (!node.isStream) {
@@ -245,8 +245,8 @@ Singleton {
                 const name = getStreamName(node);
                 if (name === root.selfAppName)
                     continue;
-                if (!seenApps.includes(name)) {
-                    seenApps.push(name);
+                if (!seenApps.has(name)) {
+                    seenApps.add(name);
                     newAppStreams.push(node);
                 }
             }

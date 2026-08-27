@@ -62,7 +62,6 @@ PageBase {
                 label: Audio.getStreamName(stream.modelData)
                 valueLabel: Audio.getAppMuted(stream.modelData) ? qsTr("Muted") : Math.round(value * 100) + "%"
                 value: Audio.getAppVolume(stream.modelData)
-                enabled: !Audio.getAppMuted(stream.modelData)
                 onMoved: v => Audio.setAppVolume(stream.modelData, v)
             }
         }
