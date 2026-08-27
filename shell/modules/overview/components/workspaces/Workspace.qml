@@ -1,6 +1,5 @@
 pragma ComponentBehavior: Bound
 
-import org.kde.pipewire as Pipewire
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -288,8 +287,6 @@ StyledRect {
                     const w = modelData.width, h = modelData.height;
                     return (w > 0 && h > 0) ? w / h : 16 / 9;
                 }
-                property var streamRequest: null
-                readonly property int serial: streamRequest ? (streamRequest.objectSerial || streamRequest.nodeId) : 0
                 property real dragStartX: 0
                 property real dragStartY: 0
                 property real dragStartWidth: 0
@@ -301,19 +298,6 @@ StyledRect {
                         if (root.closingWindows[i] === modelData.address) return true;
                     }
                     return false;
-                }
-
-                // Deferred: ScreencastManager must not be reached while QML is
-                // still building the caller.
-                function updateStream(): void {
-                    if (iconDelegate.expanded && !iconDelegate.streamRequest && iconDelegate.clientAddress) {
-                        Visibilities.streamClaim = iconDelegate.clientAddress;
-                        iconDelegate.streamRequest = ScreencastManager.requestStream(iconDelegate.clientAddress);
-                    } else if (!iconDelegate.expanded && iconDelegate.streamRequest) {
-                        ScreencastManager.releaseStream(iconDelegate.clientAddress);
-                        iconDelegate.streamRequest = null;
-                        Visibilities.streamClaim = "";
-                    }
                 }
 
                 radius: Tokens.rounding.small
@@ -360,10 +344,12 @@ StyledRect {
                     else if (iconDelegate.expanded && iconDelegate.liftedBy < 100)
                         iconDelegate.expanded = false;
                 }
-                onExpandedChanged: Qt.callLater(iconDelegate.updateStream)
+                // Claimed while open so the card in the grid gives the stream
+                // up; a node feeds one consumer.
+                onExpandedChanged: Visibilities.streamClaim = iconDelegate.expanded ? iconDelegate.clientAddress : ""
                 Component.onDestruction: {
-                    if (iconDelegate.streamRequest && iconDelegate.clientAddress)
-                        ScreencastManager.releaseStream(iconDelegate.clientAddress);
+                    if (iconDelegate.expanded)
+                        Visibilities.streamClaim = "";
                 }
 
                 Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
@@ -393,23 +379,16 @@ StyledRect {
                         }
                     }
                 }
-                IconImage {
-                    anchors.centerIn: parent
-                    implicitSize: Math.min(parent.width, parent.height) * 0.6
-                    asynchronous: true
-                    source: modelData.iconName ? Icons.getAppIcon(modelData.iconName, "image-missing") : (modelData.class ? Icons.getAppIcon(modelData.class, "image-missing") : "")
-                    visible: iconDelegate.serial === 0
-                }
-                Pipewire.PipeWireSourceItem {
+                WindowPreview {
+                    // Collapsed it is just the icon; lifted out of the strip it
+                    // opens into the window, which is what WindowPreview shows
+                    // once a stream arrives.
+                    active: iconDelegate.expanded
+                    address: iconDelegate.clientAddress
                     anchors.fill: parent
-                    visible: iconDelegate.serial !== 0
-
-                    Component.onCompleted: {
-                        if ("objectSerial" in this)
-                            this.objectSerial = Qt.binding(() => iconDelegate.streamRequest ? iconDelegate.streamRequest.objectSerial : 0);
-                        else if ("nodeId" in this)
-                            this.nodeId = Qt.binding(() => iconDelegate.streamRequest ? iconDelegate.streamRequest.nodeId : 0);
-                    }
+                    fallbackIcon: modelData.iconName ? Icons.getAppIcon(modelData.iconName, "image-missing") : (modelData.class ? Icons.getAppIcon(modelData.class, "image-missing") : "")
+                    fallbackScale: 0.6
+                    sourceAspect: iconDelegate.windowAspect
                 }
                 StateLayer {
                     anchors.fill: parent
