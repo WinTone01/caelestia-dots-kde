@@ -20,6 +20,25 @@ ColumnLayout {
     property bool showPasswordDialog: false
     property bool _isSidebarOpen: popouts.sidebarOpen && popouts.isHorizontal
 
+    readonly property var activeDeviceDetails: root.view === "wireless" ? Nmcli.wirelessDeviceDetails : Nmcli.ethernetDeviceDetails
+    readonly property var activeDetails: {
+        const d = root.activeDeviceDetails;
+        if (!d || typeof d !== "object" || Object.keys(d).length === 0)
+            return { visible: false, rows: [] };
+
+        const dnsList = Array.isArray(d.dns) ? d.dns : [];
+        return {
+            visible: true,
+            rows: [
+                { label: qsTr("IP address"), value: d.ipAddress ?? "" },
+                { label: qsTr("Subnet mask"), value: d.subnet ?? "" },
+                { label: qsTr("Gateway"), value: d.gateway ?? "" },
+                { label: qsTr("DNS"), value: dnsList.join(", ") },
+                { label: qsTr("MAC address"), value: d.macAddress ?? "" }
+            ]
+        };
+    }
+
     readonly property real masterScale: !isNaN(GlobalConfig.bar.previewScale) ? GlobalConfig.bar.previewScale : 1.0
     readonly property real elementOffset: GlobalConfig.bar.perElementPreviewScale ? (!isNaN(GlobalConfig.bar.previewScales.network) ? GlobalConfig.bar.previewScales.network : 0.0) : 0.0
     readonly property real barScaleOffset: GlobalConfig.bar.previewScaleWithBar ? (!isNaN(GlobalConfig.bar.scale) ? GlobalConfig.bar.scale : 1.0) : 1.0
@@ -501,6 +520,41 @@ ColumnLayout {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    // Connection details (IP / subnet / gateway / DNS / MAC) for the active device
+    StyledText {
+        visible: root.activeDetails.visible
+        Layout.topMargin: Tokens.padding.medium * root.scaleOffset
+        Layout.rightMargin: Tokens.padding.extraSmall * root.scaleOffset
+        text: qsTr("Connection details")
+        font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
+    }
+
+    Repeater {
+        model: root.activeDetails.rows
+
+        RowLayout {
+            required property var modelData
+            visible: modelData.value !== ""
+
+            Layout.fillWidth: true
+            Layout.rightMargin: Tokens.padding.extraSmall * root.scaleOffset
+            spacing: Tokens.spacing.small * root.scaleOffset
+
+            StyledText {
+                Layout.fillWidth: true
+                text: modelData.label
+                font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
+            }
+
+            StyledText {
+                text: modelData.value
+                color: Colours.palette.m3onSurfaceVariant
+                elide: Text.ElideRight
+                font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
             }
         }
     }

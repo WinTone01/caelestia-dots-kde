@@ -8,6 +8,7 @@ import Caelestia.Config
 import qs.components
 import qs.components.controls
 import qs.services
+import qs.utils
 
 ColumnLayout {
     id: root
@@ -148,6 +149,51 @@ ColumnLayout {
             value: Audio.volume
             onInteraction: v => Audio.setVolume(v)
             onReleased: v => Audio.playEffectTick()
+        }
+    }
+
+    StyledText {
+        visible: Audio.streams.length > 0
+        Layout.topMargin: Tokens.spacing.medium * root.scaleOffset
+        text: qsTr("App volumes")
+        font.weight: Font.Medium
+        font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
+    }
+
+    StyledRect {
+        visible: Audio.streams.length > 0
+        Layout.fillWidth: true
+        implicitWidth: streamsLayout.implicitWidth + Tokens.padding.medium * 2 * root.scaleOffset
+        implicitHeight: streamsLayout.implicitHeight + Tokens.padding.medium * 2 * root.scaleOffset
+        radius: Tokens.rounding.medium * root.scaleOffset
+        color: Colours.tPalette.m3surfaceContainer
+        clip: true
+
+        ColumnLayout {
+            id: streamsLayout
+
+            width: parent.width - Tokens.padding.medium * 2 * root.scaleOffset
+            x: Tokens.padding.medium * root.scaleOffset
+            y: Tokens.padding.medium * root.scaleOffset
+            spacing: Tokens.spacing.extraSmall / 2 * root.scaleOffset
+
+            Repeater {
+                model: Audio.streams
+
+                SliderRow {
+                    required property PwNode modelData
+                    required property int index
+
+                    first: index === 0
+                    last: index === Audio.streams.length - 1
+                    icon: Icons.getVolumeIcon(modelData?.audio?.volume ?? 0, modelData?.audio?.muted ?? false)
+                    label: Audio.getStreamName(modelData)
+                    valueLabel: Math.round(value * 100) + "%"
+                    value: modelData?.audio?.volume ?? 0
+                    enabled: !modelData?.audio?.muted
+                    onMoved: v => Audio.setStreamVolume(modelData, v)
+                }
+            }
         }
     }
 
