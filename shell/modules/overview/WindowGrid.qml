@@ -37,13 +37,9 @@ Item {
         if (listView.currentIndex >= wsList.length)
             return [];
         const wsId = wsList[listView.currentIndex].index;
-        const all = typeof KWinActiveWindowBridge !== "undefined" ? KWinActiveWindowBridge.windowList : null;
-        const out = [];
-        if (all)
-            for (let i = 0; i < all.length; ++i)
-                if (all[i].workspace && (all[i].workspace.id === wsId || all[i].workspace.index === wsId))
-                    out.push(all[i]);
-        return out;
+        return typeof KWinActiveWindowBridge !== "undefined"
+            ? KWinActiveWindowBridge.windowsForWorkspace(wsId, false)
+            : [];
     }
 
     signal requestWindowInfo(var client)
@@ -214,12 +210,7 @@ Item {
 
                 let arr = [];
                 if (kwinList) {
-                    for (let i = 0; i < kwinList.length; ++i) {
-                        const w = kwinList[i];
-                        if (w.workspace && (w.workspace.id === wsId || w.workspace.index === wsId)) {
-                            arr.push(w);
-                        }
-                    }
+                    arr = KWinActiveWindowBridge.windowsForWorkspace(wsId, false);
                 } else if (hyprList) {
                     for (let i = 0; i < hyprList.length; ++i) {
                         const w = hyprList[i];

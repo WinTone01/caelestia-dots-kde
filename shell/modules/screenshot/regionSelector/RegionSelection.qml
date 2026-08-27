@@ -77,33 +77,18 @@ PanelWindow {
     property string snapshotWorkspaceUuid: ""
 
     readonly property var windows: {
-        let arr = Array.from(KWinActiveWindowBridge.windowList || []);
-
         // Prefer the snapshotted workspace (set when overlay opens) so that
         // focusWindow() calls during hover cannot cause the filter to shift.
         const useSnapshot = root.snapshotWorkspaceId > 0 || root.snapshotWorkspaceUuid !== "";
-        const activeId = useSnapshot ? root.snapshotWorkspaceId
+        const target = useSnapshot
+            ? (root.snapshotWorkspaceUuid !== "" ? root.snapshotWorkspaceUuid : root.snapshotWorkspaceId)
             : (typeof KWinWorkspaceState !== "undefined" ? KWinWorkspaceState.activeId : 0);
-        const activeIdx = activeId > 0 ? activeId - 1 : 0;
-        const activeUuid = useSnapshot ? root.snapshotWorkspaceUuid
-            : (typeof KWinWorkspaceState !== "undefined" && KWinWorkspaceState.workspaces[activeIdx]
-                ? KWinWorkspaceState.workspaces[activeIdx].id : "");
 
-        if (activeId > 0 || activeUuid !== "") {
-            arr = arr.filter(w => {
-                if (!w.workspace) return true;
-
-                if (typeof w.workspace.id === "number") {
-                    if (w.workspace.id === -1) return true; // On all workspaces
-                    return w.workspace.id === activeId;
-                } else if (typeof w.workspace.id === "string") {
-                    if (w.workspace.id === "") return true;
-                    return w.workspace.id === activeUuid;
-                }
-
-                return true;
-            });
-        }
+        // windowsForWorkspace owns the workspace-field semantics (numeric id /
+        // uuid, -1 = all workspaces), so hover-focus cannot drift the filter.
+        const arr = Array.from(typeof KWinActiveWindowBridge !== "undefined"
+            ? KWinActiveWindowBridge.windowsForWorkspace(target)
+            : []);
 
         return arr.sort((a, b) => {
             // Sort floating=true windows before others
