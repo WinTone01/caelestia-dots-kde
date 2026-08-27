@@ -36,6 +36,9 @@ StyledRect {
             },
             {
                 id: "nightlight"
+            },
+            {
+                id: "easyeffects"
             }
         ].filter(t => !disabledIds.has(t.id));
 
@@ -49,6 +52,12 @@ StyledRect {
 
             if (item.id === "vpn") {
                 return GlobalConfig.utilities.vpn.provider.some(p => typeof p === "object" ? (p.enabled === true) : false);
+            }
+
+            // Nothing to toggle if it is not installed, and a dead button is
+            // worse than no button.
+            if (item.id === "easyeffects") {
+                return EasyEffects.available;
             }
 
             return true;
@@ -239,6 +248,14 @@ StyledRect {
                             const newVal = !GlobalConfig.background.videoWallpaperPaused;
                             GlobalConfig.background.videoWallpaperPaused = newVal;
                         }
+                    }
+                }
+                DelegateChoice {
+                    roleValue: "easyeffects"
+                    delegate: Toggle {
+                        checked: EasyEffects.active
+                        icon: "graphic_eq"
+                        onClicked: EasyEffects.toggle()
                     }
                 }
                 DelegateChoice {
