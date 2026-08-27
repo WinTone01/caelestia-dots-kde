@@ -35,6 +35,25 @@ Singleton {
         confirmTimer.restart();
     }
 
+    /// Opens the EasyEffects window, where its presets and the effect chain are
+    /// configured -- the toggle only starts and stops it.
+    ///
+    /// It quits first rather than just launching. EasyEffects is single
+    /// instance, so a second launch reaches the running one and exits, and an
+    /// instance started with --hide-window stays hidden when it does: measured
+    /// on 8.2.8, a plain launch returns 0 and no window ever appears. Quitting
+    /// and starting again without that flag is what actually puts it on screen.
+    ///
+    /// The cost is a moment without effects while it restarts. That is worth
+    /// naming, but a right click that silently does nothing is worse, and the
+    /// windowed instance goes on applying the same chain once it is up.
+    function open(): void {
+        Quickshell.execDetached(["bash", "-c",
+            "easyeffects -q >/dev/null 2>&1; flatpak kill com.github.wwmm.easyeffects >/dev/null 2>&1; "
+            + "easyeffects >/dev/null 2>&1 || flatpak run com.github.wwmm.easyeffects >/dev/null 2>&1"]);
+        confirmTimer.restart();
+    }
+
     function toggle(): void {
         if (root.active)
             root.disable();
