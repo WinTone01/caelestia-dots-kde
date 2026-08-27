@@ -1,7 +1,6 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell.Services.Pipewire
 import Caelestia.Config
@@ -25,18 +24,10 @@ ColumnLayout {
     readonly property real fontScale: Math.max(0.1, scaleOffset + (!isNaN(GlobalConfig.bar.fontScaleOffset) ? GlobalConfig.bar.fontScaleOffset : 0.0) + elementFontOffset)
 
     implicitWidth: Math.max(300 * scaleOffset, _isSidebarOpen ? (Tokens.sizes.sidebar.width * scaleOffset) - Tokens.padding.extraLargeIncreased : 0)
-    spacing: Tokens.spacing.medium * scaleOffset
-
-    ButtonGroup {
-        id: sinks
-    }
-
-    ButtonGroup {
-        id: sources
-    }
+    spacing: Tokens.spacing.small * scaleOffset
 
     StyledText {
-        Layout.topMargin: Tokens.padding.medium * root.scaleOffset
+        Layout.topMargin: Tokens.padding.small * root.scaleOffset
         Layout.leftMargin: Tokens.padding.small * root.scaleOffset
         text: qsTr("Audio")
         font.weight: 500
@@ -45,137 +36,97 @@ ColumnLayout {
 
     StyledRect {
         Layout.fillWidth: true
-        implicitWidth: outputLayout.implicitWidth + Tokens.padding.medium * 2 * root.scaleOffset
-        implicitHeight: outputLayout.implicitHeight + Tokens.padding.medium * 2 * root.scaleOffset
+        implicitHeight: devicesLayout.implicitHeight + Tokens.padding.small * 2 * root.scaleOffset
         radius: Tokens.rounding.medium * root.scaleOffset
         color: Colours.tPalette.m3surfaceContainer
         clip: true
 
         ColumnLayout {
-            id: outputLayout
+            id: devicesLayout
 
-            width: parent.width - Tokens.padding.medium * 2 * root.scaleOffset
-            x: Tokens.padding.medium * root.scaleOffset
-            y: Tokens.padding.medium * root.scaleOffset
-            spacing: Tokens.spacing.medium * root.scaleOffset
+            width: parent.width - Tokens.padding.small * 2 * root.scaleOffset
+            x: Tokens.padding.small * root.scaleOffset
+            y: Tokens.padding.small * root.scaleOffset
+            spacing: Tokens.spacing.extraSmall * root.scaleOffset
 
             StyledText {
                 text: qsTr("Output device")
-                font.weight: Font.Medium
-                font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
+                color: Colours.palette.m3onSurfaceVariant
+                font.pointSize: Tokens.font.label.small.pointSize * root.fontScale
             }
 
             Repeater {
                 model: Audio.sinks
 
-                StyledRadioButton {
-                    id: outputControl
-
+                DeviceOption {
                     required property PwNode modelData
 
-                    ButtonGroup.group: sinks
-                    checked: Audio.sink?.id === modelData.id
-                    onClicked: Audio.setAudioSink(modelData)
-                    text: modelData.description
-                    font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
+                    label: modelData.description
+                    active: Audio.sink?.id === modelData.id
+                    onSelected: Audio.setAudioSink(modelData)
                 }
             }
-        }
-    }
-
-    StyledRect {
-        Layout.fillWidth: true
-        implicitWidth: inputLayout.implicitWidth + Tokens.padding.medium * 2 * root.scaleOffset
-        implicitHeight: inputLayout.implicitHeight + Tokens.padding.medium * 2 * root.scaleOffset
-        radius: Tokens.rounding.medium * root.scaleOffset
-        color: Colours.tPalette.m3surfaceContainer
-        clip: true
-
-        ColumnLayout {
-            id: inputLayout
-
-            width: parent.width - Tokens.padding.medium * 2 * root.scaleOffset
-            x: Tokens.padding.medium * root.scaleOffset
-            y: Tokens.padding.medium * root.scaleOffset
-            spacing: Tokens.spacing.medium * root.scaleOffset
 
             StyledText {
+                Layout.topMargin: Tokens.padding.extraSmall * root.scaleOffset
                 text: qsTr("Input device")
-                font.weight: Font.Medium
-                font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
+                color: Colours.palette.m3onSurfaceVariant
+                font.pointSize: Tokens.font.label.small.pointSize * root.fontScale
             }
 
             Repeater {
                 model: Audio.sources
 
-                StyledRadioButton {
-                    id: inputControl
-
+                DeviceOption {
                     required property PwNode modelData
 
-                    ButtonGroup.group: sources
-                    checked: Audio.source?.id === modelData.id
-                    onClicked: Audio.setAudioSource(modelData)
-                    text: modelData.description
-                    font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
+                    label: modelData.description
+                    active: Audio.source?.id === modelData.id
+                    onSelected: Audio.setAudioSource(modelData)
                 }
             }
         }
     }
 
     StyledText {
-        Layout.topMargin: Tokens.spacing.medium * root.scaleOffset
-        text: qsTr("Volume (%1)").arg(Audio.muted ? qsTr("Muted") : `${Math.round(Audio.volume * 100)}%`)
-        font.weight: Font.Medium
-        font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
-    }
-
-    CustomMouseArea {
-        Layout.fillWidth: true
-        implicitHeight: Tokens.padding.medium * 3 * root.scaleOffset
-
-        onWheel: event => {
-            if (event.angleDelta.y > 0)
-                Audio.incrementVolume();
-            else if (event.angleDelta.y < 0)
-                Audio.decrementVolume();
-        }
-
-        StyledSlider {
-            anchors.left: parent.left
-            anchors.right: parent.right
-            implicitHeight: parent.implicitHeight
-
-            value: Audio.volume
-            onInteraction: v => Audio.setVolume(v)
-            onReleased: v => Audio.playEffectTick()
-        }
-    }
-
-    StyledText {
-        visible: Audio.streams.length > 0
-        Layout.topMargin: Tokens.spacing.medium * root.scaleOffset
-        text: qsTr("App volumes")
+        Layout.topMargin: Tokens.spacing.small * root.scaleOffset
+        Layout.leftMargin: Tokens.padding.small * root.scaleOffset
+        text: qsTr("Volume")
         font.weight: Font.Medium
         font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
     }
 
     StyledRect {
-        visible: Audio.streams.length > 0
         Layout.fillWidth: true
-        implicitWidth: streamsLayout.implicitWidth + Tokens.padding.medium * 2 * root.scaleOffset
-        implicitHeight: streamsLayout.implicitHeight + Tokens.padding.medium * 2 * root.scaleOffset
+        implicitHeight: volumeLayout.implicitHeight + Tokens.padding.small * 2 * root.scaleOffset
         radius: Tokens.rounding.medium * root.scaleOffset
         color: Colours.tPalette.m3surfaceContainer
         clip: true
 
         ColumnLayout {
-            id: streamsLayout
+            id: volumeLayout
 
-            width: parent.width - Tokens.padding.medium * 2 * root.scaleOffset
-            x: Tokens.padding.medium * root.scaleOffset
-            y: Tokens.padding.medium * root.scaleOffset
+            width: parent.width - Tokens.padding.small * 2 * root.scaleOffset
+            x: Tokens.padding.small * root.scaleOffset
+            y: Tokens.padding.small * root.scaleOffset
             spacing: Tokens.spacing.extraSmall / 2 * root.scaleOffset
+
+            SliderRow {
+                Layout.fillWidth: true
+                first: true
+                last: Audio.streams.length === 0
+                iconClickable: true
+                icon: Icons.getVolumeIcon(Audio.volume, Audio.muted)
+                label: qsTr("Volume")
+                valueLabel: Audio.muted ? qsTr("Muted") : Math.round(Audio.volume * 100) + "%"
+                value: Audio.volume
+                onIconClicked: {
+                    if (Audio.sink?.ready && Audio.sink?.audio)
+                        Audio.sink.audio.muted = !Audio.sink.audio.muted;
+                }
+                onMoved: v => Audio.setVolume(v)
+                onReleased: v => Audio.playEffectTick()
+            }
 
             Repeater {
                 model: Audio.streams
@@ -184,7 +135,6 @@ ColumnLayout {
                     required property PwNode modelData
                     required property int index
 
-                    first: index === 0
                     last: index === Audio.streams.length - 1
                     icon: Icons.getVolumeIcon(modelData?.audio?.volume ?? 0, modelData?.audio?.muted ?? false)
                     label: Audio.getStreamName(modelData)
@@ -199,6 +149,7 @@ ColumnLayout {
 
     IconTextButton {
         Layout.fillWidth: true
+        Layout.topMargin: Tokens.spacing.small * root.scaleOffset
         inactiveColour: Colours.palette.m3primaryContainer
         inactiveOnColour: Colours.palette.m3onPrimaryContainer
         verticalPadding: Tokens.padding.small * root.scaleOffset
@@ -208,3 +159,4 @@ ColumnLayout {
         onClicked: root.popouts.detachRequested("audio")
     }
 }
+

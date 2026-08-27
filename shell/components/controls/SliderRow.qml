@@ -21,38 +21,48 @@ StyledRect {
     property real value
     property bool first
     property bool last
+    property bool iconClickable: false
 
     signal moved(value: real)
     signal interaction(value: real)
     signal released(value: real)
+    signal iconClicked
 
     Layout.fillWidth: true
     implicitHeight: rowLayout.implicitHeight + rowLayout.anchors.margins + rowLayout.anchors.topMargin
     color: Colours.tPalette.m3surfaceContainer
-    topLeftRadius: first ? Tokens.rounding.extraLarge : Tokens.rounding.extraSmall
-    topRightRadius: first ? Tokens.rounding.extraLarge : Tokens.rounding.extraSmall
-    bottomLeftRadius: last ? Tokens.rounding.extraLarge : Tokens.rounding.extraSmall
-    bottomRightRadius: last ? Tokens.rounding.extraLarge : Tokens.rounding.extraSmall
+    topLeftRadius: first ? Tokens.rounding.large : Tokens.rounding.extraSmall
+    topRightRadius: first ? Tokens.rounding.large : Tokens.rounding.extraSmall
+    bottomLeftRadius: last ? Tokens.rounding.large : Tokens.rounding.extraSmall
+    bottomRightRadius: last ? Tokens.rounding.large : Tokens.rounding.extraSmall
 
     RowLayout {
         id: rowLayout
 
         anchors.fill: parent
-        anchors.margins: Tokens.padding.largeIncreased
-        anchors.topMargin: Tokens.padding.large
-        spacing: Tokens.spacing.medium
+        anchors.margins: Tokens.padding.medium
+        anchors.topMargin: Tokens.padding.small
+        spacing: Tokens.spacing.small
 
         MaterialIcon {
             id: icon
 
             visible: text !== ""
             color: Colours.palette.m3onSurfaceVariant
-            fontStyle: Tokens.font.icon.medium
+            fontStyle: Tokens.font.icon.small
+
+            MouseArea {
+                anchors.fill: parent
+                anchors.margins: -6
+                enabled: root.iconClickable
+                cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                onClicked: root.iconClicked()
+            }
         }
 
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: Tokens.spacing.medium
+            spacing: Tokens.spacing.extraSmall
 
             RowLayout {
                 Layout.fillWidth: true
@@ -98,7 +108,7 @@ StyledRect {
                 }
 
                 Layout.fillWidth: true
-                implicitHeight: Tokens.padding.medium * 2
+                implicitHeight: Tokens.padding.large
 
                 StyledSlider {
                     anchors.left: parent.left
