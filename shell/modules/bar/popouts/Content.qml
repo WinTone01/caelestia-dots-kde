@@ -77,41 +77,13 @@ Item {
                 network: (networkPopout.item as Network)?.passwordNetwork ?? null
             }
 
-            Connections {
-                function onCurrentNameChanged() {
-                    // Update network immediately when password popout becomes active
-                    if (root.popouts.currentName === "wirelesspassword") {
-                        // Set network immediately if available
-                        if ((networkPopout.item as Network)?.passwordNetwork) {
-                            if (passwordPopout.item) {
-                                (passwordPopout.item as WirelessPassword).network = (networkPopout.item as Network).passwordNetwork;
-                            }
-                        }
-                        // Also try after a short delay in case networkPopout.item wasn't ready
-                        Qt.callLater(() => {
-                            if (passwordPopout.item && (networkPopout.item as Network)?.passwordNetwork) {
-                                (passwordPopout.item as WirelessPassword).network = (networkPopout.item as Network).passwordNetwork;
-                            }
-                        }, 100);
-                    }
-                }
-
-                target: root.popouts
-            }
-
-            Connections {
-                function onItemChanged() {
-                    // When network popout loads, update password popout if it's active
-                    if (root.popouts.currentName === "wirelesspassword" && passwordPopout.item) {
-                        Qt.callLater(() => {
-                            if ((networkPopout.item as Network)?.passwordNetwork) {
-                                (passwordPopout.item as WirelessPassword).network = (networkPopout.item as Network).passwordNetwork;
-                            }
-                        });
-                    }
-                }
-
-                target: networkPopout
+            // Keep the loaded dialog's network fresh — one live binding instead
+            // of three hand-written assignments with a timing workaround.
+            Binding {
+                when: passwordPopout.item !== null
+                target: passwordPopout.item
+                property: "network"
+                value: (networkPopout.item as Network)?.passwordNetwork ?? null
             }
         }
 
