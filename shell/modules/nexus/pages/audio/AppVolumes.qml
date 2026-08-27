@@ -44,7 +44,7 @@ PageBase {
             list.spacing: Tokens.spacing.extraSmall / 2
 
             model: ScriptModel {
-                values: [...Audio.streams]
+                values: [...Audio.appStreams]
             }
 
             delegate: SliderRow {
@@ -58,12 +58,11 @@ PageBase {
                 first: index === 0
                 last: index === streamList.list.count - 1
 
-                icon: Icons.getVolumeIcon(stream.modelData?.audio?.volume ?? 0, stream.modelData?.audio?.muted ?? false)
+                icon: Icons.getVolumeIcon(Audio.getAppVolume(stream.modelData), Audio.getAppMuted(stream.modelData))
                 label: Audio.getStreamName(stream.modelData)
-                valueLabel: Math.round(value * 100) + "%"
-                value: stream.modelData?.audio?.volume ?? 0
-                enabled: !stream.modelData?.audio?.muted
-                onMoved: v => Audio.setStreamVolume(stream.modelData, v)
+                valueLabel: Audio.getAppMuted(stream.modelData) ? qsTr("Muted") : Math.round(value * 100) + "%"
+                value: Audio.getAppVolume(stream.modelData)
+                onMoved: v => Audio.setAppVolume(stream.modelData, v)
             }
         }
     }
