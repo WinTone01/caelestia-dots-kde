@@ -227,8 +227,13 @@ Item {
             const len = Notifs.popupCount;
             // Only act on 0 → 1 transition (fresh batch arrival)
             if (len > 0 && root._prevPopupCount === 0 && GlobalConfig.notifs.position === "auto") {
-                const defV = Config.bar.position === "bottom" ? "bottom" : "top";
-                const defH = Config.bar.position === "left" ? "left" : "right";
+                // Taken from notifAutoPosition rather than worked out again:
+                // the second copy had drifted (it flipped on "left" where the
+                // first flips on "right"), so with a side bar the avoidance
+                // watched the corner opposite the one notifications were in.
+                const defParts = root.notifAutoPosition.split("-");
+                const defV = defParts[0];
+                const defH = defParts[1];
                 const notifW = Tokens.sizes.notifs.width;
                 const notifH = Math.min(root.height / 2, 600);
                 // Corner bounds in Panels-relative coordinates
