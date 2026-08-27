@@ -59,6 +59,13 @@ exec stdbuf -oL -eL "$QUICKSHELL_PATH" -d -n -p "\$HOME/.config/quickshell/caele
 EOF
 chmod +x "$HOME/.local/bin/caelestia-autostart.sh"
 
+# Phase 1 (DesktopServices), not 2 (Applications). The shell registers
+# org.freedesktop.Notifications, and applications decide once, when they start,
+# whether a notification server exists -- one that finds none draws its own
+# popups for the rest of the session, in its own corner, ignoring every setting
+# here. In phase 2 the shell starts alongside the user's autostarted apps with
+# no ordering between them, so which apps end up talking to it is a coin toss
+# per login. Phase 1 finishes before any of them begin.
 cat > "$AUTOSTART_DIR/caelestiashell.desktop" << EOF
 [Desktop Entry]
 Type=Application
@@ -69,7 +76,7 @@ Icon=quickshell
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
-X-KDE-AutostartPhase=2
+X-KDE-AutostartPhase=1
 X-KDE-Wayland-Interfaces=zkde_screencast_unstable_v1
 EOF
 echo "  [OK]  Quickshell autostart created."
