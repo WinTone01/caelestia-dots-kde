@@ -20,10 +20,10 @@ ColumnLayout {
 
     readonly property real fontScale: Math.max(0.1, scaleOffset + (!isNaN(GlobalConfig.bar.fontScaleOffset) ? GlobalConfig.bar.fontScaleOffset : 0.0))
 
-    // Index of the Nexus "Updates" page, resolved dynamically so this menu
+    // Index of the Nexus "Updates" page, resolved by page key so this menu
     // can't drift out of sync if the page registry is reordered.
     readonly property int updatesPageIdx: {
-        const idx = PageRegistry.pages.findIndex(page => page.icon === "update");
+        const idx = PageRegistry.indexForKey("updates");
         return idx >= 0 ? idx : 0;
     }
 
