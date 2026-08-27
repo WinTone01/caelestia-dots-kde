@@ -371,19 +371,14 @@ ColumnLayout {
         Repeater {
             model: Audio.appStreams
 
-            SliderRow {
+            AppStreamRow {
                 required property PwNode modelData
                 required property int index
 
+                node: modelData
+                muteOnIconClick: true
                 first: index === 0
                 last: index === Audio.appStreams.length - 1
-                iconClickable: true
-                icon: Icons.getVolumeIcon(Audio.getAppVolume(modelData), Audio.getAppMuted(modelData))
-                label: Audio.getStreamName(modelData)
-                valueLabel: Audio.getAppMuted(modelData) ? qsTr("Muted") : Math.round(value * 100) + "%"
-                value: Audio.getAppVolume(modelData)
-                onIconClicked: Audio.setAppMuted(modelData, !Audio.getAppMuted(modelData))
-                onMoved: v => Audio.setAppVolume(modelData, v)
             }
         }
     }
