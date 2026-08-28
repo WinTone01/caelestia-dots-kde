@@ -29,8 +29,6 @@ A community port of the [Caelestia Hyprland dotfiles](https://github.com/caelest
 curl -fsSL https://raw.githubusercontent.com/ladybug-me/caelestia-dots-kde/main/install.sh | sh
 ```
 
-`install.sh` only clones the repo and hands off to the unified installer TUI. The TUI walks you through mirror refresh, packages, theming, and configuration - organized into phases (Prepare, Packages, Configure, Build, Finalize) - with an installation profile (Full / Standard / Minimal / Custom) and a review screen before anything changes. It prefers a prebuilt binary and compiles locally only when one isn't available.
-
 ### Updating
 
 - **Installer TUI:** run the installer and choose *Update*
@@ -71,16 +69,6 @@ https://github.com/user-attachments/assets/4c3e20c9-5050-4cc8-8e9c-32fd0594ac8b
 | `Super + Ctrl + S` | Screen recorder |
 | `Super + Shift + C` | Color picker |
 | `Super + Shift + V` | Emoji selector |
-
-## Tech Stack
-
-| Component | Role |
-| --- | --- |
-| [KDE Plasma 6](https://kde.org/plasma-desktop) | Desktop environment |
-| [Quickshell](https://quickshell.outfoxxed.me/) | Widget system |
-| [Darkly](https://github.com/vinceliuice/Darkly) | Plasma style & window decoration |
-| [Kvantum](https://github.com/tsujan/Kvantum) | Qt application theming |
-| [Krohnkite](https://github.com/esjeon/krohnkite) | Optional tiling |
 
 ## Customization
 
