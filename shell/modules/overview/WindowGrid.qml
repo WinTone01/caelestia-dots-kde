@@ -45,6 +45,20 @@ Item {
     signal requestWindowInfo(var client)
     signal requestClose()
 
+    // Resolve an icon for a window card, mirroring the dock: prefer an icon
+    // extracted from the window's own _NET_WM_ICON (apps with no desktop
+    // entry, e.g. Steam games or Minecraft), then fall back to the themed
+    // desktop-entry icon lookup the overview already used.
+    function windowIconSource(client: var): string {
+        if (!client)
+            return "";
+        const wp = WinIcons.paths[WinIcons.keyFor(client.class, client.pid ?? 0)];
+        if (wp)
+            return "file://" + wp;
+        return client.iconName ? Icons.getAppIcon(client.iconName, "image-missing")
+                               : (client.class ? Icons.getAppIcon(client.class, "image-missing") : "");
+    }
+
     function cycleSelection(backwards: bool): void {
         const n = root.currentWindows.length;
         if (n === 0)
@@ -316,6 +330,9 @@ Item {
 
                             Component.onCompleted: {
                                 root.cardItems = [...root.cardItems, activeWin];
+                                if (modelData) {
+                                    WinIcons.request(modelData.class, modelData.title, modelData.pid ?? 0, modelData.address ? String(modelData.address) : "");
+                                }
                             }
                             Component.onDestruction: {
                                 root.cardItems = root.cardItems.filter(x => x !== activeWin);
@@ -432,7 +449,7 @@ Item {
                                             return (wAspect > containerAspect) ? thumb.height : thumb.width / wAspect;
                                         }
                                         anchors.centerIn: parent
-                                        fallbackIcon: modelData.iconName ? Icons.getAppIcon(modelData.iconName, "image-missing") : (modelData.class ? Icons.getAppIcon(modelData.class, "image-missing") : "")
+                                        fallbackIcon: root.windowIconSource(modelData)
                                         sourceAspect: activeWin.windowAspect
                                     }
 
@@ -461,7 +478,7 @@ Item {
                                     IconImage {
                                         implicitSize: Math.round(titleText.implicitHeight * 1.1)
                                         asynchronous: true
-                                        source: modelData.class ? Icons.getAppIcon(modelData.class, "image-missing") : ""
+                                        source: root.windowIconSource(modelData)
                                     }
                                     StyledText {
                                         id: titleText
