@@ -55,40 +55,6 @@ void run_external(const std::string& script_path) {
 }
 
 int main(int argc, char** argv) {
-    // --version: print this bundle's TUI data version so setup.sh can decide
-    // whether its prebuilt binary matches this checkout. A stale release
-    // binary would render old screens and ignore new menu actions.
-    if (argc > 1 && std::string(argv[1]) == "--version") {
-        // The bundle dir may be passed explicitly (setup.sh checks the
-        // downloaded binary while it still lives in a temp file); otherwise
-        // resolve it from the executable path.
-        std::string base;
-        if (argc > 2) {
-            base = argv[2];
-        } else {
-            char vbuf[1024];
-            ssize_t vlen = readlink("/proc/self/exe", vbuf, sizeof(vbuf) - 1);
-            if (vlen != -1) {
-                vbuf[vlen] = '\0';
-                std::string path(vbuf);
-                size_t pos = path.find_last_of('/');
-                if (pos != std::string::npos) {
-                    base = path.substr(0, pos);
-                }
-            }
-        }
-        std::ifstream vf(base + "/installer/tui.version");
-        std::string ver;
-        if (vf.is_open()) {
-            std::getline(vf, ver);
-            while (!ver.empty() && (ver.back() == '\r' || ver.back() == '\n')) {
-                ver.pop_back();
-            }
-        }
-        std::cout << ver << std::endl;
-        return 0;
-    }
-
     // Detect bundle dir from arg or exe path. "--update"/"--uninstall"
     // preselect that action instead of opening the wizard.
     std::string preset_action;

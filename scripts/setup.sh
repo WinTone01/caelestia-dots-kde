@@ -181,19 +181,19 @@ try_download_prebuilt_installer() {
         *) return 1 ;;
     esac
 
-    local tmp_bin
+    local version tmp_bin url
+    version="$(tui_version)"
+    # The release asset name embeds the TUI data version, so a matching
+    # binary is downloaded directly and a stale/old release simply 404s.
+    # This never executes an unknown binary, which is what hung the old
+    # "--version" check (old builds launched the full TUI instead).
+    [[ -n "$version" ]] || return 1
     tmp_bin="$(mktemp)"
-    local url
-    url="https://github.com/ladybug-me/caelestia-dots-kde/releases/download/caelestia-bin-repo/caelestia-install-${arch}"
+    url="https://github.com/ladybug-me/caelestia-dots-kde/releases/download/caelestia-bin-repo/caelestia-install-${arch}-v${version}"
     if curl -fsSL --connect-timeout 10 --max-time 30 "$url" -o "$tmp_bin" 2>/dev/null; then
         chmod +x "$tmp_bin"
-        local expected actual
-        expected="$(tui_version)"
-        actual="$("$tmp_bin" --version "$BUNDLE_DIR" 2>/dev/null || true)"
-        if [[ -n "$expected" && "$actual" == "$expected" ]]; then
-            printf '%s\n' "$tmp_bin"
-            return 0
-        fi
+        printf '%s\n' "$tmp_bin"
+        return 0
     fi
     rm -f "$tmp_bin"
     return 1
@@ -232,10 +232,16 @@ if [[ -n "$PREBUILT_BIN" ]]; then
     stop_spinner
     rm -f "$BIN"
     mv "$PREBUILT_BIN" "$BIN"
-    echo "[OK]    Using prebuilt installer binary (skipped compilation)."
+    echo "[OK]    Using prebuilt installer binary v$(tui_version) (skipped compilation)."
 else
-    # Local fallback. Reuse a previously compiled binary that matches this
-    # checkout's TUI version so repeated runs don't recompile every time.
+    stop_spinner
+    if [[ -n "${CAELESTIA_FORCE_BUILD_INSTALLER:-}" ]]; then
+        echo "[INFO]  CAELESTIA_FORCE_BUILD_INSTALLER set - compiling locally."
+    else
+        echo "[INFO]  No prebuilt binary for v$(tui_version) - compiling locally (one time)."
+    fi
+    # Reuse a previously compiled binary that matches this checkout's TUI
+    # version so repeated runs don't recompile every time.
     STAMP="$BUNDLE_DIR/installer/build/.tui_stamp"
     if [[ -x "$BIN" && -f "$STAMP" ]] && [[ "$(cat "$STAMP" 2>/dev/null)" == "$(tui_version)" ]]; then
         stop_spinner
