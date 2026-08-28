@@ -20,10 +20,8 @@ export BUNDLE_DIR
 export INSTALL_START_EPOCH="$(date +%s)"
 
 # Prevent concurrent runs.
-if [[ "${CAELESTIA_TMUX_MASTER:-0}" == "0" ]]; then
-    exec 9>"${XDG_RUNTIME_DIR:-/tmp}/caelestia-setup.lock"
-    flock -n 9 || { echo "Another Caelestia setup is already running."; exit 1; }
-fi
+exec 9>"${XDG_RUNTIME_DIR:-/tmp}/caelestia-setup.lock"
+flock -n 9 || { echo "Another Caelestia setup is already running."; exit 1; }
 
 detect_base_distro() {
     local detected="unknown"
@@ -211,13 +209,10 @@ run_arch_pacman_install() {
 
 export BASE_DISTRO="$(detect_base_distro)"
 
-# Only run in the outer (pre-tmux) invocation.
-if [[ "${CAELESTIA_TMUX_MASTER:-0}" == "0" ]]; then
-    if [[ "$BASE_DISTRO" == "arch" ]]; then
-        silent_refresh_pacman_sources
-    elif [[ "$BASE_DISTRO" == "fedora" || "$BASE_DISTRO" == "debian" ]]; then
-        silent_refresh_native_sources
-    fi
+if [[ "$BASE_DISTRO" == "arch" ]]; then
+    silent_refresh_pacman_sources
+elif [[ "$BASE_DISTRO" == "fedora" || "$BASE_DISTRO" == "debian" ]]; then
+    silent_refresh_native_sources
 fi
 
 normalize_line_endings_first() {
@@ -280,11 +275,9 @@ normalize_line_endings_first() {
     done
 }
 
-if [[ "${CAELESTIA_TMUX_MASTER:-0}" == "0" ]]; then
-    if ! normalize_line_endings_first; then
-        echo "[FATAL] Line ending normalization step failed. Aborting installer." >&2
-        exit 1
-    fi
+if ! normalize_line_endings_first; then
+    echo "[FATAL] Line ending normalization step failed. Aborting installer." >&2
+    exit 1
 fi
 
 BIN="$BUNDLE_DIR/caelestia-install"
@@ -315,7 +308,50 @@ try_download_prebuilt_installer() {
     return 1
 }
 
-if [[ "${CAELESTIA_TMUX_MASTER:-0}" == "0" ]]; then
+echo -n "Preparing Caelestia installer"
+{
+    while true; do
+        printf "."
+        sleep 0.5
+        printf "."
+        sleep 0.5
+        printf "."
+        sleep 0.5
+        printf "\b\b\b   \b\b\b"
+    done
+} &
+SPINNER_PID=$!
+
+PREBUILT_BIN=""
+if [[ -z "${CAELESTIA_FORCE_BUILD_INSTALLER:-}" ]] && command -v curl >/dev/null 2>&1; then
+    PREBUILT_BIN="$(try_download_prebuilt_installer || true)"
+fi
+
+# Check and install requirements
+MISSING_PKGS=()
+if ! command -v g++ >/dev/null 2>&1; then
+    MISSING_PKGS+=("g++")
+fi
+if ! command -v cmake >/dev/null 2>&1; then
+    MISSING_PKGS+=("cmake")
+fi
+if ! command -v make >/dev/null 2>&1; then
+    MISSING_PKGS+=("make")
+fi
+if [ ${#MISSING_PKGS[@]} -ne 0 ]; then
+    kill $SPINNER_PID 2>/dev/null || true
+    echo ""
+    echo "Missing build tools: ${MISSING_PKGS[*]}. Installing..."
+    if [[ "$BASE_DISTRO" == "arch" ]]; then
+        run_arch_pacman_install base-devel cmake
+    elif [[ "$BASE_DISTRO" == "fedora" ]]; then
+        sudo dnf install -y gcc-c++ cmake make
+    elif [[ "$BASE_DISTRO" == "debian" ]]; then
+        sudo apt-get update && sudo apt-get install -y build-essential g++ cmake make
+    else
+        echo "Could not auto-install build tools. Please install manually: ${MISSING_PKGS[*]}"
+        exit 1
+    fi
     echo -n "Preparing Caelestia installer"
     {
         while true; do
@@ -329,107 +365,45 @@ if [[ "${CAELESTIA_TMUX_MASTER:-0}" == "0" ]]; then
         done
     } &
     SPINNER_PID=$!
+fi
 
-    PREBUILT_BIN=""
-    if [[ -z "${CAELESTIA_FORCE_BUILD_INSTALLER:-}" ]] && command -v curl >/dev/null 2>&1; then
-        PREBUILT_BIN="$(try_download_prebuilt_installer || true)"
-    fi
-
-    # Check and install requirements
-    MISSING_PKGS=()
-    if ! command -v g++ >/dev/null 2>&1; then
-        MISSING_PKGS+=("g++")
-    fi
-    if ! command -v cmake >/dev/null 2>&1; then
-        MISSING_PKGS+=("cmake")
-    fi
-    if ! command -v make >/dev/null 2>&1; then
-        MISSING_PKGS+=("make")
-    fi
-    # tmux is used for the split-pane installer view unless explicitly disabled
-    if [[ "${CAELESTIA_USE_TMUX:-1}" == "1" ]] && ! command -v tmux >/dev/null 2>&1; then
-        MISSING_PKGS+=("tmux")
-    fi
-
-    if [ ${#MISSING_PKGS[@]} -ne 0 ]; then
+if [[ -n "$PREBUILT_BIN" ]]; then
+    kill $SPINNER_PID 2>/dev/null || true
+    wait $SPINNER_PID 2>/dev/null || true
+    echo ""
+    rm -f "$BIN"
+    mv "$PREBUILT_BIN" "$BIN"
+    echo "[OK]    Using prebuilt installer binary (skipped compilation)."
+else
+    BUILD_DIR="$BUNDLE_DIR/installer/build"
+    BUILD_LOG="/tmp/caelestia_build.log"
+    rm -rf "$BUILD_DIR"
+    mkdir -p "$BUILD_DIR"
+    (
+        cd "$BUILD_DIR" || exit 1
+        cmake -DCMAKE_BUILD_TYPE=Release .. >"$BUILD_LOG" 2>&1 || exit 1
+        make -j"$(nproc 2>/dev/null || echo 1)" >>"$BUILD_LOG" 2>&1 || exit 1
+    ) || {
         kill $SPINNER_PID 2>/dev/null || true
         echo ""
-        echo "Missing build tools: ${MISSING_PKGS[*]}. Installing..."
-        if [[ "$BASE_DISTRO" == "arch" ]]; then
-            if [[ "${CAELESTIA_USE_TMUX:-1}" == "1" ]]; then
-                run_arch_pacman_install base-devel cmake tmux
-            else
-                run_arch_pacman_install base-devel cmake
-            fi
-        elif [[ "$BASE_DISTRO" == "fedora" ]]; then
-            if [[ "${CAELESTIA_USE_TMUX:-1}" == "1" ]]; then
-                sudo dnf install -y gcc-c++ cmake make tmux
-            else
-                sudo dnf install -y gcc-c++ cmake make
-            fi
-        elif [[ "$BASE_DISTRO" == "debian" ]]; then
-            if [[ "${CAELESTIA_USE_TMUX:-1}" == "1" ]]; then
-                sudo apt-get update && sudo apt-get install -y build-essential g++ cmake make tmux
-            else
-                sudo apt-get update && sudo apt-get install -y build-essential g++ cmake make
-            fi
-        else
-            echo "Could not auto-install build tools. Please install manually: ${MISSING_PKGS[*]}"
-            exit 1
-        fi
-        echo -n "Preparing Caelestia installer"
-        {
-            while true; do
-                printf "."
-                sleep 0.5
-                printf "."
-                sleep 0.5
-                printf "."
-                sleep 0.5
-                printf "\b\b\b   \b\b\b"
-            done
-        } &
-        SPINNER_PID=$!
-    fi
-
-    if [[ -n "$PREBUILT_BIN" ]]; then
-        kill $SPINNER_PID 2>/dev/null || true
-        wait $SPINNER_PID 2>/dev/null || true
-        echo ""
-        rm -f "$BIN"
-        mv "$PREBUILT_BIN" "$BIN"
-        echo "[OK]    Using prebuilt installer binary (skipped compilation)."
-    else
-        BUILD_DIR="$BUNDLE_DIR/installer/build"
-        BUILD_LOG="/tmp/caelestia_build.log"
-        rm -rf "$BUILD_DIR"
-        mkdir -p "$BUILD_DIR"
-        (
-            cd "$BUILD_DIR" || exit 1
-            cmake -DCMAKE_BUILD_TYPE=Release .. >"$BUILD_LOG" 2>&1 || exit 1
-            make -j"$(nproc 2>/dev/null || echo 1)" >>"$BUILD_LOG" 2>&1 || exit 1
-        ) || {
-            kill $SPINNER_PID 2>/dev/null || true
-            echo ""
-            echo "[FATAL] Failed to build the Caelestia installer." >&2
-            echo "--- build log (last 60 lines) ---"
-            tail -n 60 "$BUILD_LOG" 2>/dev/null || cat "$BUILD_LOG" 2>/dev/null
-            echo "--- end build log ---"
-            echo "Full log saved to: $BUILD_LOG"
-            exit 1
-        }
+        echo "[FATAL] Failed to build the Caelestia installer." >&2
+        echo "--- build log (last 60 lines) ---"
+        tail -n 60 "$BUILD_LOG" 2>/dev/null || cat "$BUILD_LOG" 2>/dev/null
+        echo "--- end build log ---"
+        echo "Full log saved to: $BUILD_LOG"
+        exit 1
+    }
 
 
-        kill $SPINNER_PID 2>/dev/null || true
-        wait $SPINNER_PID 2>/dev/null || true
-        echo ""
+    kill $SPINNER_PID 2>/dev/null || true
+    wait $SPINNER_PID 2>/dev/null || true
+    echo ""
 
-        rm -f "$BIN"
-        cp "$BUILD_DIR/caelestia-install" "$BIN" || {
-            echo "[FATAL] Failed to copy the compiled Caelestia installer to $BIN." >&2
-            exit 1
-        }
-    fi
+    rm -f "$BIN"
+    cp "$BUILD_DIR/caelestia-install" "$BIN" || {
+        echo "[FATAL] Failed to copy the compiled Caelestia installer to $BIN." >&2
+        exit 1
+    }
 fi
 
 cleanup_install_state() {
@@ -445,101 +419,8 @@ cleanup_install_state() {
         qdbus6 org.freedesktop.ScreenSaver /ScreenSaver org.freedesktop.ScreenSaver.UnInhibit "$(cat /tmp/caelestia_kde_inhibit.cookie)" 2>/dev/null || true
     fi
     rm -f /tmp/caelestia_inhibit.pid /tmp/caelestia_kde_inhibit.cookie
-
-    if [[ -n "${TMUX:-}" && "${CAELESTIA_TMUX_MASTER:-0}" == "1" ]]; then
-        tmux kill-session -t caelestia_install 2>/dev/null || true
-        rm -f /tmp/caelestia_cmd /tmp/caelestia_status
-    fi
-    rm -f /tmp/caelestia_tmux_wrapper.sh
 }
 trap cleanup_install_state EXIT
-
-if [[ -z "${TMUX:-}" && "${CAELESTIA_NO_TMUX:-0}" == "0" && "${CAELESTIA_USE_TMUX:-1}" == "1" ]]; then
-    # Kill any stale session first
-    tmux kill-session -t caelestia_install 2>/dev/null || true
-
-    export CAELESTIA_TMUX_MASTER=1
-    rm -f /tmp/caelestia_cmd /tmp/caelestia_status
-    rm -f /tmp/caelestia_installer_err.log
-    mkfifo /tmp/caelestia_cmd
-    mkfifo /tmp/caelestia_status
-
-    # Wrapper keeps the tmux pane alive after exit/crash for diagnostics.
-    WRAPPER_SCRIPT="/tmp/caelestia_tmux_wrapper.sh"
-    printf -v args_str '%q ' "$0" "$@"
-    cat > "$WRAPPER_SCRIPT" <<WRAPPER_EOF
-#!/usr/bin/env bash
-bash $args_str
-ec=\$?
-echo ""
-echo "============================================================"
-echo "  installer session ended (exit code: \$ec)"
-echo "============================================================"
-echo ""
-echo "Press Enter to close this window..."
-read -r
-exit \$ec
-WRAPPER_EOF
-    chmod +x "$WRAPPER_SCRIPT"
-
-    tmux new-session -d -s caelestia_install "bash $WRAPPER_SCRIPT"
-    # Keep pane visible on failure; close normally on success.
-    tmux set-option -t caelestia_install remain-on-exit failed
-    tmux set-option -t caelestia_install mouse on
-
-    tmux attach-session -t caelestia_install
-    _tmux_exit=$?
-
-    # Always restore terminal state immediately after tmux exits, regardless of
-    # how it exited (normal, Ctrl+C, crash).  The TUI binary may have left the
-    # terminal in raw mode / alt-screen; without this the shell appears "stuck".
-    stty sane 2>/dev/null || true
-    tput cnorm 2>/dev/null || true
-    printf '\033[0m\033[?1049l\033[?25h' 2>/dev/null || true
-
-    # Surface inner-script diagnostics in the outer terminal.
-    _needs_pause=0
-    if [[ -s /tmp/caelestia_installer_err.log ]]; then
-        _reached_done=0
-        if grep -q '\[installer\] done (success)' /tmp/caelestia_installer_err.log 2>/dev/null; then
-            _reached_done=1
-        fi
-        if [[ $_reached_done -eq 0 ]]; then
-            stty sane 2>/dev/null || true
-            tput cnorm 2>/dev/null || true
-            echo ""
-            echo "============================================================"
-            echo "  INSTALLER DID NOT COMPLETE"
-            echo "============================================================"
-            echo ""
-            echo "--- stderr output from installer ---"
-            cat /tmp/caelestia_installer_err.log
-            echo "--- end stderr ---------------------"
-            echo ""
-            _needs_pause=1
-        fi
-    elif [[ $_tmux_exit -ne 0 ]]; then
-        stty sane 2>/dev/null || true
-        tput cnorm 2>/dev/null || true
-        echo ""
-        echo "============================================================"
-        echo "  INSTALLER SESSION ENDED (exit code: $_tmux_exit)"
-        echo "  No stderr log was produced — the binary may have crashed"
-        echo "  or the tmux session may have failed to start entirely"
-        echo "  (check for a stale tmux server or /tmp/caelestia_cmd issues)."
-        echo "============================================================"
-        echo ""
-        _needs_pause=1
-    fi
-
-    # Prevent terminal from auto-closing before the user can read output.
-    if [[ $_needs_pause -eq 1 ]]; then
-        echo "Press Enter to close this window..."
-        read -r
-    fi
-
-    exit $_tmux_exit
-fi
 
 if [[ ! -x "$BIN" ]]; then
     echo ""
