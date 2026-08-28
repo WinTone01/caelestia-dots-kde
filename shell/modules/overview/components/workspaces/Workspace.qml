@@ -210,10 +210,10 @@ StyledRect {
                     let windows = [];
                     const kwinList = root.kwinWindowList; 
                     if (typeof KWinActiveWindowBridge !== "undefined" && kwinList) {
-                        const wins = kwinList;
+                        const wins = KWinActiveWindowBridge.windowsForWorkspace(wsId, false);
                         for (let i = 0; i < wins.length; ++i) {
                             const w = wins[i];
-                            if (w.workspace && (w.workspace.id === wsId || w.workspace.index === wsId) && w["class"] !== "quickshell" && w["class"] !== "plasmashell") {
+                            if (w["class"] !== "quickshell" && w["class"] !== "plasmashell") {
                                 windows.push(w);
                             }
                         }

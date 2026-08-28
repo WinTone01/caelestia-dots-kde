@@ -7,10 +7,11 @@ import qs.components
 import qs.components.controls
 import qs.services
 
-// Compact label + value + slider row. This is the shared, stripped-down
-// equivalent of modules/nexus/common/SliderRow.qml, moved into the generic
-// components namespace so bar popouts can use it without creating a reverse
-// bar -> nexus dependency.
+// Label + value + slider row, shared by the bar popouts and the Nexus pages.
+// `spacious` selects the roomier Nexus layout; `first`/`last` round the card
+// corners for connected lists. Previously two near-identical modules were
+// kept in sync by hand (this one and modules/nexus/common/SliderRow.qml, now
+// a one-line preset).
 StyledRect {
     id: root
 
@@ -22,6 +23,7 @@ StyledRect {
     property bool first
     property bool last
     property bool iconClickable: false
+    property bool spacious: false
 
     signal moved(value: real)
     signal interaction(value: real)
@@ -31,25 +33,25 @@ StyledRect {
     Layout.fillWidth: true
     implicitHeight: rowLayout.implicitHeight + rowLayout.anchors.margins + rowLayout.anchors.topMargin
     color: Colours.tPalette.m3surfaceContainer
-    topLeftRadius: first ? Tokens.rounding.large : Tokens.rounding.extraSmall
-    topRightRadius: first ? Tokens.rounding.large : Tokens.rounding.extraSmall
-    bottomLeftRadius: last ? Tokens.rounding.large : Tokens.rounding.extraSmall
-    bottomRightRadius: last ? Tokens.rounding.large : Tokens.rounding.extraSmall
+    topLeftRadius: first ? (spacious ? Tokens.rounding.extraLarge : Tokens.rounding.large) : Tokens.rounding.extraSmall
+    topRightRadius: first ? (spacious ? Tokens.rounding.extraLarge : Tokens.rounding.large) : Tokens.rounding.extraSmall
+    bottomLeftRadius: last ? (spacious ? Tokens.rounding.extraLarge : Tokens.rounding.large) : Tokens.rounding.extraSmall
+    bottomRightRadius: last ? (spacious ? Tokens.rounding.extraLarge : Tokens.rounding.large) : Tokens.rounding.extraSmall
 
     RowLayout {
         id: rowLayout
 
         anchors.fill: parent
-        anchors.margins: Tokens.padding.medium
-        anchors.topMargin: Tokens.padding.small
-        spacing: Tokens.spacing.small
+        anchors.margins: spacious ? Tokens.padding.largeIncreased : Tokens.padding.medium
+        anchors.topMargin: spacious ? Tokens.padding.large : Tokens.padding.small
+        spacing: spacious ? Tokens.spacing.medium : Tokens.spacing.small
 
         MaterialIcon {
             id: icon
 
             visible: text !== ""
             color: Colours.palette.m3onSurfaceVariant
-            fontStyle: Tokens.font.icon.small
+            fontStyle: spacious ? Tokens.font.icon.medium : Tokens.font.icon.small
 
             MouseArea {
                 anchors.fill: parent
@@ -62,7 +64,7 @@ StyledRect {
 
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: Tokens.spacing.extraSmall
+            spacing: spacious ? Tokens.spacing.medium : Tokens.spacing.extraSmall
 
             RowLayout {
                 Layout.fillWidth: true
@@ -108,7 +110,7 @@ StyledRect {
                 }
 
                 Layout.fillWidth: true
-                implicitHeight: Tokens.padding.large
+                implicitHeight: spacious ? Tokens.padding.medium * 2 : Tokens.padding.large
 
                 StyledSlider {
                     anchors.left: parent.left
