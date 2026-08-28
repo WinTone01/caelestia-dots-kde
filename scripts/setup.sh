@@ -4,6 +4,7 @@
 #
 #   Original Hyprland dots: Caelestia
 #   KDE port and modifications: ladybug-me
+#   Co-maintainer: 0xSolanaceae
 #   Installer behavior: idempotent and safe for reruns
 # ==============================================================
 
