@@ -43,6 +43,31 @@ Item {
     property bool ignoreNextSwitch: false
     property bool _initialized: false
     property bool isDragging: false
+    /// -1 while a drag rests against the left edge, +1 against the right, 0
+    /// otherwise. Drives the dwell that pages through workspaces.
+    ///
+    /// Read from the drag's own position rather than from drop areas at the
+    /// edges. Those reported entry and exit, and paging moves the grid under the
+    /// pointer, which counted as leaving -- so the second page never came while
+    /// the drag was held perfectly still. A position cannot be confused that way.
+    readonly property real edgeBand: 60
+    readonly property int edgeDirection: {
+        if (!root.isDragging || Visibilities.dragAddress === "" || Visibilities.dragOriginScreen !== root.screen.name)
+            return 0;
+        // Screen coordinates on both sides. The published position is relative
+        // to the window, which covers the screen; root is an item inside it and
+        // narrower, so measuring one against the other put the edge in the wrong
+        // place -- far enough out that it was never reached.
+        const local = Visibilities.dragX - root.screen.x;
+        const span = root.screen.width;
+        if (local < 0 || local >= span)
+            return 0; // gone to another screen; that is a move, not a page
+        if (local < root.edgeBand)
+            return -1;
+        if (local > span - root.edgeBand)
+            return 1;
+        return 0;
+    }
     readonly property real hoverScale: 1.02
     property int selectedIndex: -1
     readonly property var currentWindows: {
@@ -61,6 +86,17 @@ Item {
 
     signal requestWindowInfo(var client)
     signal requestClose()
+
+    /// The screen containing a point in global coordinates, or null.
+    function screenAtGlobal(gx: real, gy: real): var {
+        const all = Quickshell.screens;
+        for (let i = 0; i < all.length; ++i) {
+            const s = all[i];
+            if (gx >= s.x && gx < s.x + s.width && gy >= s.y && gy < s.y + s.height)
+                return s;
+        }
+        return null;
+    }
 
     // Resolve an icon for a window card, mirroring the dock: prefer an icon
     // extracted from the window's own _NET_WM_ICON (apps with no desktop
@@ -333,17 +369,60 @@ Item {
 
                             property bool closing: false
                             property url infoScreenshot: ""
+                            /// Set by a workspace thumbnail's DropArea while the
+                            /// card hovers it, so the card shrinks to the size it
+                            /// would occupy there. 0 means "not over one".
+                            property real dropTargetScale: 0
+                            /// Over a workspace thumbnail: the preview collapses
+                            /// into the application's icon, the way a window does
+                            /// when it is dropped onto a workspace in GNOME. It is
+                            /// what the slot will actually contain once dropped, so
+                            /// the drag shows its own result; dragging back out
+                            /// reverses it.
+                            readonly property bool morphed: dragHandler.active && activeWin.dropTargetScale > 0
+
+                            // The pointer, not the card's middle. The card is held
+                            // wherever it was grabbed, so its centre sits at an
+                            // offset that drifts across boundaries on its own --
+                            // enough to cross the screen edge while the pointer was
+                            // still well inside it, which read as leaving the screen
+                            // and reset the edge dwell every time it wobbled.
+                            function publishDrag(): void {
+                                if (!dragHandler.active)
+                                    return;
+                                const p = dragHandler.centroid.scenePosition;
+                                Visibilities.setDrag(activeWin.clientAddress, root.screen.x + p.x, root.screen.y + p.y, activeWin.width, activeWin.height, root.screen.name);
+                            }
 
                             x: dragHandler.active ? x : layoutProps.x
                             y: dragHandler.active ? y : layoutProps.y
                             width: layoutProps.width
                             height: layoutProps.height
-                            color: Colours.palette.m3surfaceContainer
+                            color: activeWin.morphed ? "transparent" : Colours.palette.m3surfaceContainer
                             radius: Tokens.rounding.large
-                            scale: closing ? 0 : (activeWin.isSelected && !dragHandler.active ? root.hoverScale : 1)
-                            opacity: closing ? 0 : 1
-                            border.width: activeWin.isSelected ? 2 : 0
+                            scale: {
+                                if (closing)
+                                    return 0;
+                                // Dragged onto a workspace thumbnail: shrink to
+                                // roughly what it will look like once dropped, so
+                                // the target reads as a target rather than the
+                                // card just floating over it.
+                                if (dragHandler.active && activeWin.dropTargetScale > 0)
+                                    return activeWin.dropTargetScale;
+                                return activeWin.isSelected && !dragHandler.active ? root.hoverScale : 1;
+                            }
+                            // Once the drag is over another screen that screen
+                            // draws it, and the half still poking out here would
+                            // otherwise sit there as a stream-less icon.
+                            opacity: closing || Visibilities.streamClaim === activeWin.clientAddress ? 0 : 1
+                            border.width: activeWin.isSelected && !activeWin.morphed ? 2 : 0
                             border.color: Colours.palette.m3primary
+
+                            // Published on every move so the screen the pointer
+                            // has reached can draw what is coming; this one cannot
+                            // draw past its own edge.
+                            onXChanged: activeWin.publishDrag()
+                            onYChanged: activeWin.publishDrag()
 
                             Component.onCompleted: {
                                 root.cardItems = [...root.cardItems, activeWin];
@@ -375,12 +454,40 @@ Item {
                                 onActiveChanged: {
                                     root.isDragging = active;
                                     if (!active) {
+                                        activeWin.dropTargetScale = 0;
+                                        Visibilities.clearDrag();
+
+                                        if (typeof KWinWorkspaceState === "undefined" || typeof KWinActiveWindowBridge === "undefined") return;
+
+                                        // Checked before Drag.drop(), not after.
+                                        // Each screen has its own overview in its
+                                        // own window, so a drag can never be handed
+                                        // to the other one's drop areas -- but the
+                                        // pointer does travel there and the card
+                                        // goes with it, so where it was let go is
+                                        // enough to act on. This one's drop areas
+                                        // still claim a release out there, though,
+                                        // and one of them answering first is what
+                                        // made a window dragged to the next monitor
+                                        // land on a workspace of the monitor it came
+                                        // from. Leaving the screen is the stronger
+                                        // signal, so it is read first.
+                                        const target = root.screenAtGlobal(Visibilities.dragX, Visibilities.dragY);
+                                        if (target && target.name !== root.screen.name) {
+                                            const addr = clientAddress;
+                                            activeWin.Drag.cancel();
+                                            activeWin.visible = false;
+                                            Qt.callLater(() => {
+                                                KWinActiveWindowBridge.sendToOutput(addr, target.name);
+                                            });
+                                            return;
+                                        }
+
                                         let dropAction = activeWin.Drag.drop();
                                         if (dropAction !== Qt.IgnoreAction) {
                                             return; // Handled by DropArea
                                         }
 
-                                        if (typeof KWinWorkspaceState === "undefined" || typeof KWinActiveWindowBridge === "undefined") return;
                                         const targetWsId = KWinWorkspaceState.workspaces[listView.currentIndex].index;
                                         if (targetWsId !== page.wsId) {
                                             activeWin.visible = false;
@@ -392,7 +499,15 @@ Item {
                                     }
                                 }
                             }
-                            Behavior on scale { Anim {} }
+                            Behavior on scale {
+                                // Slower while a drag is in progress: this is the
+                                // preview collapsing into its icon and opening back
+                                // out, which is meant to be read, not the snap of a
+                                // hover highlight.
+                                Anim {
+                                    type: dragHandler.active ? Anim.SlowSpatial : Anim.DefaultSpatial
+                                }
+                            }
                             Behavior on opacity {
                                 NumberAnimation {
                                     id: opacityAnim
@@ -430,11 +545,39 @@ Item {
                                 }
                             }
 
+                            // The icon the card collapses into over a workspace
+                            // thumbnail. Sized as a share of the card so that the
+                            // card's own drop scale carries it down to icon size --
+                            // one animation drives both, and they cannot drift.
+                            IconImage {
+                                anchors.centerIn: parent
+                                asynchronous: true
+                                implicitSize: Math.round(Math.min(activeWin.width, activeWin.height) * 0.62)
+                                opacity: activeWin.morphed ? 1 : 0
+                                source: modelData.iconName ? Icons.getAppIcon(modelData.iconName, "image-missing") : (modelData.class ? Icons.getAppIcon(modelData.class, "image-missing") : "")
+                                visible: opacity > 0.01
+                                z: 10
+
+                                Behavior on opacity {
+                                    Anim {
+                                        type: Anim.SlowEffects
+                                    }
+                                }
+                            }
+
                             Item {
                                 id: cardLayout
 
                                 anchors.fill: parent
                                 anchors.margins: Tokens.padding.small
+                                opacity: activeWin.morphed ? 0 : 1
+                                visible: opacity > 0.01
+
+                                Behavior on opacity {
+                                    Anim {
+                                        type: Anim.SlowEffects
+                                    }
+                                }
 
                                 StyledClippingRect {
                                     id: thumb
@@ -451,9 +594,15 @@ Item {
                                         // neighbours: a workspace three swipes away
                                         // is not worth a stream. The window shown in
                                         // the info panel is excluded too -- that
-                                        // panel puts up its own frozen frame.
+                                        // panel puts up its own frozen frame. And
+                                        // not while something outside the grid has
+                                        // claimed the stream: KWin serves one node
+                                        // per window and a node feeds one consumer,
+                                        // so holding on would leave the other one
+                                        // drawing black.
                                         active: root.opacity > 0 && Math.abs(page.index - listView.currentIndex) <= 1
                                             && !(root.activeInfoClient && root.activeInfoClient.address === modelData.address)
+                                            && Visibilities.streamClaim !== modelData.address
                                         address: modelData.address ?? ""
                                         width: {
                                             const wAspect = activeWin.windowAspect;
@@ -536,7 +685,10 @@ Item {
                                 anchors.right: cardLayout.right
                                 anchors.margins: Tokens.padding.small
                                 spacing: Tokens.spacing.small
-                                opacity: hover.hovered ? 1 : 0
+                                // Hidden for the whole drag: it belongs to the
+                                // card sitting in the grid, and left up it hovers
+                                // over the collapsed icon with nothing to act on.
+                                opacity: hover.hovered && !dragHandler.active ? 1 : 0
                                 visible: opacity > 0.01
 
                                 Behavior on opacity { Anim {} }
@@ -688,33 +840,106 @@ Item {
         interval: 500
         onTriggered: root.ignoreNextSwitch = false
     }
-    Timer {
-        id: edgeScrollCooldown
+    // What a drag arriving from another screen looks like here.
+    //
+    // The card itself belongs to the overview it started in and is clipped at
+    // that screen's edge, so without this a window dragged across simply
+    // disappears halfway and is released onto nothing visible. This follows the
+    // published pointer position and shows the same live preview the card was
+    // showing, so the window keeps its identity across the gap rather than
+    // turning into an icon on the way.
+    Item {
+        id: incoming
 
-        interval: 1000
-    }
-    DropArea {
-        anchors.left: parent.left
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        width: 100
-        onEntered: {
-            if (!edgeScrollCooldown.running && listView.currentIndex > 0) {
-                listView.currentIndex -= 1;
-                edgeScrollCooldown.start();
+        readonly property var window: {
+            const addr = Visibilities.dragAddress;
+            if (!addr || typeof KWinActiveWindowBridge === "undefined")
+                return null;
+            const all = KWinActiveWindowBridge.windowList || [];
+            for (let i = 0; i < all.length; ++i)
+                if (all[i].address === addr)
+                    return all[i];
+            return null;
+        }
+        readonly property bool arriving: Visibilities.dragAddress !== ""
+            && Visibilities.dragOriginScreen !== root.screen.name
+            && Visibilities.dragX >= root.screen.x
+            && Visibilities.dragX < root.screen.x + root.screen.width
+            && Visibilities.dragY >= root.screen.y
+            && Visibilities.dragY < root.screen.y + root.screen.height
+        readonly property real aspect: {
+            const w = incoming.window;
+            if (w && w.width > 0 && w.height > 0)
+                return w.width / w.height;
+            return 16 / 9;
+        }
+
+        // The size the card had on the screen it left, so crossing the gap does
+        // not resize the thing being carried.
+        height: Visibilities.dragHeight > 0 ? Visibilities.dragHeight : Math.round(width / Math.max(0.2, incoming.aspect))
+        opacity: arriving ? 1 : 0
+        visible: opacity > 0.01
+        width: Visibilities.dragWidth > 0 ? Visibilities.dragWidth : Math.round(Math.min(root.width, root.height) * 0.32)
+        x: Visibilities.dragX - root.screen.x - width / 2
+        y: Visibilities.dragY - root.screen.y - height / 2
+        z: 1000
+
+        // Claimed while it is here so the card back on the origin screen gives
+        // the stream up; a node feeds one consumer.
+        onArrivingChanged: Visibilities.streamClaim = incoming.arriving ? Visibilities.dragAddress : ""
+
+        Behavior on opacity {
+            Anim {
+                type: Anim.DefaultEffects
+            }
+        }
+
+        StyledClippingRect {
+            anchors.fill: parent
+            color: Colours.palette.m3surfaceContainer
+            radius: Tokens.rounding.large
+
+            WindowPreview {
+                active: incoming.arriving
+                address: Visibilities.dragAddress
+                anchors.fill: parent
+                fallbackIcon: {
+                    const w = incoming.window;
+                    if (!w)
+                        return "";
+                    return w.iconName ? Icons.getAppIcon(w.iconName, "image-missing") : (w.class ? Icons.getAppIcon(w.class, "image-missing") : "");
+                }
+                sourceAspect: incoming.aspect
             }
         }
     }
-    DropArea {
-        anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        width: 100
-        onEntered: {
-            if (!edgeScrollCooldown.running && listView.currentIndex < listView.count - 1) {
+
+    // Holding a drag against an edge pages through workspaces, one step at a
+    // time for as long as it is held.
+    //
+    // It used to page the instant the drag touched the edge, which made the
+    // edge unusable as a way off the screen: on a side with another monitor,
+    // simply travelling towards it paged a workspace on the way past. Waiting
+    // for the drag to actually rest there separates the two gestures -- pass
+    // through and you reach the next monitor, stop and you page -- so both work
+    // on the same edge without a mode.
+    Timer {
+        id: edgeDwell
+
+        // running is bound rather than started and stopped by hand. A drag
+        // released while still inside an edge area never delivers an exit, so
+        // the stop call that was meant to pair with the start never arrived and
+        // the timer kept paging on its own long after the pointer was gone --
+        // workspaces flipping by themselves with nothing held. Tying it to the
+        // drag itself means it cannot outlive one.
+        interval: 900
+        repeat: true
+        running: root.isDragging && root.edgeDirection !== 0
+        onTriggered: {
+            if (root.edgeDirection < 0 && listView.currentIndex > 0)
+                listView.currentIndex -= 1;
+            else if (root.edgeDirection > 0 && listView.currentIndex < listView.count - 1)
                 listView.currentIndex += 1;
-                edgeScrollCooldown.start();
-            }
         }
     }
     StyledRect {
