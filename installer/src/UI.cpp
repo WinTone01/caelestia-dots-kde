@@ -110,11 +110,14 @@ namespace UI {
 
         string art_color = "accent";
         string author = "By @ladybug-me";
+        string co_author = "Co-maintainer: 0xSolanaceae";
         if (!g_theme.is_null() && g_theme.contains("splash_screen")) {
             if (g_theme["splash_screen"].contains("art_color"))
                 art_color = g_theme["splash_screen"]["art_color"].get<string>();
             if (g_theme["splash_screen"].contains("author"))
                 author = g_theme["splash_screen"]["author"].get<string>();
+            if (g_theme["splash_screen"].contains("co_author"))
+                co_author = g_theme["splash_screen"]["co_author"].get<string>();
         }
 
         while (!g_quit) {
@@ -151,9 +154,10 @@ namespace UI {
 
             int ty = top + art_height + 1;
             Draw::text_center(ty, author, "muted");
-            Draw::text_center(ty + 2, "Caelestia KDE installer", "primary");
-            Draw::text_center(ty + 3, "KDE Plasma desktop setup, packaged and automated.", "on_surface");
-            Draw::text_center(ty + 5, "Detected distribution: " + distro_label(g_base_distro), "secondary");
+            Draw::text_center(ty + 1, co_author, "muted");
+            Draw::text_center(ty + 3, "Caelestia KDE installer", "primary");
+            Draw::text_center(ty + 4, "KDE Plasma desktop setup, packaged and automated.", "on_surface");
+            Draw::text_center(ty + 6, "Detected distribution: " + distro_label(g_base_distro), "secondary");
             Draw::text_center(y + h - 2, "Press Enter to continue (Esc to quit)...", "muted");
 
             cout << Draw::sync_end() << flush;
@@ -162,6 +166,63 @@ namespace UI {
             if (key == "enter" || key == " ") return;
             if (key == "escape") { g_quit = true; return; }
         }
+    }
+
+    std::string action_select() {
+        struct Action {
+            string id;
+            string title;
+            string help;
+        };
+        vector<Action> actions = {
+            {"install", "Install Caelestia", "Install the shell, packages, themes, and configs."},
+            {"update", "Update Caelestia", "Pull the latest code and rebuild the shell."},
+            {"uninstall", "Uninstall Caelestia", "Remove the shell and restore backups where available."},
+            {"exit", "Exit", "Leave without changing anything."},
+        };
+
+        int selected = 0;
+        while (!g_quit) {
+            if (g_resized) { Term::get_size(); g_resized = false; }
+            cout << Draw::sync_start() << Draw::clear();
+
+            int x = 1, y = 1;
+            int w = g_term_width - 2;
+            int h = g_term_height - 2;
+            if (w < 30 || h < 12) {
+                cout << Draw::sync_end() << flush;
+                return "install";
+            }
+
+            Draw::box(x, y, w, h, "CAELESTIA SETUP", "primary", "on_surface");
+            Draw::text(x + 2, y + 2, navigate_hint(), "muted");
+
+            for (size_t i = 0; i < actions.size(); ++i) {
+                string col = (int)i == selected ? "bold_primary" : "muted";
+                Draw::text(x + 4, y + 4 + (int)i,
+                           ((int)i == selected ? "> " : "  ") + actions[i].title, col);
+            }
+
+            int help_y = y + 5 + (int)actions.size();
+            if (help_y < y + h - 2)
+                Draw::text(x + 4, help_y, Draw::fit(actions[selected].help, (size_t)(w - 8)), "secondary");
+
+            Draw::text(x + 2, y + h - 2, Draw::fit("Esc - Exit", (size_t)(w - 4)), "muted");
+
+            cout << Draw::sync_end() << flush;
+
+            string key = Input::wait_key();
+            if (key == "KEY_up") {
+                if (selected > 0) selected--;
+            } else if (key == "KEY_down") {
+                if (selected < (int)actions.size() - 1) selected++;
+            } else if (key == "enter" || key == " ") {
+                return actions[selected].id;
+            } else if (key == "escape") {
+                return "exit";
+            }
+        }
+        return "exit";
     }
 
     std::string profile_select() {

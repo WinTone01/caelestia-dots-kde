@@ -9,6 +9,9 @@ namespace UI {
     void welcome_screen();
     bool sudo_prompt();
 
+    // Top-level action: "install", "update", "uninstall", or "exit".
+    std::string action_select();
+
     // Profiles from menu.json: picker, overrides, display title.
     std::string profile_select();
     void apply_profile(const std::string& profile_id);

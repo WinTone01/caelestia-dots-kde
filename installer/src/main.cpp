@@ -37,10 +37,36 @@ void check_signals() {
     }
 }
 
+// Hands the terminal to an interactive external script (update.sh or
+// uninstall.sh): leave the TUI's raw/alternate screen, run the script on the
+// real terminal, pause, then re-enter the TUI.
+void run_external(const std::string& script_path) {
+    Term::restore();
+    std::string cmd = "bash " + script_path;
+    int rc = system(cmd.c_str());
+    std::cout << "\n" << (rc == 0 ? "[OK]    " : "[WARN]  ") << script_path
+              << " finished (exit code " << rc << ")." << std::endl;
+    std::cout << "Press Enter to continue..." << std::endl;
+    std::string dummy;
+    if (!std::cin.eof()) {
+        std::getline(std::cin, dummy);
+    }
+    Term::init();
+}
+
 int main(int argc, char** argv) {
-    // Detect bundle dir from arg or exe path
+    // Detect bundle dir from arg or exe path. "--update"/"--uninstall"
+    // preselect that action instead of opening the wizard.
+    std::string preset_action;
     if (argc > 1) {
-        g_bundle_dir = argv[1];
+        std::string first = argv[1];
+        if (first == "--update") {
+            preset_action = "update";
+        } else if (first == "--uninstall") {
+            preset_action = "uninstall";
+        } else {
+            g_bundle_dir = first;
+        }
     } else {
         char buf[1024];
         ssize_t len = readlink("/proc/self/exe", buf, sizeof(buf)-1);
@@ -57,7 +83,7 @@ int main(int argc, char** argv) {
     // Early diagnostic: print bundle dir to stderr so setup.sh can capture it
     std::cerr << "[installer] bundle dir: " << g_bundle_dir << std::endl;
 
-    // Hide cursor immediately to prevent flashing in tmux
+    // Hide cursor immediately so the TUI never flashes it
     std::cout << "\x1b[?25l" << std::flush;
     Term::init();
 
@@ -89,17 +115,46 @@ int main(int argc, char** argv) {
     }
 
     // Phase 1: Welcome (splash merged into the frame)
-    std::cerr << "[installer] phase 1: welcome_screen" << std::endl;
-    UI::welcome_screen();
-    check_signals();
+    if (preset_action.empty()) {
+        std::cerr << "[installer] phase 1: welcome_screen" << std::endl;
+        UI::welcome_screen();
+        check_signals();
 
-    // Esc on the welcome screen sets g_quit. Honor it with a clean exit
-    // (same terminal restore the other cancel paths use).
-    if (g_quit) {
-        std::cerr << "[installer] user quit at welcome screen" << std::endl;
-        Term::restore();
-        std::cout << "\n\n\nExiting installer.\n";
-        return 0;
+        // Esc on the welcome screen sets g_quit. Honor it with a clean exit
+        // (same terminal restore the other cancel paths use).
+        if (g_quit) {
+            std::cerr << "[installer] user quit at welcome screen" << std::endl;
+            Term::restore();
+            std::cout << "\n\n\nExiting installer.\n";
+            return 0;
+        }
+    }
+
+    // Phase 1.5: Action select. Update and uninstall hand off to their
+    // scripts on the real terminal; install continues into the wizard.
+    std::string action = preset_action;
+    while (true) {
+        if (action.empty()) {
+            std::cerr << "[installer] phase 1.5: action_select" << std::endl;
+            action = UI::action_select();
+        }
+        if (action == "exit") {
+            Term::restore();
+            return 0;
+        }
+        if (action == "update" || action == "uninstall") {
+            std::cerr << "[installer] action: " << action << std::endl;
+            std::string script = g_bundle_dir + (action == "update" ? "/update.sh" : "/uninstall.sh");
+            run_external(script);
+            if (action == "uninstall") {
+                Term::restore();
+                std::cout << "\nExiting installer.\n";
+                return 0;
+            }
+            action.clear();
+            continue; // back to the action menu
+        }
+        break; // install
     }
 
     // Phase 2: Sudo Auth
