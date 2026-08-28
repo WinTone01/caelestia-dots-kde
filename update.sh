@@ -117,6 +117,18 @@ if [ ! -f "$BUNDLE_DIR/scripts/03-deploy-configs.sh" ] || [ ! -f "$BUNDLE_DIR/sc
     die "Critical internal scripts are missing from $BUNDLE_DIR/scripts/"
 fi
 
+# Restore the install-time menu choices (default shell, lockscreen plugin,
+# fish config, ...) that setup.sh persisted to install.env. A fresh update
+# process has none of these set, so the deploy/tweak scripts would otherwise
+# fall back to hardcoded defaults and silently revert the user's explicit
+# install-time decisions.
+if [ -f "$HOME/.config/caelestia-kde/install.env" ]; then
+    set -a
+    # shellcheck disable=SC1091
+    . "$HOME/.config/caelestia-kde/install.env"
+    set +a
+fi
+
 # Cache sudo credentials once now so sub-scripts don't each re-prompt.
 # The keepalive loop refreshes the timestamp with -nv (non-interactive
 # extend) so it never expires, even during long CMake builds.

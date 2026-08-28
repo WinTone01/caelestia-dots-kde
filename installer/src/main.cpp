@@ -109,6 +109,52 @@ int main(int argc, char** argv) {
         for (const auto& pair : g_answers) {
             setenv(pair.first.c_str(), pair.second.c_str(), 1);
         }
+
+        // Persist the install-time menu choices so update.sh can restore them.
+        // A fresh update process runs 03-deploy-configs.sh / 08-build-shell.sh /
+        // 09-system-tweaks.sh with none of these env vars set, so every script
+        // gate (${DEFAULT_SHELL:-fish}, ${INSTALL_FISH:-true}, ...) falls back
+        // to its hardcoded default and silently reverts the user's explicit
+        // choice (forces the login shell back to fish, re-enables the
+        // lockscreen plugin, overwrites ~/.config/fish).
+        if (const char* home = getenv("HOME")) {
+            string cfg_dir = string(home) + "/.config/caelestia-kde";
+            system(("mkdir -p \"" + cfg_dir + "\"").c_str());
+            ofstream env_file(cfg_dir + "/install.env", ios::out | ios::trunc);
+            if (env_file.is_open()) {
+                for (const auto& pair : g_answers) {
+                    // Only persist entries that are valid shell env names.
+                    if (pair.first.empty())
+                        continue;
+                    bool valid = (pair.first[0] == '_') ||
+                                 (pair.first[0] >= 'a' && pair.first[0] <= 'z') ||
+                                 (pair.first[0] >= 'A' && pair.first[0] <= 'Z');
+                    if (!valid)
+                        continue;
+                    for (char c : pair.first) {
+                        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                              (c >= '0' && c <= '9') || c == '_')) {
+                            valid = false;
+                            break;
+                        }
+                    }
+                    if (!valid)
+                        continue;
+
+                    // Single-quote the value so the file stays parseable even
+                    // if a value ever contains shell metacharacters.
+                    env_file << pair.first << "='";
+                    for (char c : pair.second) {
+                        if (c == '\'')
+                            env_file << "'\\''";
+                        else
+                            env_file << c;
+                    }
+                    env_file << "'\n";
+                }
+                env_file.close();
+            }
+        }
     } else {
         std::cerr << "[installer] phase 3: skipped (no menu loaded)" << std::endl;
     }
