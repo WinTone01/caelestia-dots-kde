@@ -29,14 +29,19 @@ A community port of the [Caelestia Hyprland dotfiles](https://github.com/caelest
 curl -fsSL https://raw.githubusercontent.com/ladybug-me/caelestia-dots-kde/main/install.sh | sh
 ```
 
+`install.sh` only clones the repo and hands off to the unified installer TUI. The TUI walks you through mirror refresh, packages, theming, and configuration - organized into phases (Prepare, Packages, Configure, Build, Finalize) - with an installation profile (Full / Standard / Minimal / Custom) and a review screen before anything changes. It prefers a prebuilt binary and compiles locally only when one isn't available.
+
 ### Updating
 
+- **Installer TUI:** run the installer and choose *Update*
 - **GUI:** Shell Settings -> Updates -> select branch -> Install Updates
 - **CLI:** `bash update.sh` and choose `main` (stable) or `dev` (bleeding edge)
 
 Shell settings are preserved across updates.
 
 ### Uninstalling
+
+Choose *Uninstall* from the installer TUI, or run:
 
 ```bash
 bash ./uninstall.sh
@@ -152,6 +157,16 @@ For detailed debug logs, enable Debug Mode in Nexus -> About -> Advanced, then r
 </tr></table>
 
 <!-- contributors-end -->
+
+## Star History
+
+<a href="https://www.star-history.com/?repos=ladybug-me%2Fcaelestia-dots-kde&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=ladybug-me/caelestia-dots-kde&type=date&theme=dark&legend=top-left&sealed_token=NFI4jXcoZAI26MlGX2jEasHMRd1PIS09clm_CVDS7SFGajH3wiHlN72P8WzuOQT2k2F71ZOCGl_xoy8eVpWlWtA0ACY3koK0NIS1-vLecN0vbvYgrZDN9kp8sQn7NT2xPNeilgrmzYWTzgdQYgskaDMGophAKmy6r6LUfQj8iFjy-Gunuqnte3EY14fX" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=ladybug-me/caelestia-dots-kde&type=date&legend=top-left&sealed_token=NFI4jXcoZAI26MlGX2jEasHMRd1PIS09clm_CVDS7SFGajH3wiHlN72P8WzuOQT2k2F71ZOCGl_xoy8eVpWlWtA0ACY3koK0NIS1-vLecN0vbvYgrZDN9kp8sQn7NT2xPNeilgrmzYWTzgdQYgskaDMGophAKmy6r6LUfQj8iFjy-Gunuqnte3EY14fX" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=ladybug-me/caelestia-dots-kde&type=date&legend=top-left&sealed_token=NFI4jXcoZAI26MlGX2jEasHMRd1PIS09clm_CVDS7SFGajH3wiHlN72P8WzuOQT2k2F71ZOCGl_xoy8eVpWlWtA0ACY3koK0NIS1-vLecN0vbvYgrZDN9kp8sQn7NT2xPNeilgrmzYWTzgdQYgskaDMGophAKmy6r6LUfQj8iFjy-Gunuqnte3EY14fX" />
+ </picture>
+</a>
 
 ## Credits
 
