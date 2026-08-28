@@ -241,27 +241,6 @@ Item {
         opacity: 0
         active: false
 
-        Binding {
-            when: popout.item !== null
-            target: popout.item
-            property: "scaleOffset"
-            value: popout.scaleOffset
-        }
-
-        Binding {
-            when: popout.item !== null
-            target: popout.item
-            property: "fontScale"
-            value: popout.fontScale
-        }
-
-        Binding {
-            when: popout.item !== null
-            target: popout.item
-            property: "_isSidebarOpen"
-            value: popout.sidebarOpen
-        }
-
         states: State {
             name: "active"
             when: popout.shouldBeActive
@@ -302,5 +281,26 @@ Item {
                 }
             }
         ]
+
+        Binding {
+            when: popout.item !== null
+            target: popout.item
+            property: "scaleOffset"
+            value: popout.scaleOffset
+        }
+
+        Binding {
+            when: popout.item !== null
+            target: popout.item
+            property: "fontScale"
+            value: popout.fontScale
+        }
+
+        Binding {
+            when: popout.item !== null
+            target: popout.item
+            property: "_isSidebarOpen"
+            value: popout.sidebarOpen
+        }
     }
 }

@@ -20,6 +20,10 @@ ColumnLayout {
 
     property bool _isSidebarOpen: false
 
+    // Injected by Content.qml's Popout.
+    property real scaleOffset: 1.0
+    property real fontScale: 1.0
+
     function checkConnectionStatus(): void {
         if (!root.shouldBeVisible || !connectButton.connecting) {
             return;
@@ -70,10 +74,6 @@ ColumnLayout {
             root.popouts.currentName = "network";
         }
     }
-
-    // Injected by Content.qml's Popout.
-    property real scaleOffset: 1.0
-    property real fontScale: 1.0
 
     spacing: Tokens.spacing.medium * scaleOffset
     implicitWidth: Math.max(400 * scaleOffset, _isSidebarOpen ? (Tokens.sizes.sidebar.width * scaleOffset) - Tokens.padding.extraLargeIncreased : 0)

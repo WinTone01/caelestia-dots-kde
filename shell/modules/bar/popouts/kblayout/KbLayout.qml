@@ -15,13 +15,13 @@ ColumnLayout {
 
     property bool _isSidebarOpen: false
 
-    function refresh() {
-        kb.refresh();
-    }
-
     // Injected by Content.qml's Popout.
     property real scaleOffset: 1.0
     property real fontScale: 1.0
+
+    function refresh() {
+        kb.refresh();
+    }
 
     spacing: Tokens.spacing.small * scaleOffset
     width: Math.max(Tokens.sizes.bar.kbLayoutWidth * scaleOffset, _isSidebarOpen ? (Tokens.sizes.sidebar.width * scaleOffset) - Tokens.padding.extraLargeIncreased * scaleOffset : 0)

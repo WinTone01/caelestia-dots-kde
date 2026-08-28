@@ -12,9 +12,6 @@ Item {
 
     required property PopoutState popouts
 
-    implicitWidth: child.implicitWidth
-    implicitHeight: child.implicitHeight
-
     readonly property string gifPath: {
         const hr = new Date().getHours();
         if (hr >= 5 && hr < 12) return Qt.resolvedUrl("../../../assets/morning.gif");
@@ -29,6 +26,9 @@ Item {
     property bool _isSidebarOpen: false
 
     readonly property int previewSize: Math.round(Tokens.sizes.bar.windowPreviewSize * scaleOffset)
+
+    implicitWidth: child.implicitWidth
+    implicitHeight: child.implicitHeight
 
     Column {
         id: child
