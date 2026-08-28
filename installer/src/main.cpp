@@ -87,6 +87,16 @@ int main(int argc, char** argv) {
     UI::splash_screen();
     check_signals();
 
+    // Esc on the splash screen sets g_quit. Honor it with a clean exit
+    // (same terminal restore the other cancel paths use) instead of falling
+    // through to the sudo prompt, which looked like the installer hanging.
+    if (g_quit) {
+        std::cerr << "[installer] user quit at splash screen" << std::endl;
+        Term::restore();
+        std::cout << "\n\n\nExiting installer.\n";
+        return 0;
+    }
+
     // Phase 2: Sudo Auth
     std::cerr << "[installer] phase 2: sudo_prompt" << std::endl;
     if (!UI::sudo_prompt()) {
