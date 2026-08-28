@@ -82,16 +82,21 @@ int main(int argc, char** argv) {
     signal(SIGINT, handle_sigint);
     signal(SIGTERM, handle_sigterm);
 
-    // Phase 1: Splash
-    std::cerr << "[installer] phase 1: splash_screen" << std::endl;
-    UI::splash_screen();
+    // Distro detection happens in setup.sh and arrives via BASE_DISTRO.
+    const char* env_distro = getenv("BASE_DISTRO");
+    if (env_distro && string(env_distro) != "") {
+        g_base_distro = env_distro;
+    }
+
+    // Phase 1: Welcome (splash merged into the frame)
+    std::cerr << "[installer] phase 1: welcome_screen" << std::endl;
+    UI::welcome_screen();
     check_signals();
 
-    // Esc on the splash screen sets g_quit. Honor it with a clean exit
-    // (same terminal restore the other cancel paths use) instead of falling
-    // through to the sudo prompt, which looked like the installer hanging.
+    // Esc on the welcome screen sets g_quit. Honor it with a clean exit
+    // (same terminal restore the other cancel paths use).
     if (g_quit) {
-        std::cerr << "[installer] user quit at splash screen" << std::endl;
+        std::cerr << "[installer] user quit at welcome screen" << std::endl;
         Term::restore();
         std::cout << "\n\n\nExiting installer.\n";
         return 0;
@@ -106,15 +111,53 @@ int main(int argc, char** argv) {
     }
     check_signals();
 
-    // Phase 3 & 4: Dynamic Menu
+    // Phase 3: Profile -> Configure -> Review (review happens before any
+    // step runs; Back from the menu returns to the profile picker).
     if (!g_menu.is_null() && g_menu.contains("menu")) {
-        std::cerr << "[installer] phase 3: render_menu" << std::endl;
-        if (!UI::render_menu(g_menu["menu"], "CONFIGURATION MENU")) {
-            std::cerr << "[installer] user backed out of menu" << std::endl;
-            Term::restore();
-            return 0; // User backed out or exited
+        std::cerr << "[installer] phase 3: profile + configure + review" << std::endl;
+        UI::init_menu_defaults(g_menu["menu"]);
+
+        bool has_profiles = g_menu.contains("profiles") && g_menu["profiles"].is_array() &&
+                            !g_menu["profiles"].empty();
+        std::string profile_id = "custom";
+        if (has_profiles) {
+            profile_id = UI::profile_select();
+            if (profile_id.empty()) {
+                std::cerr << "[installer] user cancelled at profile select" << std::endl;
+                Term::restore();
+                return 0;
+            }
+            UI::apply_profile(profile_id);
         }
-        
+        std::string profile_title = UI::profile_title(profile_id);
+
+        bool begin = false;
+        while (!begin && !g_quit) {
+            if (!UI::render_menu(g_menu["menu"], "CONFIGURATION", profile_title)) {
+                if (has_profiles) {
+                    profile_id = UI::profile_select();
+                    if (profile_id.empty()) {
+                        std::cerr << "[installer] user cancelled at profile select" << std::endl;
+                        Term::restore();
+                        return 0;
+                    }
+                    UI::apply_profile(profile_id);
+                    profile_title = UI::profile_title(profile_id);
+                    continue;
+                }
+                std::cerr << "[installer] user backed out of menu" << std::endl;
+                Term::restore();
+                return 0;
+            }
+            if (UI::review_screen()) {
+                begin = true;
+            }
+        }
+        if (g_quit) {
+            Term::restore();
+            return 0;
+        }
+
         // Export all answers as environment variables for the bash scripts
         for (const auto& pair : g_answers) {
             setenv(pair.first.c_str(), pair.second.c_str(), 1);
@@ -172,21 +215,15 @@ int main(int argc, char** argv) {
         std::cerr << "[installer] phase 3: skipped (no menu loaded)" << std::endl;
     }
 
-    // Fallback distro logic if somehow not set
-    const char* env_distro = getenv("BASE_DISTRO");
-    if (env_distro && string(env_distro) != "") {
-        g_base_distro = env_distro;
-    }
-
     check_signals();
-    // Phase 5: Execute
-    std::cerr << "[installer] phase 5: execute (" << Runner::steps.size() << " steps)" << std::endl;
+    // Phase 4: Execute
+    std::cerr << "[installer] phase 4: execute (" << Runner::steps.size() << " steps)" << std::endl;
     Runner::execute();
 
     check_signals();
-    // Phase 6: Finalize
-    std::cerr << "[installer] phase 6: summary_screen" << std::endl;
-    UI::summary_screen();
+    // Phase 5: Complete
+    std::cerr << "[installer] phase 5: complete_screen" << std::endl;
+    UI::complete_screen();
     Term::restore();
 
     if (g_answers["REMOVE_CACHE"] == "true") {
