@@ -129,7 +129,10 @@ int main(int argc, char** argv) {
         // lockscreen plugin, overwrites ~/.config/fish).
         if (const char* home = getenv("HOME")) {
             string cfg_dir = string(home) + "/.config/caelestia-kde";
-            system(("mkdir -p \"" + cfg_dir + "\"").c_str());
+            std::string safe_dir = cfg_dir;
+            for (size_t pos = 0; (pos = safe_dir.find('\'', pos)) != std::string::npos; pos += 4)
+                safe_dir.replace(pos, 1, "'\\\''");
+            system(("mkdir -p '" + safe_dir + "'").c_str());
             ofstream env_file(cfg_dir + "/install.env", ios::out | ios::trunc);
             if (env_file.is_open()) {
                 for (const auto& pair : g_answers) {

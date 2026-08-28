@@ -262,7 +262,7 @@ StyledRect {
                 }
 
                 Component.onCompleted: {
-                    if (modelData)
+                    if (modelData && !DesktopEntries.heuristicLookup(modelData.iconName || modelData.class || ""))
                         WinIcons.request(modelData.class, modelData.title, modelData.pid ?? 0, modelData.address ? String(modelData.address) : "");
                 }
 

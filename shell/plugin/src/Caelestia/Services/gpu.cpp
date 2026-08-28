@@ -196,8 +196,10 @@ void Gpu::readGenericUsage() {
 
     // Pass 2: Intel iGPUs have no busy-percent node; approximate usage as the
     // ratio of the current GPU frequency to its maximum.
-    if (count == 0) {
+    if (count < cards.size()) {
         for (const QString& card : cards) {
+            if (QFile::exists(QStringLiteral("/sys/class/drm/%1/device/gpu_busy_percent").arg(card)))
+                continue;
             QFile cur(QStringLiteral("/sys/class/drm/%1/gt/gt0/rps_cur_freq_mhz").arg(card));
             if (!cur.open(QIODevice::ReadOnly | QIODevice::Text)) {
                 continue;
