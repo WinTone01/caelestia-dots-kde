@@ -283,11 +283,19 @@ fi
 
 BIN="$BUNDLE_DIR/caelestia-install"
 
+# The TUI data version of this checkout. The prebuilt binary is only reused
+# when it reports the same version - a stale release binary would otherwise
+# render old screens and ignore new menu actions (e.g. action_review).
+tui_version() {
+    tr -d '[:space:]' < "$BUNDLE_DIR/installer/tui.version" 2>/dev/null || true
+}
+
 # Try to fetch a prebuilt installer binary from GitHub Releases so we don't
 # have to compile the TUI on the user's machine. The binary is built by
 # .github/workflows/prebuilt-artifacts.yml and uploaded to the fixed
 # `caelestia-bin-repo` release tag. Falls back to compiling when unavailable
-# (no curl, offline, unsupported arch) or when forced via env var.
+# (no curl, offline, unsupported arch), when it does not match this checkout's
+# TUI version, or when forced via env var.
 try_download_prebuilt_installer() {
     local arch
     arch="$(uname -m)"
@@ -302,8 +310,13 @@ try_download_prebuilt_installer() {
     url="https://github.com/ladybug-me/caelestia-dots-kde/releases/download/caelestia-bin-repo/caelestia-install-${arch}"
     if curl -fsSL --connect-timeout 10 --max-time 120 "$url" -o "$tmp_bin" 2>/dev/null; then
         chmod +x "$tmp_bin"
-        printf '%s\n' "$tmp_bin"
-        return 0
+        local expected actual
+        expected="$(tui_version)"
+        actual="$("$tmp_bin" --version "$BUNDLE_DIR" 2>/dev/null || true)"
+        if [[ -n "$expected" && "$actual" == "$expected" ]]; then
+            printf '%s\n' "$tmp_bin"
+            return 0
+        fi
     fi
     rm -f "$tmp_bin"
     return 1
