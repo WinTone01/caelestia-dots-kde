@@ -132,6 +132,54 @@
       ]
     },
     {
+      "id": "menu_optional_apps",
+      "type": "submenu",
+      "title": "Optional Apps",
+      "items": [
+        {
+          "id": "INSTALL_VSCODE",
+          "type": "boolean",
+          "title": "VSCode/VSCodium settings, keybindings, and theme extension",
+          "default": false
+        },
+        {
+          "id": "INSTALL_ZED",
+          "type": "boolean",
+          "title": "Zed keymap and settings",
+          "default": false
+        },
+        {
+          "id": "INSTALL_SPICETIFY",
+          "type": "boolean",
+          "title": "Spicetify (Spotify) theming",
+          "default": false
+        },
+        {
+          "id": "INSTALL_DISCORD",
+          "type": "boolean",
+          "title": "Discord / Equibop",
+          "default": false
+        },
+        {
+          "id": "INSTALL_TODOIST",
+          "type": "boolean",
+          "title": "Todoist AppImage",
+          "default": false
+        },
+        {
+          "id": "INSTALL_FIREFOX_THEME",
+          "type": "boolean",
+          "title": "Firefox theming (userChrome.css / user.js)",
+          "default": false
+        },
+        {
+          "id": "action_back",
+          "type": "action",
+          "title": "Back to Main Menu"
+        }
+      ]
+    },
+    {
       "id": "action_proceed",
       "type": "action",
       "title": "Begin Installation"

@@ -57,6 +57,10 @@ double KWinWorkspaceState::swipeOffset() const {
     return m_swipeOffset;
 }
 
+bool KWinWorkspaceState::showingDesktop() const {
+    return m_showingDesktop;
+}
+
 KWinWorkspaceState::KWinWorkspaceState(QObject* parent)
     : QObject(parent)
 {
@@ -77,6 +81,11 @@ KWinWorkspaceState::KWinWorkspaceState(QObject* parent)
                 this, SLOT(onCountChanged(uint)));
     bus.connect("org.kde.KWin", "/VirtualDesktopManager", "org.kde.KWin.VirtualDesktopManager", "rowsChanged",
                 this, SLOT(onRowsChanged(uint)));
+
+    bus.connect("org.kde.KWin", "/KWin", "org.kde.KWin", "showingDesktopChanged",
+                this, SLOT(onShowingDesktopChanged(bool)));
+    bus.connect("org.kde.KWin", "/KWin", "org.freedesktop.DBus.Properties", "PropertiesChanged",
+                this, SLOT(onKWinPropertiesChanged(QString, QVariantMap, QStringList)));
 
     fetchInitialState();
     setupTrackerServer();
@@ -161,7 +170,33 @@ void KWinWorkspaceState::fetchInitialState() {
         }
     }
 
+    QDBusMessage showingMsg = QDBusMessage::createMethodCall("org.kde.KWin", "/KWin", "org.freedesktop.DBus.Properties", "Get");
+    showingMsg << "org.kde.KWin" << "showingDesktop";
+    QDBusReply<QDBusVariant> showingReply = QDBusConnection::sessionBus().call(showingMsg);
+    if (showingReply.isValid()) {
+        updateShowingDesktop(showingReply.value().variant().toBool());
+    }
+
     updateActiveId();
+}
+
+void KWinWorkspaceState::onShowingDesktopChanged(bool showing) {
+    updateShowingDesktop(showing);
+}
+
+void KWinWorkspaceState::onKWinPropertiesChanged(const QString& interface, const QVariantMap& changedProps, const QStringList& invalidatedProps) {
+    Q_UNUSED(interface)
+    Q_UNUSED(invalidatedProps)
+    if (changedProps.contains(QStringLiteral("showingDesktop"))) {
+        updateShowingDesktop(changedProps.value(QStringLiteral("showingDesktop")).toBool());
+    }
+}
+
+void KWinWorkspaceState::updateShowingDesktop(bool showing) {
+    if (showing != m_showingDesktop) {
+        m_showingDesktop = showing;
+        emit showingDesktopChanged();
+    }
 }
 
 void KWinWorkspaceState::updateActiveId() {

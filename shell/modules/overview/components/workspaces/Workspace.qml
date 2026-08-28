@@ -48,6 +48,18 @@ StyledRect {
     signal selected()
     signal reselected()
 
+    // Prefer an icon extracted from the window's own _NET_WM_ICON, then fall
+    // back to the themed desktop-entry lookup (same as the overview cards).
+    function windowIconSource(client: var): string {
+        if (!client)
+            return "";
+        const wp = WinIcons.paths[WinIcons.keyFor(client.class, client.pid ?? 0)];
+        if (wp)
+            return "file://" + wp;
+        return client.iconName ? Icons.getAppIcon(client.iconName, "image-missing")
+                               : (client.class ? Icons.getAppIcon(client.class, "image-missing") : "");
+    }
+
     implicitWidth: Math.floor(baseWidth * scaleFactor)
     implicitHeight: indicatorSize
     radius: Tokens.rounding.large
@@ -249,6 +261,11 @@ StyledRect {
                     return false;
                 }
 
+                Component.onCompleted: {
+                    if (modelData && !DesktopEntries.heuristicLookup(modelData.iconName || modelData.class || ""))
+                        WinIcons.request(modelData.class, modelData.title, modelData.pid ?? 0, modelData.address ? String(modelData.address) : "");
+                }
+
                 radius: Tokens.rounding.small
                 color: Colours.tPalette.m3surfaceContainerHigh
                 Layout.fillWidth: true
@@ -311,7 +328,7 @@ StyledRect {
                     anchors.centerIn: parent
                     implicitSize: Math.min(parent.width, parent.height) * 0.6
                     asynchronous: true
-                    source: modelData.iconName ? Icons.getAppIcon(modelData.iconName, "image-missing") : (modelData.class ? Icons.getAppIcon(modelData.class, "image-missing") : "")
+                    source: root.windowIconSource(modelData)
                 }
                 StateLayer {
                     anchors.fill: parent

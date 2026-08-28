@@ -131,6 +131,7 @@ vector<Step> steps = {
     {"Build Caelestia shell", "scripts/08-build-shell.sh", "PENDING"},
     {"Apply system tweaks", "scripts/09-system-tweaks.sh", "PENDING"},
     {"Create autostart entries", "scripts/10-autostart.sh", "PENDING"},
+    {"Install optional components", "scripts/11-optional-apps.sh", "PENDING"},
 };
 
 string show_error_dialog(const string &step_name, const string &script_path,
@@ -395,6 +396,28 @@ void execute() {
     if (steps[i].name == "System update") {
       const char *skip_val = getenv("SKIP_SYSTEM_UPDATE");
       if (skip_val && std::string(skip_val) == "true") {
+        steps[i].status = "IGNORED";
+        draw_progress_ui(i);
+        continue;
+      }
+    }
+
+    // The optional-components step only runs when at least one toggle is on;
+    // a stock install (all false) skips it entirely instead of printing a
+    // long no-op section.
+    if (steps[i].name == "Install optional components") {
+      const char *opt[] = {"INSTALL_VSCODE",   "INSTALL_ZED", "INSTALL_SPICETIFY",
+                           "INSTALL_DISCORD",   "INSTALL_TODOIST",
+                           "INSTALL_FIREFOX_THEME"};
+      bool any_enabled = false;
+      for (const char *name : opt) {
+        const char *val = getenv(name);
+        if (val && std::string(val) == "true") {
+          any_enabled = true;
+          break;
+        }
+      }
+      if (!any_enabled) {
         steps[i].status = "IGNORED";
         draw_progress_ui(i);
         continue;
