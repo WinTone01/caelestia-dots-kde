@@ -1,92 +1,157 @@
 {
+  "profiles": [
+    {
+      "id": "full",
+      "title": "Full",
+      "help": "Everything Caelestia offers: all packages, theming, and optional apps.",
+      "sets": {
+        "INSTALL_FISH": true,
+        "INSTALL_PAPIRUS": true,
+        "INSTALL_DARKLY": true,
+        "INSTALL_KVANTUM": true,
+        "INSTALL_THUNAR": true,
+        "APPLY_DARKLY": true,
+        "APPLY_MATERIAL_YOU": true,
+        "APPLY_FONTS": true,
+        "APPLY_LOCKSCREEN": true,
+        "INSTALL_VSCODE": true,
+        "INSTALL_ZED": true,
+        "INSTALL_SPICETIFY": true,
+        "INSTALL_DISCORD": true,
+        "INSTALL_TODOIST": true,
+        "INSTALL_FIREFOX_THEME": true
+      }
+    },
+    {
+      "id": "standard",
+      "title": "Standard",
+      "help": "The recommended everyday setup: packages and theming, no optional apps.",
+      "sets": {}
+    },
+    {
+      "id": "minimal",
+      "title": "Minimal",
+      "help": "Shell and Darkly theme only. Fastest install, least changed.",
+      "sets": {
+        "INSTALL_FISH": true,
+        "INSTALL_PAPIRUS": false,
+        "INSTALL_DARKLY": true,
+        "INSTALL_KVANTUM": true,
+        "INSTALL_THUNAR": false,
+        "APPLY_DARKLY": true,
+        "APPLY_MATERIAL_YOU": false,
+        "APPLY_FONTS": false,
+        "APPLY_LOCKSCREEN": false
+      }
+    },
+    {
+      "id": "custom",
+      "title": "Custom",
+      "help": "Choose every option yourself. No preset applied.",
+      "sets": {}
+    }
+  ],
   "menu": [
     {
       "id": "menu_packages",
       "type": "submenu",
-      "title": "Package Installation",
+      "title": "Packages",
+      "help": "Distro packages and AUR builds installed during the Packages phase.",
       "items": [
         {
           "id": "INSTALL_FISH",
           "type": "boolean",
           "title": "Fish shell",
+          "help": "Install fish plus the Caelestia fish configuration.",
           "default": true
         },
         {
           "id": "INSTALL_PAPIRUS",
           "type": "boolean",
           "title": "Papirus icon theme",
+          "help": "Install the Papirus icon set.",
           "default": true
         },
         {
           "id": "INSTALL_DARKLY",
           "type": "boolean",
           "title": "Darkly theme package",
+          "help": "Install the Darkly Plasma/Qt theme packages.",
+          "default": true
+        },
+        {
+          "id": "INSTALL_KVANTUM",
+          "type": "boolean",
+          "title": "Kvantum theme engine",
+          "help": "Install Kvantum, the Qt style engine behind the Caelestia look.",
           "default": true
         },
         {
           "id": "INSTALL_THUNAR",
           "type": "boolean",
           "title": "Thunar integration files",
+          "help": "Deploy Caelestia configs for the Thunar file manager.",
           "default": false
-        },
-        {
-          "id": "INSTALL_KVANTUM",
-          "type": "boolean",
-          "title": "Kvantum theme engine",
-          "default": true
         },
         {
           "id": "action_back",
           "type": "action",
-          "title": "Back to Main Menu"
+          "title": "Back"
         }
       ]
     },
     {
-      "id": "menu_theming",
+      "id": "menu_appearance",
       "type": "submenu",
-      "title": "Plasma Theming",
+      "title": "Appearance",
+      "help": "How the desktop looks, applied during the Configure phase.",
       "items": [
         {
           "id": "APPLY_DARKLY",
           "type": "boolean",
-          "title": "Apply Darkly theme (style, decorations, window borders)",
+          "title": "Apply Darkly theme",
+          "help": "Set style, decorations, and window borders to Darkly.",
           "default": true
         },
         {
           "id": "APPLY_MATERIAL_YOU",
           "type": "boolean",
-          "title": "Enable Material You dynamic colors",
+          "title": "Material You dynamic colors",
+          "help": "Derive the accent palette from your wallpaper via kde-material-you-colors.",
           "default": true
         },
         {
           "id": "APPLY_FONTS",
           "type": "boolean",
-          "title": "Apply custom fonts (Rubik, JetBrains Mono Nerd)",
+          "title": "Custom fonts",
+          "help": "Apply Rubik and JetBrains Mono Nerd Font system-wide.",
           "default": true
         },
         {
           "id": "APPLY_LOCKSCREEN",
           "type": "boolean",
-          "title": "Enable custom lockscreen wallpaper plugin",
+          "title": "Custom lockscreen wallpaper",
+          "help": "Enable the plasma-wallpaper-application lockscreen plugin.",
           "default": true
         },
         {
           "id": "action_back",
           "type": "action",
-          "title": "Back to Main Menu"
+          "title": "Back"
         }
       ]
     },
     {
       "id": "menu_shell",
       "type": "submenu",
-      "title": "Shell Preferences",
+      "title": "Shell",
+      "help": "Your login shell, applied during the Finalize phase.",
       "items": [
         {
           "id": "DEFAULT_SHELL",
           "type": "select",
           "title": "Default shell",
+          "help": "The login shell Caelestia configures.",
           "default": "fish",
           "options": [
             "bash",
@@ -97,92 +162,104 @@
         {
           "id": "action_back",
           "type": "action",
-          "title": "Back to Main Menu"
+          "title": "Back"
         }
       ]
     },
     {
-      "id": "menu_installer",
+      "id": "menu_apps",
       "type": "submenu",
-      "title": "Installer Behavior",
-      "items": [
-        {
-          "id": "CONFIRM_ARG",
-          "type": "boolean",
-          "title": "Auto-confirm package installs (--noconfirm / -y)",
-          "default": true
-        },
-        {
-          "id": "REMOVE_CACHE",
-          "type": "boolean",
-          "title": "Remove build cache after install",
-          "default": false
-        },
-        {
-          "id": "SKIP_SYSTEM_UPDATE",
-          "type": "boolean",
-          "title": "Skip the full system update (pacman -Syu / dnf upgrade / apt upgrade)",
-          "default": false
-        },
-        {
-          "id": "action_back",
-          "type": "action",
-          "title": "Back to Main Menu"
-        }
-      ]
-    },
-    {
-      "id": "menu_optional_apps",
-      "type": "submenu",
-      "title": "Optional Apps",
+      "title": "Applications",
+      "help": "Optional third-party app theming, run only if any are enabled.",
       "items": [
         {
           "id": "INSTALL_VSCODE",
           "type": "boolean",
-          "title": "VSCode/VSCodium settings, keybindings, and theme extension",
+          "title": "VSCode / VSCodium",
+          "help": "Settings, keybindings, and the Caelestia theme extension.",
           "default": false
         },
         {
           "id": "INSTALL_ZED",
           "type": "boolean",
-          "title": "Zed keymap and settings",
+          "title": "Zed",
+          "help": "Zed keymap and settings.",
           "default": false
         },
         {
           "id": "INSTALL_SPICETIFY",
           "type": "boolean",
-          "title": "Spicetify (Spotify) theming",
+          "title": "Spicetify",
+          "help": "Spotify theming via Spicetify.",
           "default": false
         },
         {
           "id": "INSTALL_DISCORD",
           "type": "boolean",
           "title": "Discord / Equibop",
+          "help": "Caelestia look for Discord or the Equibop client.",
           "default": false
         },
         {
           "id": "INSTALL_TODOIST",
           "type": "boolean",
-          "title": "Todoist AppImage",
+          "title": "Todoist",
+          "help": "Install the Todoist AppImage.",
           "default": false
         },
         {
           "id": "INSTALL_FIREFOX_THEME",
           "type": "boolean",
-          "title": "Firefox theming (userChrome.css / user.js)",
+          "title": "Firefox theming",
+          "help": "Apply userChrome.css / user.js theming to Firefox.",
           "default": false
         },
         {
           "id": "action_back",
           "type": "action",
-          "title": "Back to Main Menu"
+          "title": "Back"
         }
       ]
     },
     {
-      "id": "action_proceed",
+      "id": "menu_behavior",
+      "type": "submenu",
+      "title": "Installer Behavior",
+      "help": "How the installer itself behaves.",
+      "items": [
+        {
+          "id": "CONFIRM_ARG",
+          "type": "boolean",
+          "title": "Auto-confirm package installs",
+          "help": "Pass --noconfirm / -y to package managers so installs never pause.",
+          "default": true
+        },
+        {
+          "id": "REMOVE_CACHE",
+          "type": "boolean",
+          "title": "Remove build cache after install",
+          "help": "Delete the Caelestia build cache once installation finishes.",
+          "default": false
+        },
+        {
+          "id": "SKIP_SYSTEM_UPDATE",
+          "type": "boolean",
+          "title": "Skip the full system update",
+          "help": "Skip pacman -Syu / dnf upgrade / apt upgrade during the Prepare phase.",
+          "default": false
+        },
+        {
+          "id": "action_back",
+          "type": "action",
+          "title": "Back"
+        }
+      ]
+    },
+    {
+      "id": "action_review",
       "type": "action",
-      "title": "Begin Installation"
+      "title": "Review installation",
+      "help": "See every step that will run, grouped by phase, before anything changes."
     }
   ]
 }
