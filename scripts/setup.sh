@@ -65,123 +65,6 @@ detect_base_distro() {
     echo "$detected"
 }
 
-is_cachyos() {
-    local os_id=""
-    local os_like=""
-
-    if [[ -r /etc/os-release ]]; then
-        # shellcheck disable=SC1091
-        . /etc/os-release
-        os_id="${ID:-}"
-        os_like="${ID_LIKE:-}"
-    fi
-
-    [[ "$os_id" == "cachyos" || " $os_like " == *" cachyos "* ]]
-}
-
-silent_refresh_pacman_sources() {
-    if [[ "$BASE_DISTRO" != "arch" ]]; then
-        return 0
-    fi
-
-    local have_root=0
-    if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
-        have_root=1
-    else
-        # Ask for sudo once upfront; sudo -v caches the ticket.
-        if sudo -v; then
-            have_root=1
-        else
-            echo "[WARN]  Skipping pacman mirror refresh/ranking (sudo access not available)."
-        fi
-    fi
-
-    if (( have_root )); then
-        # Cached sudo — non-interactive from here on.
-        as_root() {
-            if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
-                "$@"
-            else
-                sudo -n "$@"
-            fi
-        }
-
-        # Enable parallel package downloads before anything syncs, so the
-        # large package steps don't download hundreds of packages serially.
-        if [[ -f /etc/pacman.conf ]]; then
-            if grep -q '^#\?ParallelDownloads' /etc/pacman.conf; then
-                as_root sed -i 's/^#\?ParallelDownloads.*/ParallelDownloads = 5/' /etc/pacman.conf
-            else
-                echo "ParallelDownloads = 5" | as_root tee -a /etc/pacman.conf >/dev/null
-            fi
-        fi
-
-        if is_cachyos; then
-            if command -v cachyos-rate-mirrors >/dev/null 2>&1; then
-                echo "[INFO]  Ranking CachyOS mirrors..."
-                as_root cachyos-rate-mirrors >/dev/null 2>&1 || echo "[WARN]  cachyos-rate-mirrors failed, continuing with current mirrors."
-            else
-                echo "[WARN]  cachyos-rate-mirrors is not installed; continuing with current mirrors."
-            fi
-        else
-            # Reflector is the fallback for Arch-based systems without CachyOS tooling.
-            if ! command -v reflector >/dev/null 2>&1; then
-                as_root pacman -Sy --noconfirm reflector >/dev/null 2>&1 || true
-            fi
-
-            if command -v reflector >/dev/null 2>&1; then
-                echo "[INFO]  Ranking Arch mirrors by download speed..."
-                as_root reflector --latest 20 --protocol https --sort rate --save /etc/pacman.d/mirrorlist >/dev/null 2>&1 || echo "[WARN]  reflector failed, continuing with current mirrors."
-            fi
-        fi
-
-        # Pre-install dos2unix for CRLF normalization later.
-        if ! command -v dos2unix >/dev/null 2>&1; then
-            as_root pacman -Sy --noconfirm dos2unix >/dev/null 2>&1 || true
-        fi
-
-        as_root pacman -Sy --noconfirm >/dev/null 2>&1 || echo "[WARN]  Failed to refresh pacman sources early. Continuing..."
-        unset -f as_root
-    fi
-}
-
-silent_refresh_native_sources() {
-    local have_root=0
-
-    case "$BASE_DISTRO" in
-        fedora|debian) ;;
-        *) return 0 ;;
-    esac
-
-    if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
-        have_root=1
-    elif sudo -v; then
-        have_root=1
-    else
-        echo "[WARN]  Skipping package source refresh (sudo access not available)."
-        return 0
-    fi
-
-    case "$BASE_DISTRO" in
-        fedora)
-            echo "[INFO]  Refreshing Fedora repository metadata using DNF..."
-            if (( have_root )) && [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
-                dnf makecache --refresh >/dev/null 2>&1 || echo "[WARN]  Failed to refresh DNF metadata. Continuing..."
-            else
-                sudo -n dnf makecache --refresh >/dev/null 2>&1 || echo "[WARN]  Failed to refresh DNF metadata. Continuing..."
-            fi
-            ;;
-        debian)
-            echo "[INFO]  Refreshing Debian repository metadata using APT..."
-            if (( have_root )) && [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
-                apt-get update >/dev/null 2>&1 || echo "[WARN]  Failed to refresh APT metadata. Continuing..."
-            else
-                sudo -n apt-get update >/dev/null 2>&1 || echo "[WARN]  Failed to refresh APT metadata. Continuing..."
-            fi
-            ;;
-    esac
-}
-
 run_arch_pacman_install() {
     local -a pkgs=("$@")
     local -a pacman_args=(-S --needed --noconfirm)
@@ -209,12 +92,6 @@ run_arch_pacman_install() {
 }
 
 export BASE_DISTRO="$(detect_base_distro)"
-
-if [[ "$BASE_DISTRO" == "arch" ]]; then
-    silent_refresh_pacman_sources
-elif [[ "$BASE_DISTRO" == "fedora" || "$BASE_DISTRO" == "debian" ]]; then
-    silent_refresh_native_sources
-fi
 
 normalize_line_endings_first() {
     export BASE_DISTRO="$(detect_base_distro)"
@@ -308,7 +185,7 @@ try_download_prebuilt_installer() {
     tmp_bin="$(mktemp)"
     local url
     url="https://github.com/ladybug-me/caelestia-dots-kde/releases/download/caelestia-bin-repo/caelestia-install-${arch}"
-    if curl -fsSL --connect-timeout 10 --max-time 120 "$url" -o "$tmp_bin" 2>/dev/null; then
+    if curl -fsSL --connect-timeout 10 --max-time 30 "$url" -o "$tmp_bin" 2>/dev/null; then
         chmod +x "$tmp_bin"
         local expected actual
         expected="$(tui_version)"
@@ -322,50 +199,7 @@ try_download_prebuilt_installer() {
     return 1
 }
 
-echo -n "Preparing Caelestia installer"
-{
-    while true; do
-        printf "."
-        sleep 0.5
-        printf "."
-        sleep 0.5
-        printf "."
-        sleep 0.5
-        printf "\b\b\b   \b\b\b"
-    done
-} &
-SPINNER_PID=$!
-
-PREBUILT_BIN=""
-if [[ -z "${CAELESTIA_FORCE_BUILD_INSTALLER:-}" ]] && command -v curl >/dev/null 2>&1; then
-    PREBUILT_BIN="$(try_download_prebuilt_installer || true)"
-fi
-
-# Check and install requirements
-MISSING_PKGS=()
-if ! command -v g++ >/dev/null 2>&1; then
-    MISSING_PKGS+=("g++")
-fi
-if ! command -v cmake >/dev/null 2>&1; then
-    MISSING_PKGS+=("cmake")
-fi
-if ! command -v make >/dev/null 2>&1; then
-    MISSING_PKGS+=("make")
-fi
-if [ ${#MISSING_PKGS[@]} -ne 0 ]; then
-    kill $SPINNER_PID 2>/dev/null || true
-    echo ""
-    echo "Missing build tools: ${MISSING_PKGS[*]}. Installing..."
-    if [[ "$BASE_DISTRO" == "arch" ]]; then
-        run_arch_pacman_install base-devel cmake
-    elif [[ "$BASE_DISTRO" == "fedora" ]]; then
-        sudo dnf install -y gcc-c++ cmake make
-    elif [[ "$BASE_DISTRO" == "debian" ]]; then
-        sudo apt-get update && sudo apt-get install -y build-essential g++ cmake make
-    else
-        echo "Could not auto-install build tools. Please install manually: ${MISSING_PKGS[*]}"
-        exit 1
-    fi
+start_spinner() {
     echo -n "Preparing Caelestia installer"
     {
         while true; do
@@ -379,45 +213,80 @@ if [ ${#MISSING_PKGS[@]} -ne 0 ]; then
         done
     } &
     SPINNER_PID=$!
+}
+
+stop_spinner() {
+    kill "$SPINNER_PID" 2>/dev/null || true
+    wait "$SPINNER_PID" 2>/dev/null || true
+    echo ""
+}
+
+start_spinner
+
+PREBUILT_BIN=""
+if [[ -z "${CAELESTIA_FORCE_BUILD_INSTALLER:-}" ]] && command -v curl >/dev/null 2>&1; then
+    PREBUILT_BIN="$(try_download_prebuilt_installer || true)"
 fi
 
 if [[ -n "$PREBUILT_BIN" ]]; then
-    kill $SPINNER_PID 2>/dev/null || true
-    wait $SPINNER_PID 2>/dev/null || true
-    echo ""
+    stop_spinner
     rm -f "$BIN"
     mv "$PREBUILT_BIN" "$BIN"
     echo "[OK]    Using prebuilt installer binary (skipped compilation)."
 else
-    BUILD_DIR="$BUNDLE_DIR/installer/build"
-    BUILD_LOG="/tmp/caelestia_build.log"
-    rm -rf "$BUILD_DIR"
-    mkdir -p "$BUILD_DIR"
-    (
-        cd "$BUILD_DIR" || exit 1
-        cmake -DCMAKE_BUILD_TYPE=Release .. >"$BUILD_LOG" 2>&1 || exit 1
-        make -j"$(nproc 2>/dev/null || echo 1)" >>"$BUILD_LOG" 2>&1 || exit 1
-    ) || {
-        kill $SPINNER_PID 2>/dev/null || true
-        echo ""
-        echo "[FATAL] Failed to build the Caelestia installer." >&2
-        echo "--- build log (last 60 lines) ---"
-        tail -n 60 "$BUILD_LOG" 2>/dev/null || cat "$BUILD_LOG" 2>/dev/null
-        echo "--- end build log ---"
-        echo "Full log saved to: $BUILD_LOG"
-        exit 1
-    }
+    # Local fallback. Reuse a previously compiled binary that matches this
+    # checkout's TUI version so repeated runs don't recompile every time.
+    STAMP="$BUNDLE_DIR/installer/build/.tui_stamp"
+    if [[ -x "$BIN" && -f "$STAMP" ]] && [[ "$(cat "$STAMP" 2>/dev/null)" == "$(tui_version)" ]]; then
+        stop_spinner
+        echo "[OK]    Reusing compiled installer binary (matches TUI version)."
+    else
+        # Compiling needs build tools; install whatever is missing first.
+        MISSING_PKGS=()
+        if ! command -v g++ >/dev/null 2>&1; then MISSING_PKGS+=("g++"); fi
+        if ! command -v cmake >/dev/null 2>&1; then MISSING_PKGS+=("cmake"); fi
+        if ! command -v make >/dev/null 2>&1; then MISSING_PKGS+=("make"); fi
+        if [ ${#MISSING_PKGS[@]} -ne 0 ]; then
+            stop_spinner
+            echo "Missing build tools: ${MISSING_PKGS[*]}. Installing..."
+            if [[ "$BASE_DISTRO" == "arch" ]]; then
+                run_arch_pacman_install base-devel cmake
+            elif [[ "$BASE_DISTRO" == "fedora" ]]; then
+                sudo dnf install -y gcc-c++ cmake make
+            elif [[ "$BASE_DISTRO" == "debian" ]]; then
+                sudo apt-get update && sudo apt-get install -y build-essential g++ cmake make
+            else
+                echo "Could not auto-install build tools. Please install manually: ${MISSING_PKGS[*]}"
+                exit 1
+            fi
+            start_spinner
+        fi
 
+        BUILD_DIR="$BUNDLE_DIR/installer/build"
+        BUILD_LOG="/tmp/caelestia_build.log"
+        mkdir -p "$BUILD_DIR"
+        (
+            cd "$BUILD_DIR" || exit 1
+            cmake -DCMAKE_BUILD_TYPE=Release .. >"$BUILD_LOG" 2>&1 || exit 1
+            make -j"$(nproc 2>/dev/null || echo 1)" >>"$BUILD_LOG" 2>&1 || exit 1
+        ) || {
+            stop_spinner
+            echo "[FATAL] Failed to build the Caelestia installer." >&2
+            echo "--- build log (last 60 lines) ---"
+            tail -n 60 "$BUILD_LOG" 2>/dev/null || cat "$BUILD_LOG" 2>/dev/null
+            echo "--- end build log ---"
+            echo "Full log saved to: $BUILD_LOG"
+            exit 1
+        }
 
-    kill $SPINNER_PID 2>/dev/null || true
-    wait $SPINNER_PID 2>/dev/null || true
-    echo ""
-
-    rm -f "$BIN"
-    cp "$BUILD_DIR/caelestia-install" "$BIN" || {
-        echo "[FATAL] Failed to copy the compiled Caelestia installer to $BIN." >&2
-        exit 1
-    }
+        stop_spinner
+        rm -f "$BIN"
+        cp "$BUILD_DIR/caelestia-install" "$BIN" || {
+            echo "[FATAL] Failed to copy the compiled Caelestia installer to $BIN." >&2
+            exit 1
+        }
+        echo "$(tui_version)" > "$STAMP"
+    fi
 fi
 
 cleanup_install_state() {
