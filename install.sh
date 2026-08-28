@@ -2,7 +2,14 @@
 # ==============================================================
 #   Caelestia KDE Port - Bootstrap installer
 #
-#   Clone (or update) the repo and hand off to setup.sh.
+#   Clone (or update) the repo and hand off to scripts/setup.sh,
+#   which is the single entry point for everything else: mirror
+#   refresh, sudo, build tools, install, update, and uninstall.
+#
+#   Original Hyprland dots: Caelestia
+#   KDE port and modifications: ladybug-me
+#   Co-maintainer: 0xSolanaceae
+#
 #   Install with a single command:
 #
 #     curl -fsSL https://raw.githubusercontent.com/ladybug-me/caelestia-dots-kde/main/install.sh | sh
@@ -48,8 +55,8 @@ if [ ! -t 0 ]; then
         # /dev/tty. The C++ TUI runs directly on /dev/tty without tmux.
         exec 0<>/dev/tty
     else
-        echo "[Caelestia] ERROR: stdin is not a terminal and no TTY is available." >&2
-        echo "[Caelestia] Please run the installer directly: bash install.sh" >&2
+        echo "  [ERR]   stdin is not a terminal and no TTY is available." >&2
+        echo "  [INFO]  Please run the installer directly: bash install.sh" >&2
         exit 1
     fi
 fi
@@ -59,7 +66,9 @@ BRANCH="${CAELESTIA_BRANCH:-main}"
 DEST="${CAELESTIA_DIR:-$HOME/caelestia-dots-kde}"
 
 if ! command -v git >/dev/null 2>&1; then
-    echo "[Caelestia] git is required but not installed." >&2
+    # Marker spacing must match scripts/lib/log.sh, which install.sh cannot
+    # source because it has to stay POSIX sh for `curl | sh` bootstrapping.
+    echo "  [ERR]   git is required but not installed." >&2
     exit 1
 fi
 
@@ -73,13 +82,13 @@ if [ -f "./scripts/setup.sh" ]; then
 fi
 
 if [ -d "$DEST/.git" ]; then
-    echo "[Caelestia] Updating existing checkout at $DEST"
+    echo "  [INFO]  Updating existing checkout at $DEST"
     git -C "$DEST" pull --ff-only --recurse-submodules
 elif [ -e "$DEST" ]; then
-    echo "[Caelestia] $DEST already exists and is not a git checkout; aborting." >&2
+    echo "  [ERR]   $DEST already exists and is not a git checkout; aborting." >&2
     exit 1
 else
-    echo "[Caelestia] Cloning $REPO ($BRANCH) into $DEST"
+    echo "  [INFO]  Cloning $REPO ($BRANCH) into $DEST"
     git clone -b "$BRANCH" --single-branch --depth 1 --recurse-submodules "$REPO" "$DEST"
 fi
 
