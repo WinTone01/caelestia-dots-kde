@@ -4,6 +4,8 @@
 
 set -euo pipefail
 
+source "$(dirname "${BASH_SOURCE[0]}")/lib/log.sh"
+
 # Applies:
 #   - Plasma style:      Darkly
 #   - Application style: Darkly (via kvantum-dark as engine)
@@ -16,22 +18,22 @@ BUNDLE_DIR="${BUNDLE_DIR:?BUNDLE_DIR not set}"
 
 echo
 echo ""
-echo "  Step 4/11  KDE Settings"
+info "Applying KDE settings"
 echo ""
 
 #  Darkly Theme
 if [[ "${APPLY_DARKLY:-true}" == "true" ]]; then
     #  Darkly: Plasma style 
-    echo "  Applying Darkly plasma style..."
+    info "Applying Darkly plasma style..."
     kwriteconfig6 --file plasmarc --group "Theme" --key "name" "Darkly" 2>/dev/null || true
 
     #  Darkly: Application style (Qt widget style) 
-    echo "  Applying Darkly application style..."
+    info "Applying Darkly application style..."
     kwriteconfig6 --file kdeglobals --group "KDE" --key "widgetStyle" "darkly" 2>/dev/null || true
     kwriteconfig6 --file kdeglobals --group "General" --key "ColorScheme" "Darkly" 2>/dev/null || true
 
     #  Darkly: Window decoration 
-    echo "  Applying Darkly window decoration..."
+    info "Applying Darkly window decoration..."
     kwriteconfig6 --file kwinrc --group "org.kde.kdecoration2" \
         --key "library" "org.kde.darkly" 2>/dev/null || \
     kwriteconfig6 --file kwinrc --group "org.kde.kdecoration2" \
@@ -40,25 +42,25 @@ if [[ "${APPLY_DARKLY:-true}" == "true" ]]; then
         --key "theme" "@darkly" 2>/dev/null || true
 
 else
-    echo "  [SKIP] Skipping Darkly theme"
+    skip "Skipping Darkly theme"
 fi
 
 # ── 3. Apply via lookandfeeltool if Darkly LNF exists (Fonts included) ────────
 if [[ "${APPLY_FONTS:-true}" == "true" ]]; then
     if command -v lookandfeeltool >/dev/null 2>&1; then
         if [[ "${APPLY_DARKLY:-true}" == "true" ]]; then
-            echo "  Applying custom fonts and LNF via lookandfeeltool..."
+            info "Applying custom fonts and LNF via lookandfeeltool..."
             lookandfeeltool --apply "Darkly" 2>/dev/null || true
         else
-            echo "  [SKIP] Skipping Darkly LNF as Darkly theme was opted out. (Fonts must be applied manually)"
+            skip "Skipping Darkly LNF as Darkly theme was opted out. (Fonts must be applied manually)"
         fi
     fi
 else
-    echo "  [SKIP] Skipping custom fonts application."
+    skip "Skipping custom fonts application."
 fi
 
 #  Cliphist Service 
-echo "  Setting up cliphist background service..."
+info "Setting up cliphist background service..."
 mkdir -p "$HOME/.config/systemd/user"
 cat > "$HOME/.config/systemd/user/cliphist.service" << 'EOF'
 [Unit]
@@ -76,12 +78,12 @@ WantedBy=default.target
 EOF
 systemctl --user daemon-reload
 systemctl --user enable --now cliphist.service 2>/dev/null || true
-echo "  [OK]  Cliphist background service enabled."
+ok "Cliphist background service enabled."
 
-echo "[OK]  KDE settings applied."
+ok "KDE settings applied."
 
 #  Set Default Wallpaper 
-echo "  Setting default wallpaper to Minimal-Paper.png..."
+info "Setting default wallpaper to Minimal-Paper.png..."
 WALLPAPER_PATH="$BUNDLE_DIR/shell/assets/wallpapers/Minimal-Paper.png"
 if [[ -f "$WALLPAPER_PATH" ]]; then
     qdbus6 org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "
