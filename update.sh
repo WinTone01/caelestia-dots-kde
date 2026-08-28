@@ -6,10 +6,7 @@ export PATH="$HOME/.local/bin:$PATH"
 
 set -uo pipefail
 
-die()  { echo "[FATAL] $*" >&2; exit 1; }
-info() { echo "[INFO]  $*"; }
-ok()   { echo "[OK]    $*"; }
-warn() { echo "[WARN]  $*"; }
+source "$(dirname "${BASH_SOURCE[0]}")/scripts/lib/log.sh"
 
 section() {
     local title="$1"
