@@ -220,7 +220,7 @@ void draw_progress_ui(size_t current_index) {
     return;
   }
 
-  Draw::box(x, y, w, h, "CAELESTIA", "container", "primary");
+  Draw::box(x, y, w, h, "", "container", "primary");
 
   // Progress bar
   string progress_text =

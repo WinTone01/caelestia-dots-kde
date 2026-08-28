@@ -139,7 +139,7 @@ namespace UI {
                 continue;
             }
 
-            Draw::box(x, y, w, h, "CAELESTIA", "primary", "primary");
+            Draw::box(x, y, w, h, "", "primary", "primary");
 
             int left = x + (w - art_width) / 2;
             if (left < x + 1) left = x + 1;
@@ -156,7 +156,6 @@ namespace UI {
             Draw::text_center(ty, author, "muted");
             Draw::text_center(ty + 1, co_author, "muted");
             Draw::text_center(ty + 3, "Caelestia KDE installer", "primary");
-            Draw::text_center(ty + 4, "KDE Plasma desktop setup, packaged and automated.", "on_surface");
             Draw::text_center(ty + 6, "Detected distribution: " + distro_label(g_base_distro), "secondary");
             Draw::text_center(y + h - 2, "Press Enter to continue (Esc to quit)...", "muted");
 
