@@ -22,7 +22,7 @@ Make your changes in the cloned repo, test them (see below), then open a PR. Tha
 ## Where stuff lives
 
 | Area | Directory | Tech |
-|------|-----------|------|
+| ------ | ----------- | ------ |
 | Shell UI (launcher, bar, notifications, etc.) | `shell/` | QML + Quickshell |
 | KWin plugin (window management, shortcuts) | `shell/plugin/` | C++ |
 | TUI installer | `installer/src/` | C++ |
@@ -45,6 +45,7 @@ caelestia shell -k && caelestia shell -d
 ```
 
 **Editor setup:**
+
 - Run `touch ~/.config/quickshell/caelestia/.qmlls.ini` for QML language server support
 - In VS Code, install the "Qt Qml" extension and set the `qmlls` path to `/usr/bin/qmlls6`
 
@@ -66,6 +67,7 @@ cmake -B build && cmake --build build   # Compile
 ## Code style (the short version)
 
 **QML:**
+
 - Spaces between operators: `if (condition) {` not `if(condition){`
 - Prefer early returns: `if (!ok) return;` over deep nesting
 - Group related properties with blank lines
@@ -73,6 +75,7 @@ cmake -B build && cmake --build build   # Compile
 - Run `python3 shell/scripts/qml-lint-conventions.py` - it catches most issues
 
 **Shell scripts:**
+
 - Use `set -euo pipefail` at the top
 - Prefer `[[ ]]` over `[ ]`
 - Quote variables: `"$VAR"` not `$VAR`
@@ -80,13 +83,16 @@ cmake -B build && cmake --build build   # Compile
 
 ## Security
 
-- When calling shell commands from QML, pass arguments as an array - never concatenate strings:
+- When calling shell commands from QML, pass arguments as an array - never
+  concatenate strings:
+
   ```js
   // Good
   Quickshell.execDetached(["bash", "-c", "echo \"$1\"", "--", myVar])
   // Bad
   Quickshell.execDetached(["bash", "-c", "echo " + myVar])
   ```
+
 - Use `Paths.runtimeTemp("filename")` for temporary files - not hardcoded `/tmp/` paths.
 
 ## Architecture docs
