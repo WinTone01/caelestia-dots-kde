@@ -87,6 +87,24 @@ Item {
         }
     }
 
+    readonly property bool popoutIntersectsSidebar: {
+        if (!popoutsWrapper.visible || popoutsWrapper.offsetScale >= 1) return false;
+        if (!sidebar.visible) return false;
+        if (Config.bar.position === "top" || Config.bar.position === "bottom") {
+            const sideLeft = sidebar.x;
+            const sideRight = sideLeft + sidebar.width;
+            const popLeft = popoutsWrapper.x;
+            const popRight = popoutsWrapper.x + popoutsWrapper.content.nonAnimWidth;
+            return popLeft < sideRight && popRight > sideLeft;
+        } else {
+            const sideTop = sidebar.y;
+            const sideBottom = sideTop + sidebar.height;
+            const popTop = popoutsWrapper.y;
+            const popBottom = popoutsWrapper.y + popoutsWrapper.content.nonAnimHeight;
+            return popTop < sideBottom && popBottom > sideTop;
+        }
+    }
+
     anchors.fill: parent
     anchors.leftMargin: (Config.bar.position === "left" ? bar.implicitWidth + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge * 2 : 0) : borderThickness + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0))
     anchors.rightMargin: (Config.bar.position === "right" ? bar.implicitWidth + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge * 2 : 0) : borderThickness + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0))
@@ -338,7 +356,7 @@ Item {
 
         property string vAnchor: "bottom"
         property string hAnchor: Config.bar.position === "right" ? "left" : "right"
-        property bool shouldPush: root.popoutIntersectsRight && !popoutsWrapper.content.isDockPopout
+        property bool shouldPush: root.popoutIntersectsSidebar && !popoutsWrapper.content.isDockPopout
 
         visibilities: root.visibilities
         popouts: popoutsWrapper.content
