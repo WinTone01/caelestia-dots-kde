@@ -88,8 +88,14 @@ ok "KDE settings applied."
 # install still has a wallpaper even with no network.
 if [[ -n "${CAELESTIA_WALLPAPERS_DIR:-}" ]]; then
     WALLS_DIR="$CAELESTIA_WALLPAPERS_DIR"
+elif [[ -n "${XDG_PICTURES_DIR:-}" ]]; then
+    WALLS_DIR="$XDG_PICTURES_DIR/Wallpapers"
+elif command -v xdg-user-dir >/dev/null 2>&1 \
+        && PICTURES_DIR="$(xdg-user-dir PICTURES 2>/dev/null)" \
+        && [[ -n "$PICTURES_DIR" ]]; then
+    WALLS_DIR="$PICTURES_DIR/Wallpapers"
 else
-    WALLS_DIR="${XDG_PICTURES_DIR:-$HOME/Pictures}/Wallpapers"
+    WALLS_DIR="$HOME/Pictures/Wallpapers"
 fi
 PACK_DEFAULT="$WALLS_DIR/dharmx-digital/a_couple_of_people_standing_on_a_mountain.png"
 FALLBACK_PATH="$BUNDLE_DIR/shell/assets/wallpapers/Minimal-Paper.png"

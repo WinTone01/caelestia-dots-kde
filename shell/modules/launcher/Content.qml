@@ -216,18 +216,22 @@ Item {
                 if (!list.showWallpapers)
                     list.currentList?.incrementCurrentIndex();
             }
-            Keys.onLeftPressed: event => {
-                if (list.showWallpapers) {
-                    list.currentList?.decrementCurrentIndex();
-                    event.accepted = true;
-                }
-            }
-            Keys.onRightPressed: event => {
-                if (list.showWallpapers) {
-                    list.currentList?.incrementCurrentIndex();
-                    event.accepted = true;
-                }
-            }
+Keys.onLeftPressed: event => {
+    if (list.showWallpapers) {
+        list.currentList?.decrementCurrentIndex();
+        event.accepted = true;
+    } else {
+        event.accepted = false;
+    }
+}
+Keys.onRightPressed: event => {
+    if (list.showWallpapers) {
+        list.currentList?.incrementCurrentIndex();
+        event.accepted = true;
+    } else {
+        event.accepted = false;
+    }
+}
 
             Keys.onEscapePressed: root.visibilities.launcher = false
 

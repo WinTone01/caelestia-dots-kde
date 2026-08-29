@@ -16,8 +16,14 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib/log.sh"
 # else ~/Pictures.
 if [[ -n "${CAELESTIA_WALLPAPERS_DIR:-}" ]]; then
     WALLS_DIR="$CAELESTIA_WALLPAPERS_DIR"
+elif [[ -n "${XDG_PICTURES_DIR:-}" ]]; then
+    WALLS_DIR="$XDG_PICTURES_DIR/Wallpapers"
+elif command -v xdg-user-dir >/dev/null 2>&1 \
+        && PICTURES_DIR="$(xdg-user-dir PICTURES 2>/dev/null)" \
+        && [[ -n "$PICTURES_DIR" ]]; then
+    WALLS_DIR="$PICTURES_DIR/Wallpapers"
 else
-    WALLS_DIR="${XDG_PICTURES_DIR:-$HOME/Pictures}/Wallpapers"
+    WALLS_DIR="$HOME/Pictures/Wallpapers"
 fi
 PACK_DIR="$WALLS_DIR/dharmx-digital"
 DEFAULT_IMAGE="$PACK_DIR/a_couple_of_people_standing_on_a_mountain.png"
