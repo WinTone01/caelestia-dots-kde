@@ -20,6 +20,8 @@ import "modules/polkit"
 import "modules/screenshot/regionSelector"
 import "modules/overview"
 import "modules/welcome" as Welcome
+import qs.services.api
+import QtQuick
 import QtQml
 import Quickshell
 import Quickshell.Io
@@ -100,6 +102,7 @@ ShellRoot {
 
     Component.onCompleted: {
         Qt.callLater(() => { Weather.reload(); });
+        PluginLoader.loadPlugins();
     }
 
     Services.StartupTasks {}

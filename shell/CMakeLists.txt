@@ -105,7 +105,8 @@ endif()
 
 if("shell" IN_LIST ENABLE_MODULES)
     foreach(dir assets components modules scripts services utils)
-        install(DIRECTORY ${dir} DESTINATION "${INSTALL_QSCONFDIR}")
+        install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${dir}
+                DESTINATION ${INSTALL_QSCONFDIR})
     endforeach()
 
     install(PROGRAMS assets/wrap_term_launch.sh DESTINATION "${INSTALL_QSCONFDIR}/assets")
