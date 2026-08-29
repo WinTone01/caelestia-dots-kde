@@ -1,31 +1,30 @@
 #!/usr/bin/env bash
-# 10-system-tweaks.sh  Apply live system configuration tweaks to the running KDE session.
+# 09-system-tweaks.sh  Apply live system configuration tweaks to the running KDE session.
 #
 # This script ONLY writes config values and reloads KDE daemons.
 # It does NOT copy any files. It is designed to be:
-#   - Run standalone at any time: bash scripts/10-system-tweaks.sh
+#   - Run standalone at any time: bash scripts/09-system-tweaks.sh
 #   - Called by the main installer (after deploying files)
 #   - Easily extended: add new tweak_* functions below, then call them in main()
 #
 # Usage:
-#   bash scripts/10-system-tweaks.sh           # Apply all tweaks
-#   bash scripts/10-system-tweaks.sh --list    # List available tweaks
+#   bash scripts/09-system-tweaks.sh           # Apply all tweaks
+#   bash scripts/09-system-tweaks.sh --list    # List available tweaks
 
 set -euo pipefail
-RED="\033[0;31m"
-CYAN="\033[0;36m"; GREEN="\033[0;32m"; RST="\033[0m"
-info() { echo -e "${CYAN}[INFO]  $*${RST}"; }
-ok()   { echo -e "${GREEN}[OK]    $*${RST}"; }
-warn() { echo -e "${RED}[WARN]  $*${RST}"; }
+source "$(dirname "${BASH_SOURCE[0]}")/lib/log.sh"
 
 # Never open an interactive sudo prompt from this script.
 # If setup.sh exported SUDO_PASS we reuse it; otherwise we fail fast.
 run_sudo_non_interactive() {
+    # Use the real sudo directly. Under the TUI, `sudo` on PATH resolves to
+    # the askpass wrapper (/tmp/caelestia_bin/sudo), which forces -A and
+    # breaks the -S / -n modes this helper relies on.
     if [[ -n "${SUDO_PASS:-}" ]]; then
         # Feed password via stdin; avoid forcing -n (it would fail immediately if auth is required).
-        printf '%s\n' "$SUDO_PASS" | sudo -S -p '' "$@"
+        printf '%s\n' "$SUDO_PASS" | /usr/bin/sudo -S -p '' "$@"
     else
-        sudo -n "$@"
+        /usr/bin/sudo -n "$@"
     fi
 }
 
@@ -228,7 +227,5 @@ tweak_patch_caelestia_cli
 tweak_reload_kde
 
 echo
-echo -e "${GREEN}${RST}"
-echo -e "${GREEN}  All system tweaks applied successfully.${RST}"
-echo -e "${GREEN}${RST}"
+ok "All system tweaks applied."
 echo

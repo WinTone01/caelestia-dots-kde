@@ -3,9 +3,11 @@
 
 set -euo pipefail
 
+source "$(dirname "${BASH_SOURCE[0]}")/lib/log.sh"
+
 echo
 echo ""
-echo "  Step 6/11  Services & KWin"
+info "Configuring services and KWin"
 echo ""
 
 if systemctl --user is-enabled --quiet qs-kwin-bridge.service 2>/dev/null || \
@@ -54,14 +56,14 @@ if [[ ! -f /etc/udev/rules.d/80-uinput.rules ]]; then
     echo 'KERNEL=="uinput", GROUP="input", MODE="0660"' > /etc/udev/rules.d/80-uinput.rules
     udevadm control --reload-rules 2>/dev/null || true
     udevadm trigger 2>/dev/null || true
-    echo "  [OK]  udev rule for uinput created."
+    ok "udev rule for uinput created."
 fi
 
 if ! groups "$TARGET_USER" | grep -q '\binput\b'; then
     usermod -aG input "$TARGET_USER"
-    echo "  [OK]  Added $TARGET_USER to 'input' group (takes effect on next login)."
+    ok "Added $TARGET_USER to 'input' group (takes effect on next login)."
 else
-    echo "  [OK]  $TARGET_USER already in 'input' group."
+    ok "$TARGET_USER already in 'input' group."
 fi
 
 if [[ -e /dev/uinput ]]; then
@@ -88,7 +90,7 @@ exec /usr/bin/ydotoold \
     --socket-perm=0660
 WRAPPER
 chmod +x "$HOME/.local/bin/ydotoold-wrapper"
-echo "  [OK]  ydotoold-wrapper deployed to ~/.local/bin."
+ok "ydotoold-wrapper deployed to ~/.local/bin."
 
 # Deploy and enable ydotoold systemd user service
 mkdir -p "$HOME/.config/systemd/user"
@@ -110,7 +112,7 @@ UNIT
 systemctl --user daemon-reload
 systemctl --user enable ydotoold.service 2>/dev/null || true
 systemctl --user start ydotoold.service 2>/dev/null || \
-    echo "  [INFO] ydotoold will start on next login."
-echo "  [OK]  ydotoold service configured."
+    info "ydotoold will start on next login."
+ok "ydotoold service configured."
 
-echo "[OK]  Services configured."
+ok "Services configured."
