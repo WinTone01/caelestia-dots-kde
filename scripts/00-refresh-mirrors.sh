@@ -71,4 +71,4 @@ case "$BASE_DISTRO" in
         ;;
 esac
 
-ok "Mirrors refreshed."
+info "Finished mirror refresh step."
