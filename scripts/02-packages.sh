@@ -5,6 +5,7 @@
 set -euo pipefail
 
 source "$(dirname "${BASH_SOURCE[0]}")/lib/log.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/lib/privileges.sh"
 
 BUNDLE_DIR="${BUNDLE_DIR:?BUNDLE_DIR not set}"
 
@@ -56,11 +57,11 @@ if ! command -v python3 >/dev/null 2>&1 || ! python3 -m pip --version >/dev/null
     fi
 
     if [[ "$package_distro" == "arch" ]]; then
-        sudo pacman -S --needed --noconfirm python python-pip
+        caelestia_sudo pacman -S --needed --noconfirm python python-pip
     elif [[ "$package_distro" == "fedora" ]]; then
-        sudo dnf install -y python3 python3-pip
+        caelestia_sudo dnf install -y python3 python3-pip
     elif [[ "$package_distro" == "debian" ]]; then
-        sudo apt-get update && sudo apt-get install -y python3 python3-pip python3-venv
+        caelestia_sudo apt-get update && caelestia_sudo apt-get install -y python3 python3-pip python3-venv
     else
         warn "Could not determine the distro for Python tooling installation."
     fi
