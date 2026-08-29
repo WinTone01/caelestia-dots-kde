@@ -10,7 +10,7 @@ QtObject {
             label: qsTr("Appearance"),
             key: "appearance",
             icon: "palette",
-            description: Strings.localizeEnglishSpelling(qsTr("Wallpapers, fonts, colours")),
+            description: qsTr("Wallpapers, fonts, colors"),
             category: "personalization",
             settings: [
                 { label: qsTr("Theme & Effects"), pagePath: "wallandstyle/AppearancePage.qml", subPageIdx: 8 },

@@ -161,7 +161,7 @@ int main(int argc, char** argv) {
     // Phase 2: Sudo Auth
     std::cerr << "[installer] phase 2: sudo_prompt" << std::endl;
     if (!UI::sudo_prompt()) {
-        std::cerr << "[installer] user cancelled at sudo prompt" << std::endl;
+        std::cerr << "[installer] user canceled at sudo prompt" << std::endl;
         Term::restore();
         return 0;
     }
@@ -179,7 +179,7 @@ int main(int argc, char** argv) {
         if (has_profiles) {
             profile_id = UI::profile_select();
             if (profile_id.empty()) {
-                std::cerr << "[installer] user cancelled at profile select" << std::endl;
+                std::cerr << "[installer] user canceled at profile select" << std::endl;
                 Term::restore();
                 return 0;
             }
@@ -193,7 +193,7 @@ int main(int argc, char** argv) {
                 if (has_profiles) {
                     profile_id = UI::profile_select();
                     if (profile_id.empty()) {
-                        std::cerr << "[installer] user cancelled at profile select" << std::endl;
+                        std::cerr << "[installer] user canceled at profile select" << std::endl;
                         Term::restore();
                         return 0;
                     }

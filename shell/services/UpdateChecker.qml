@@ -421,8 +421,8 @@ git -C "$REPO" log --format="COMMIT%x1f%H%x1f%h%x1f%s%x1f%an%x1f%cI%x1f%P" --ski
         root.updateCancelled = true;
         updateProcess.running = false;
         root.updateRunning = false;
-        root.updateStatus = qsTr("Cancelled");
-        root.updateLogs += "\n[Cancelled by user]";
+        root.updateStatus = qsTr("Canceled");
+        root.updateLogs += "\n[Canceled by user]";
     }
 
     // Process to read local commit and saved branch
@@ -818,7 +818,7 @@ echo "$INSTALLED|$LATEST"
             root.lastUpdateOutputMs = 0;
             if (root.updateCancelled) {
                 root.updateCancelled = false;
-                root.updateStatus = qsTr("Cancelled");
+                root.updateStatus = qsTr("Canceled");
                 return;
             }
             if (code === 0) {
