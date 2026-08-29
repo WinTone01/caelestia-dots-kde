@@ -9,6 +9,7 @@
 #include <csignal>
 #include <cstdio>
 #include <cstdlib>
+#include <filesystem>
 #include <fcntl.h>
 #include <fstream>
 #include <iostream>
@@ -424,12 +425,22 @@ void execute() {
   setenv("SRCDEST", (cache_dir + "/makepkg-sources").c_str(), 1);
   setenv("SRCPKGDEST", (cache_dir + "/makepkg-srcpackages").c_str(), 1);
 
-  system(("mkdir -p \"" + cache_dir +
-          "\" \"$BUILDDIR\" \"$PKGDEST\" \"$SRCDEST\" \"$SRCPKGDEST\"")
-             .c_str());
-  system(("rm -f \"" + cache_dir + "/failed_steps.txt\" \"" + cache_dir +
-          "/failed_packages.txt\" \"" + cache_dir + "/failed_patches.txt\"")
-             .c_str());
+  std::error_code fs_error;
+  for (const string& path : {cache_dir, cache_dir + "/makepkg-build",
+                             cache_dir + "/makepkg-packages",
+                             cache_dir + "/makepkg-sources",
+                             cache_dir + "/makepkg-srcpackages"}) {
+    std::filesystem::create_directories(path, fs_error);
+    if (fs_error) {
+      Term::restore();
+      cerr << "Could not create installer cache directory at " << path << ": "
+           << fs_error.message() << endl;
+      exit(1);
+    }
+  }
+  std::filesystem::remove(cache_dir + "/failed_steps.txt", fs_error);
+  std::filesystem::remove(cache_dir + "/failed_packages.txt", fs_error);
+  std::filesystem::remove(cache_dir + "/failed_patches.txt", fs_error);
 
   setenv("BASE_DISTRO", g_base_distro.c_str(), 1);
   setenv("BUNDLE_DIR", g_bundle_dir.c_str(), 1);
