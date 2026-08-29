@@ -524,8 +524,9 @@ namespace UI {
         bool redraw = true;
         string last_content;
         vector<string> lines;
-        long view_top = 0;  // index of the first visible line
-        bool follow = true; // auto-scroll to the newest line
+        vector<size_t> issues; // indices of lines with [WARN] or [ERR]
+        long view_top = 0;     // index of the first visible line
+        bool follow = true;    // auto-scroll to the newest line
 
         while (!g_quit) {
             if (g_resized) { Term::get_size(); g_resized = false; redraw = true; }
@@ -549,12 +550,23 @@ namespace UI {
             if (content != last_content) {
                 last_content = content;
                 lines.clear();
+                issues.clear();
                 string line;
                 for (char ch : content) {
-                    if (ch == '\n') { lines.push_back(Draw::strip_ansi(line)); line.clear(); }
-                    else line += ch;
+                    if (ch == '\n') {
+                        if (line.find("[WARN]") != string::npos || line.find("[ERR]") != string::npos)
+                            issues.push_back(lines.size());
+                        lines.push_back(Draw::strip_ansi(line));
+                        line.clear();
+                    } else {
+                        line += ch;
+                    }
                 }
-                if (!line.empty()) lines.push_back(Draw::strip_ansi(line));
+                if (!line.empty()) {
+                    if (line.find("[WARN]") != string::npos || line.find("[ERR]") != string::npos)
+                        issues.push_back(lines.size());
+                    lines.push_back(Draw::strip_ansi(line));
+                }
                 redraw = true;
             }
 
@@ -583,11 +595,17 @@ namespace UI {
                 Draw::box(x, y, w, h, "INSTALL LOG", "primary", "on_surface");
 
                 for (int i = 0; i < show && (view_top + (long)i) < (long)lines.size(); ++i) {
-                    Draw::text(x + 2, y + 2 + i, Draw::fit(lines[view_top + (long)i], (size_t)(w - 4)), "");
+                    long idx = view_top + (long)i;
+                    string color;
+                    if (lines[idx].find("[ERR]") != string::npos)
+                        color = "error";
+                    else if (lines[idx].find("[WARN]") != string::npos)
+                        color = "warning";
+                    Draw::text(x + 2, y + 2 + i, Draw::fit(lines[idx], (size_t)(w - 4)), color);
                 }
 
                 string status = follow ? "Following" : "Paused";
-                string help = "Up/Down/PgUp/PgDn scroll   Home/End jump   L - back";
+                string help = "Up/Down/PgUp/PgDn scroll   n/p - next issue   L - back";
                 Draw::text(x + 2, y + h - 2,
                            Draw::fit(status + "    " + help, (size_t)(w - 4)), "muted");
                 cout << Draw::sync_end() << flush;
@@ -623,6 +641,30 @@ namespace UI {
                 if (view_top != 0) { view_top = 0; redraw = true; }
             } else if (key == "KEY_end") {
                 if (!follow || view_top != max_scroll) { follow = true; view_top = max_scroll; redraw = true; }
+            } else if (key == "n" || key == "N") {
+                long target = -1;
+                for (size_t idx : issues) {
+                    if ((long)idx > view_top) { target = (long)idx; break; }
+                }
+                if (target == -1 && !issues.empty()) target = (long)issues[0];
+                if (target != -1) {
+                    follow = false;
+                    view_top = target - show / 2;
+                    if (view_top < 0) view_top = 0;
+                    redraw = true;
+                }
+            } else if (key == "p" || key == "P") {
+                long target = -1;
+                for (size_t i = issues.size(); i-- > 0;) {
+                    if ((long)issues[i] < view_top) { target = (long)issues[i]; break; }
+                }
+                if (target == -1 && !issues.empty()) target = (long)issues.back();
+                if (target != -1) {
+                    follow = false;
+                    view_top = target - show / 2;
+                    if (view_top < 0) view_top = 0;
+                    redraw = true;
+                }
             }
         }
     }

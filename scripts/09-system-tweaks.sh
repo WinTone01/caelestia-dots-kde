@@ -17,11 +17,14 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib/log.sh"
 # Never open an interactive sudo prompt from this script.
 # If setup.sh exported SUDO_PASS we reuse it; otherwise we fail fast.
 run_sudo_non_interactive() {
+    # Use the real sudo directly. Under the TUI, `sudo` on PATH resolves to
+    # the askpass wrapper (/tmp/caelestia_bin/sudo), which forces -A and
+    # breaks the -S / -n modes this helper relies on.
     if [[ -n "${SUDO_PASS:-}" ]]; then
         # Feed password via stdin; avoid forcing -n (it would fail immediately if auth is required).
-        printf '%s\n' "$SUDO_PASS" | sudo -S -p '' "$@"
+        printf '%s\n' "$SUDO_PASS" | /usr/bin/sudo -S -p '' "$@"
     else
-        sudo -n "$@"
+        /usr/bin/sudo -n "$@"
     fi
 }
 
