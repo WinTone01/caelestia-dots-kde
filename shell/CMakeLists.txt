@@ -117,6 +117,36 @@ if("shell" IN_LIST ENABLE_MODULES)
 
     install(FILES lockscreen.qml DESTINATION "${INSTALL_QSCONFDIR}")
     install(FILES LICENSE DESTINATION "${INSTALL_QSCONFDIR}")
+
+    # Translations: compile every translations/*.ts into a .qm next to the
+    # installed shell, where the Translations singleton looks for them.
+    # Without Qt's Linguist tools the shell simply stays in English.
+    find_package(Qt6 QUIET COMPONENTS LinguistTools)
+    file(GLOB TS_FILES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/translations/*.ts")
+
+    if(Qt6LinguistTools_FOUND AND TS_FILES)
+        set(QM_DIR "${CMAKE_BINARY_DIR}/translations")
+        set(QM_FILES "")
+
+        foreach(ts_file ${TS_FILES})
+            get_filename_component(ts_name "${ts_file}" NAME_WE)
+            set(qm_file "${QM_DIR}/${ts_name}.qm")
+            add_custom_command(
+                OUTPUT "${qm_file}"
+                COMMAND "${CMAKE_COMMAND}" -E make_directory "${QM_DIR}"
+                COMMAND Qt6::lrelease -silent "${ts_file}" -qm "${qm_file}"
+                DEPENDS "${ts_file}"
+                COMMENT "Compiling translation ${ts_name}.qm"
+                VERBATIM
+            )
+            list(APPEND QM_FILES "${qm_file}")
+        endforeach()
+
+        add_custom_target(caelestia-translations ALL DEPENDS ${QM_FILES})
+        install(FILES ${QM_FILES} DESTINATION "${INSTALL_QSCONFDIR}/translations")
+    elseif(TS_FILES)
+        message(WARNING "Qt Linguist tools not found - the shell will only be available in English")
+    endif()
 endif()
 
 if("m3shapes" IN_LIST ENABLE_MODULES)

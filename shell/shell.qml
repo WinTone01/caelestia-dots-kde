@@ -23,6 +23,7 @@ import "modules/welcome" as Welcome
 import QtQml
 import Quickshell
 import Quickshell.Io
+import Caelestia
 import Caelestia.Config
 import qs.components.containers
 import qs.services
@@ -47,6 +48,22 @@ ShellRoot {
         Qt.application.name = "caelestia-shell";
         return true;
     })()
+
+    // UI translations. The catalogues live next to the shell (shell/translations,
+    // installed as <shell>/translations/caelestia_<code>.qm), so resolving the
+    // path relative to this file works both from the install tree and when
+    // running the shell straight from a checkout.
+    Binding {
+        target: Translations
+        property: "extraSearchPaths"
+        value: [Qt.resolvedUrl("translations")]
+    }
+
+    Binding {
+        target: Translations
+        property: "language"
+        value: GlobalConfig.general.language
+    }
 
     GSFLoader {}
 

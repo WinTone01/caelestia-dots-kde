@@ -16,7 +16,7 @@ INSTALL_DARKLY="${INSTALL_DARKLY:-true}"
 PACKAGE_GROUP="${PACKAGE_GROUP:-all}"
 
 CORE_PACKAGES=(
-    cmake ninja-build ccache g++ build-essential
+    cmake ninja-build ccache g++ build-essential qt6-l10n-tools qt6-tools-dev
     wl-clipboard cliphist inotify-tools wireplumber trash-cli jq yq
     libaubio-dev aubio-tools lm-sensors libsensors-dev
     libpipewire-0.3-dev pipewire libc6

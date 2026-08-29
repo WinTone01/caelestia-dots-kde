@@ -177,7 +177,7 @@ Item {
                 
                 StyledText {
                     Layout.fillWidth: true
-                    text: "Caelestia Mode"
+                    text: qsTr("Caelestia Mode")
                     font: Tokens.font.body.medium
                     elide: Text.ElideRight
                 }

@@ -60,12 +60,12 @@ PageBase {
                     spacing: Tokens.spacing.extraSmall
 
                     StyledText {
-                        text: "Advanced Material You Settings"
+                        text: qsTr("Advanced Material You Settings")
                         font: Tokens.font.title.small
                         color: Colours.palette.m3onSurface
                     }
                     StyledText {
-                        text: "Configure advanced color engine settings and integrations"
+                        text: qsTr("Configure advanced color engine settings and integrations")
                         font: Tokens.font.body.medium
                         color: Colours.palette.m3onSurfaceVariant
                     }

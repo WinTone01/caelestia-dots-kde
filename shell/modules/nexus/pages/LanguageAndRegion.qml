@@ -1,5 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
+import Caelestia
 import Caelestia.Config
 import qs.components
 import qs.components.controls
@@ -47,6 +49,18 @@ PageBase {
         }
     ]
 
+    // "system" plus every language with an installed catalogue (see shell/translations)
+    readonly property var languageOptions: [
+        {
+            code: "system",
+            label: qsTr("System language")
+        },
+        ...Translations.available.map(lang => ({
+                    code: lang.code,
+                    label: lang.nativeName
+                }))
+    ]
+
     // Clock format (index 0 = 24-hour, 1 = 12-hour — matches Time.useTwelveHourClock)
     readonly property list<MenuItem> clockItems: [
         MenuItem {
@@ -71,48 +85,32 @@ PageBase {
             text: qsTr("Language")
         }
 
-        // Read-only: the shell follows the system locale (no in-shell translations yet)
-        ConnectedRect {
-            Layout.fillWidth: true
+        Variants {
+            id: languageVariants
+
+            model: root.languageOptions
+
+            MenuItem {
+                required property var modelData
+
+                readonly property string code: modelData.code
+
+                text: modelData.label
+                icon: modelData.code === GlobalConfig.general.language ? "check" : ""
+                activeIcon: "translate"
+            }
+        }
+
+        SelectRow {
             first: true
             last: true
-            implicitHeight: localeLayout.implicitHeight + localeLayout.anchors.margins * 2
-
-            RowLayout {
-                id: localeLayout
-
-                anchors.fill: parent
-                anchors.margins: Tokens.padding.medium
-                anchors.leftMargin: Tokens.padding.largeIncreased
-                anchors.rightMargin: Tokens.padding.largeIncreased
-                spacing: Tokens.spacing.medium
-
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 0
-
-                    StyledText {
-                        Layout.fillWidth: true
-                        text: qsTr("System language")
-                        font: Tokens.font.body.small
-                        elide: Text.ElideRight
-                    }
-
-                    StyledText {
-                        Layout.fillWidth: true
-                        text: qsTr("Follows your system locale (%1)").arg(Qt.locale().name)
-                        color: Colours.palette.m3onSurfaceVariant
-                        font: Tokens.font.label.small
-                        elide: Text.ElideRight
-                    }
-                }
-
-                StyledText {
-                    text: Qt.locale().nativeLanguageName || Qt.locale().name
-                    color: Colours.palette.m3onSurfaceVariant
-                    font: Tokens.font.body.small
-                }
-            }
+            label: qsTr("Shell language")
+            subtext: GlobalConfig.general.language === "system" ? qsTr("Follows your system locale (%1)").arg(Qt.locale().name) : qsTr("Untranslated text falls back to English")
+            menuItems: languageVariants.instances
+            active: menuItems.find(i => i.code === GlobalConfig.general.language) ?? null
+            fallbackIcon: "translate"
+            fallbackText: qsTr("System language")
+            onSelected: item => GlobalConfig.general.language = item.code
         }
 
         // Weather

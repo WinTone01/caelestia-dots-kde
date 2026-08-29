@@ -93,6 +93,7 @@ class GeneralConfig : public ConfigObject {
     CONFIG_PROPERTY(bool, showOverFullscreen, false)
     CONFIG_PROPERTY(qreal, mediaGifSpeedAdjustment, 300)
     CONFIG_PROPERTY(qreal, sessionGifSpeed, 0.7)
+    CONFIG_PROPERTY(QString, language, "system")
     CONFIG_PROPERTY(bool, debugLogs, false)
     CONFIG_PROPERTY(bool, checkUpdates, true)
     CONFIG_PROPERTY(bool, magicLampEnabled, true)
