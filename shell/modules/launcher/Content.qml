@@ -208,8 +208,26 @@ Item {
                 }
             }
 
-            Keys.onUpPressed: list.currentList?.decrementCurrentIndex()
-            Keys.onDownPressed: list.currentList?.incrementCurrentIndex()
+            Keys.onUpPressed: {
+                if (!list.showWallpapers)
+                    list.currentList?.decrementCurrentIndex();
+            }
+            Keys.onDownPressed: {
+                if (!list.showWallpapers)
+                    list.currentList?.incrementCurrentIndex();
+            }
+            Keys.onLeftPressed: event => {
+                if (list.showWallpapers) {
+                    list.currentList?.decrementCurrentIndex();
+                    event.accepted = true;
+                }
+            }
+            Keys.onRightPressed: event => {
+                if (list.showWallpapers) {
+                    list.currentList?.incrementCurrentIndex();
+                    event.accepted = true;
+                }
+            }
 
             Keys.onEscapePressed: root.visibilities.launcher = false
 
