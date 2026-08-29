@@ -55,6 +55,9 @@ bash scripts/08-build-shell.sh   # Recompiles and installs the plugins
 caelestia shell -k && caelestia shell -d   # Restart to pick up the new .so
 ```
 
+The build keeps one core free and runs at a lower priority so the session stays
+usable. Set `CAELESTIA_BUILD_JOBS` to override the job count.
+
 ### For installer changes
 
 ```bash

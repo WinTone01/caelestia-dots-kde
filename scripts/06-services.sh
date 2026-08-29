@@ -3,6 +3,10 @@
 
 set -euo pipefail
 
+BUNDLE_DIR="${BUNDLE_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+# shellcheck source=lib/privileges.sh
+. "$BUNDLE_DIR/scripts/lib/privileges.sh"
+
 echo
 echo ""
 echo "  Step 6/11  Services & KWin"
@@ -38,8 +42,25 @@ fi
 #  ydotoold (on-screen keyboard key injection)
 # ydotoold needs access to /dev/uinput. Add a udev rule to allow the 'input'
 # group to access it, then add the user to that group.
+# Everything below needs root, and all of it is one-time setup. Check the
+# end state first so a routine update never asks for a password.
+system_setup_needed() {
+    systemctl is-enabled --quiet keyd.service 2>/dev/null && return 0
+    systemctl is-active --quiet keyd.service 2>/dev/null && return 0
+    [[ -f /etc/udev/rules.d/80-uinput.rules ]] || return 0
+    groups "$USER" | grep -q '\binput\b' || return 0
+    if [[ -e /dev/uinput ]]; then
+        [[ "$(stat -c '%a' /dev/uinput 2>/dev/null)" == *660 ]] || return 0
+        [[ "$(stat -c '%G' /dev/uinput 2>/dev/null)" == "input" ]] || return 0
+    fi
+    return 1
+}
+
+if ! system_setup_needed; then
+    echo "  System-level configuration already in place - skipping root step."
+else
 echo "  Applying system-level configurations (requires root)..."
-sudo bash -s -- "$USER" << 'EOF'
+caelestia_sudo bash -s -- "$USER" << 'EOF'
 TARGET_USER="$1"
 
 if systemctl is-enabled --quiet keyd.service 2>/dev/null || \
@@ -73,6 +94,7 @@ if [[ -e /dev/uinput ]]; then
     fi
 fi
 EOF
+fi
 
 # Deploy ydotoold-wrapper script to ~/.local/bin
 mkdir -p "$HOME/.local/bin"
