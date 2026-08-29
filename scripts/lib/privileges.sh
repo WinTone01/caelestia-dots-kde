@@ -20,7 +20,7 @@ CAELESTIA_PRIVILEGES_SOURCED=1
 # The installer TUI puts a wrapper on PATH that rewrites every sudo call to
 # `sudo -A` against its own askpass helper. That is right for the step scripts
 # it drives, but it defeats the -n probe and the -S password feed used below,
-# so those go straight to the real binary (same reasoning as 09-system-tweaks).
+# so those go straight to the real binary.
 caelestia_real_sudo() {
     if [[ -x /usr/bin/sudo ]]; then
         /usr/bin/sudo "$@"
@@ -122,12 +122,16 @@ caelestia_sudo() {
     fi
 }
 
-# For work that is nice to have but must never interrupt the user.
+# Root work that must never interrupt the user: it takes cached credentials or
+# the password the installer exported, and simply fails otherwise. Feeding the
+# password avoids -n, which would refuse before the password is even read.
 caelestia_sudo_quiet() {
     if [[ "$EUID" -eq 0 ]]; then
         "$@"
+    elif [[ -n "${SUDO_PASS:-}" ]]; then
+        printf '%s\n' "$SUDO_PASS" | caelestia_real_sudo -S -p '' "$@"
     else
-        caelestia_real_sudo -n "$@" 2>/dev/null
+        caelestia_real_sudo -n "$@"
     fi
 }
 

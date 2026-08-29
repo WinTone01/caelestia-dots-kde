@@ -13,20 +13,11 @@
 
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib/log.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/lib/privileges.sh"
 
-# Never open an interactive sudo prompt from this script.
-# If setup.sh exported SUDO_PASS we reuse it; otherwise we fail fast.
-run_sudo_non_interactive() {
-    # Use the real sudo directly. Under the TUI, `sudo` on PATH resolves to
-    # the askpass wrapper (/tmp/caelestia_bin/sudo), which forces -A and
-    # breaks the -S / -n modes this helper relies on.
-    if [[ -n "${SUDO_PASS:-}" ]]; then
-        # Feed password via stdin; avoid forcing -n (it would fail immediately if auth is required).
-        printf '%s\n' "$SUDO_PASS" | /usr/bin/sudo -S -p '' "$@"
-    else
-        /usr/bin/sudo -n "$@"
-    fi
-}
+# This script never opens an interactive sudo prompt: caelestia_sudo_quiet
+# reuses cached credentials or the password the installer exported, and fails
+# instead of asking.
 
 echo
 echo ""
@@ -129,7 +120,7 @@ tweak_default_shell() {
         if [[ "$current_shell" == "$shell_path" ]]; then
             info "Shell is already set to $shell_path. Skipping chsh."
         else
-            run_sudo_non_interactive chsh -s "$shell_path" "$USER" 2>/dev/null || warn "Failed to change shell for $USER without prompting. You may need to run 'sudo chsh -s $shell_path $USER' manually."
+            caelestia_sudo_quiet chsh -s "$shell_path" "$USER" 2>/dev/null || warn "Failed to change shell for $USER without prompting. You may need to run 'sudo chsh -s $shell_path $USER' manually."
         fi
         
         local konsole_profile_dir="$HOME/.local/share/konsole"
@@ -190,7 +181,7 @@ if old in text:
     p.write_text(text.replace(old, new))
 "
         if ! python3 -c "$python_code" 2>/dev/null; then
-            if ! run_sudo_non_interactive python3 -c "$python_code" 2>/dev/null; then
+            if ! caelestia_sudo_quiet python3 -c "$python_code" 2>/dev/null; then
                 warn "Failed to patch $theme_file (requires sudo)"
                 echo "Caelestia CLI Theme Sequence Patch" >> "${XDG_CACHE_HOME:-$HOME/.cache}/caelestia-kde/failed_patches.txt"
             fi
