@@ -156,7 +156,8 @@ Item {
             PropertyChanges {
                 target: sidebar
                 anchors.topMargin: -4
-                anchors.bottomMargin: root.notifAtBottom ? root.notifReservedHeight : 0
+                anchors.bottomMargin: (root.notifAtBottom ? root.notifReservedHeight : 0)
+                    + (sidebar.shouldPush ? popoutsWrapper.implicitHeight + Tokens.spacing.extraLarge : 0)
             }
         }
     ]
