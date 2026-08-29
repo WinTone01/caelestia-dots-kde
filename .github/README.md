@@ -4,14 +4,13 @@
 
 # C A E L E S T I A
 
-### A KDE Plasma port of the caelestia shell
+<h3>A KDE Plasma port of the caelestia shell</h3>
 
 [![Arch Linux](https://img.shields.io/badge/Arch_Linux-1793d1?logo=arch-linux&logoColor=white&style=flat-square)](https://archlinux.org)
 [![Fedora](https://img.shields.io/badge/Fedora-51A2DA?logo=fedora&logoColor=white&style=flat-square)](https://fedoraproject.org)
 [![Debian](https://img.shields.io/badge/Debian-A81D33?logo=debian&logoColor=white&style=flat-square)](https://debian.org)
 [![KDE Plasma](https://img.shields.io/badge/Plasma_6-1D99F3?logo=kde&logoColor=white&style=flat-square)](https://kde.org/plasma-desktop)
 [![License: GPLv3](https://img.shields.io/badge/License-GPLv3-86dbce?style=flat-square)](LICENSE)
-
 
 </div>
 
@@ -44,10 +43,11 @@ bash ./uninstall.sh
 
 ## Screenshots
 
+<!-- markdownlint-disable-next-line MD034 -- a bare URL is what GitHub turns into an inline video player -->
 https://github.com/user-attachments/assets/4c3e20c9-5050-4cc8-8e9c-32fd0594ac8b
 
 | Shell | Theming |
-|:---:|:---:|
+| :---: | :---: |
 | <img width="460" alt="shell" src="assets/shell-screenshot.png" /> | <img width="460" alt="theming" src="assets/theming-screenshot.png" /> |
 
 ## Keybinds
