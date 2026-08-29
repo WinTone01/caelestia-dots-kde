@@ -6,10 +6,8 @@ export PATH="$HOME/.local/bin:$PATH"
 
 set -uo pipefail
 
-die()  { echo "[FATAL] $*" >&2; exit 1; }
-info() { echo "[INFO]  $*"; }
-ok()   { echo "[OK]    $*"; }
-warn() { echo "[WARN]  $*"; }
+source "$(dirname "${BASH_SOURCE[0]}")/scripts/lib/log.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/scripts/lib/privileges.sh"
 
 section() {
     local title="$1"
@@ -134,8 +132,6 @@ fi
 # the first step that does need root prompts once, and the helper keeps that
 # credential warm for the rest of the run - including GUI launches with no
 # terminal, through an askpass helper.
-# shellcheck source=scripts/lib/privileges.sh
-. "$BUNDLE_DIR/scripts/lib/privileges.sh" || die "Missing scripts/lib/privileges.sh"
 trap 'caelestia_stop_sudo_keepalive' EXIT
 
 # Apply config updates and rebuild the shell UI.  The native C++ plugin

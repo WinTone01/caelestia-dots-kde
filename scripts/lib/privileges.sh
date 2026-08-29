@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # privileges.sh - Shared privilege escalation helpers.
 #
+# Pairs with lib/log.sh; source both from a step script:
+#     source "$(dirname "${BASH_SOURCE[0]}")/lib/privileges.sh"
+#
 # Sourced by the updater and the install steps so a single credential prompt
 # covers the whole run, including GUI launches with no controlling terminal.
 #
@@ -13,6 +16,18 @@
 # `set -e` in the sourcing script.
 if [[ -z "${CAELESTIA_PRIVILEGES_SOURCED:-}" ]]; then
 CAELESTIA_PRIVILEGES_SOURCED=1
+
+# The installer TUI puts a wrapper on PATH that rewrites every sudo call to
+# `sudo -A` against its own askpass helper. That is right for the step scripts
+# it drives, but it defeats the -n probe and the -S password feed used below,
+# so those go straight to the real binary (same reasoning as 09-system-tweaks).
+caelestia_real_sudo() {
+    if [[ -x /usr/bin/sudo ]]; then
+        /usr/bin/sudo "$@"
+    else
+        sudo "$@"
+    fi
+}
 
 # First askpass helper found, used when there is no terminal to prompt on.
 caelestia_find_askpass() {
@@ -36,17 +51,17 @@ caelestia_prime_sudo() {
         return 0
     fi
 
-    if sudo -n true 2>/dev/null; then
+    if caelestia_real_sudo -n true 2>/dev/null; then
         : # already cached
     elif [[ -n "${SUDO_PASS:-}" ]]; then
-        printf '%s\n' "$SUDO_PASS" | sudo -S -p '' -v || return 1
+        printf '%s\n' "$SUDO_PASS" | caelestia_real_sudo -S -p '' -v || return 1
     elif [[ -t 0 ]]; then
-        sudo -v || return 1
+        caelestia_real_sudo -v || return 1
     else
         local askpass
         if askpass="$(caelestia_find_askpass)"; then
             export SUDO_ASKPASS="$askpass"
-            sudo -A -v || return 1
+            caelestia_real_sudo -A -v || return 1
         elif command -v pkexec >/dev/null 2>&1; then
             # No askpass helper: fall back to escalating each command through
             # pkexec. Nothing to prime, so leave the flag unset.
@@ -62,7 +77,7 @@ caelestia_prime_sudo() {
     (
         while kill -0 "$$" 2>/dev/null; do
             sleep 30
-            sudo -nv 2>/dev/null || true
+            caelestia_real_sudo -nv 2>/dev/null || true
         done
     ) &
     CAELESTIA_SUDO_KEEPALIVE_PID=$!
@@ -81,24 +96,28 @@ caelestia_stop_sudo_keepalive() {
 # updates feel like a password interrogation. The first command that really
 # needs root primes the credentials, and everything after it rides along.
 caelestia_sudo() {
-    if [[ "$EUID" -ne 0 ]] && ! sudo -n true 2>/dev/null; then
+    if [[ "$EUID" -ne 0 ]] && ! caelestia_real_sudo -n true 2>/dev/null; then
         caelestia_prime_sudo || true
     fi
 
     if [[ "$EUID" -eq 0 ]]; then
         "$@"
-    elif sudo -n true 2>/dev/null; then
-        sudo -n "$@"
+    elif caelestia_real_sudo -n true 2>/dev/null; then
+        caelestia_real_sudo -n "$@"
     elif [[ -n "${SUDO_PASS:-}" ]]; then
-        printf '%s\n' "$SUDO_PASS" | sudo -S -p '' "$@"
+        printf '%s\n' "$SUDO_PASS" | caelestia_real_sudo -S -p '' "$@"
     elif [[ -t 0 ]]; then
-        sudo "$@"
+        caelestia_real_sudo "$@"
     elif [[ -n "${SUDO_ASKPASS:-}" ]]; then
-        sudo -A "$@"
+        caelestia_real_sudo -A "$@"
     elif command -v pkexec >/dev/null 2>&1; then
         pkexec "$@"
     else
-        echo "[ERR]   Cannot elevate privileges. Install ksshaskpass or pkexec, or run from a terminal." >&2
+        if declare -F err >/dev/null; then
+            err "Cannot elevate privileges. Install ksshaskpass or pkexec, or run from a terminal."
+        else
+            echo "  [ERR]   Cannot elevate privileges." >&2
+        fi
         return 1
     fi
 }
@@ -108,7 +127,7 @@ caelestia_sudo_quiet() {
     if [[ "$EUID" -eq 0 ]]; then
         "$@"
     else
-        sudo -n "$@" 2>/dev/null
+        caelestia_real_sudo -n "$@" 2>/dev/null
     fi
 }
 

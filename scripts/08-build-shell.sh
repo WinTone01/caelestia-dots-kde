@@ -2,23 +2,11 @@
 
 set -euo pipefail
 
-CYAN="\033[0;36m"
-GREEN="\033[0;32m"
-YELLOW="\033[38;5;220m"
-RED="\033[0;31m"
-RST="\033[0m"
-
-info() { echo -e "${CYAN}[INFO]  $*${RST}"; }
-ok()   { echo -e "${GREEN}[OK]    $*${RST}"; }
-warn() { echo -e "${YELLOW}[WARN]  $*${RST}"; }
-err()  { echo -e "${RED}[ERR]   $*${RST}"; }
-die()  { echo -e "${RED}[ERR]   $*${RST}"; exit 1; }
+source "$(dirname "${BASH_SOURCE[0]}")/lib/log.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/lib/privileges.sh"
 
 BUNDLE_DIR="${BUNDLE_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 SHELL_DIR="$BUNDLE_DIR/shell"
-
-# shellcheck source=lib/privileges.sh
-. "$BUNDLE_DIR/scripts/lib/privileges.sh"
 
 # Prefer Ninja for faster builds; fall back to CMake's default generator when
 # it is not available (e.g. a standalone/update run before package install).

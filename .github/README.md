@@ -31,12 +31,15 @@ curl -fsSL https://raw.githubusercontent.com/ladybug-me/caelestia-dots-kde/main/
 
 ### Updating
 
+- **Installer TUI:** run the installer and choose *Update*
 - **GUI:** Shell Settings -> Updates -> select branch -> Install Updates
 - **CLI:** `bash update.sh` and choose `main` (stable) or `dev` (bleeding edge)
 
 Shell settings are preserved across updates.
 
 ### Uninstalling
+
+Choose *Uninstall* from the installer TUI, or run:
 
 ```bash
 bash ./uninstall.sh
@@ -66,16 +69,6 @@ https://github.com/user-attachments/assets/4c3e20c9-5050-4cc8-8e9c-32fd0594ac8b
 | `Super + Ctrl + S` | Screen recorder |
 | `Super + Shift + C` | Color picker |
 | `Super + Shift + V` | Emoji selector |
-
-## Tech Stack
-
-| Component | Role |
-| --- | --- |
-| [KDE Plasma 6](https://kde.org/plasma-desktop) | Desktop environment |
-| [Quickshell](https://quickshell.outfoxxed.me/) | Widget system |
-| [Darkly](https://github.com/vinceliuice/Darkly) | Plasma style & window decoration |
-| [Kvantum](https://github.com/tsujan/Kvantum) | Qt application theming |
-| [Krohnkite](https://github.com/esjeon/krohnkite) | Optional tiling |
 
 ## Customization
 
@@ -152,6 +145,16 @@ For detailed debug logs, enable Debug Mode in Nexus -> About -> Advanced, then r
 </tr></table>
 
 <!-- contributors-end -->
+
+## Star History
+
+<a href="https://www.star-history.com/?repos=ladybug-me%2Fcaelestia-dots-kde&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=ladybug-me/caelestia-dots-kde&type=date&theme=dark&legend=top-left&sealed_token=NFI4jXcoZAI26MlGX2jEasHMRd1PIS09clm_CVDS7SFGajH3wiHlN72P8WzuOQT2k2F71ZOCGl_xoy8eVpWlWtA0ACY3koK0NIS1-vLecN0vbvYgrZDN9kp8sQn7NT2xPNeilgrmzYWTzgdQYgskaDMGophAKmy6r6LUfQj8iFjy-Gunuqnte3EY14fX" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=ladybug-me/caelestia-dots-kde&type=date&legend=top-left&sealed_token=NFI4jXcoZAI26MlGX2jEasHMRd1PIS09clm_CVDS7SFGajH3wiHlN72P8WzuOQT2k2F71ZOCGl_xoy8eVpWlWtA0ACY3koK0NIS1-vLecN0vbvYgrZDN9kp8sQn7NT2xPNeilgrmzYWTzgdQYgskaDMGophAKmy6r6LUfQj8iFjy-Gunuqnte3EY14fX" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=ladybug-me/caelestia-dots-kde&type=date&legend=top-left&sealed_token=NFI4jXcoZAI26MlGX2jEasHMRd1PIS09clm_CVDS7SFGajH3wiHlN72P8WzuOQT2k2F71ZOCGl_xoy8eVpWlWtA0ACY3koK0NIS1-vLecN0vbvYgrZDN9kp8sQn7NT2xPNeilgrmzYWTzgdQYgskaDMGophAKmy6r6LUfQj8iFjy-Gunuqnte3EY14fX" />
+ </picture>
+</a>
 
 ## Credits
 

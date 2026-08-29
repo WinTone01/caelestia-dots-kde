@@ -12,6 +12,8 @@
 
 set -euo pipefail
 
+source "$(dirname "${BASH_SOURCE[0]}")/lib/log.sh"
+
 BUNDLE_DIR="${BUNDLE_DIR:?BUNDLE_DIR not set}"
 SRC_DIR="$BUNDLE_DIR/src"
 DOTS_DIR="$SRC_DIR/dots"
@@ -25,38 +27,38 @@ install_if_missing() {
     local pkg="$1"
     if [[ "$BASE_DISTRO" == "arch" ]]; then
         if pacman -Qi "$pkg" >/dev/null 2>&1; then
-            echo "  [SKIP] $pkg already installed."
+            skip "$pkg already installed."
             return 0
         fi
-        echo "  Installing $pkg..."
+        info "Installing $pkg..."
         yay -S --needed ${CONFIRM_ARG:-} "$pkg" 2>/dev/null || \
         sudo pacman -S --needed ${CONFIRM_ARG:-} "$pkg" 2>/dev/null || {
-            echo "  [FAIL] Could not install $pkg  skipping."
+            warn "Could not install $pkg, skipping."
             return 1
         }
-        echo "  [OK]  $pkg installed."
+        ok "$pkg installed."
     elif [[ "$BASE_DISTRO" == "fedora" ]]; then
         if dnf list --installed "$pkg" >/dev/null 2>&1; then
-            echo "  [SKIP] $pkg already installed."
+            skip "$pkg already installed."
             return 0
         fi
-        echo "  Installing $pkg..."
+        info "Installing $pkg..."
         sudo dnf install -y "$pkg" 2>/dev/null || {
-            echo "  [FAIL] Could not install $pkg  skipping."
+            warn "Could not install $pkg, skipping."
             return 1
         }
-        echo "  [OK]  $pkg installed."
+        ok "$pkg installed."
     elif [[ "$BASE_DISTRO" == "debian" ]]; then
         if dpkg -s "$pkg" >/dev/null 2>&1; then
-            echo "  [SKIP] $pkg already installed."
+            skip "$pkg already installed."
             return 0
         fi
-        echo "  Installing $pkg..."
+        info "Installing $pkg..."
         sudo apt-get install -y "$pkg" 2>/dev/null || {
-            echo "  [FAIL] Could not install $pkg  skipping."
+            warn "Could not install $pkg, skipping."
             return 1
         }
-        echo "  [OK]  $pkg installed."
+        ok "$pkg installed."
     fi
 }
 
@@ -119,9 +121,9 @@ if [[ "${INSTALL_SPICETIFY:-false}" == "true" ]]; then
     deploy_file "$theme_css" "$HOME/.config/spicetify/Themes/caelestia/user.css"
 
     if command -v spicetify >/dev/null 2>&1; then
-        spicetify apply >/dev/null 2>&1 || echo "    [WARN] spicetify apply failed"
+        spicetify apply >/dev/null 2>&1 || warn "spicetify apply failed"
     else
-        echo "    [WARN] spicetify not found; theme deployed but not applied"
+        warn "spicetify not found; theme deployed but not applied"
     fi
 fi
 
@@ -140,15 +142,15 @@ if [[ "${INSTALL_TODOIST:-false}" == "true" ]]; then
     echo "  Installing Todoist AppImage..."
     appimage="$HOME/.local/bin/todoist.AppImage"
     if [[ -x "$appimage" ]]; then
-        echo "  [SKIP] Todoist already installed."
+        skip "Todoist already installed."
     else
         mkdir -p "$HOME/.local/bin"
         echo "  Downloading Todoist AppImage..."
         if curl -L --fail -o "$appimage" "https://todoist.com/linux_app/appimage" 2>/dev/null; then
             chmod +x "$appimage"
-            echo "  [OK]  Todoist installed to $appimage"
+            ok "Todoist installed to $appimage"
         else
-            echo "  [FAIL] Todoist download failed (network?). Skipping."
+            warn "Todoist download failed (network?). Skipping."
         fi
     fi
 fi
@@ -160,7 +162,7 @@ if [[ "${INSTALL_FIREFOX_THEME:-false}" == "true" ]]; then
 
     profiles_dir="$HOME/.mozilla/firefox"
     if [[ ! -d "$profiles_dir" ]]; then
-        echo "    [WARN] No Firefox profile directory yet. Launch Firefox once, then re-run."
+        warn "No Firefox profile directory yet. Launch Firefox once, then re-run."
     else
         deployed=0
         for profile in "$profiles_dir"/*.default "$profiles_dir"/*.default-release "$profiles_dir"/*.default-esr; do
@@ -170,7 +172,7 @@ if [[ "${INSTALL_FIREFOX_THEME:-false}" == "true" ]]; then
             deploy_file "$DOTS_DIR/firefox/userChrome.css" "$profile/chrome/userChrome.css"
         done
         if [[ "$deployed" -eq 0 ]]; then
-            echo "    [WARN] No Firefox profile found. Launch Firefox once, then re-run."
+            warn "No Firefox profile found. Launch Firefox once, then re-run."
         fi
     fi
 
@@ -180,4 +182,4 @@ if [[ "${INSTALL_FIREFOX_THEME:-false}" == "true" ]]; then
     # it is intentionally not deployed here.
 fi
 
-echo "  [OK]  Optional components done."
+ok "Optional components done."
