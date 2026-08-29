@@ -60,20 +60,14 @@ bool log_tail_since(const std::string& log_path, long start_offset,
   return true;
 }
 
-// Forks a bash step script. The child's stdin comes from /dev/null and its
-// stdout/stderr are appended to the shared install log, so the terminal
-// stays reserved for the TUI.
+// Forks a bash step script with stdout/stderr appended to the shared install
+// log, so the terminal stays reserved for the TUI.
 pid_t spawn_step(const string& script_path, int log_fd) {
   pid_t child = fork();
   if (child < 0)
     return -1;
 
   if (child == 0) {
-    int devnull = open("/dev/null", O_RDONLY);
-    if (devnull >= 0) {
-      dup2(devnull, STDIN_FILENO);
-      close(devnull);
-    }
     if (log_fd >= 0) {
       dup2(log_fd, STDOUT_FILENO);
       dup2(log_fd, STDERR_FILENO);
@@ -327,7 +321,8 @@ void draw_progress_ui(size_t current_index) {
 
   // Aggregate status per phase, then build display lines grouped by phase.
   auto phase_status = [&](const string &pid) -> string {
-    bool any_failed = false, any_running = false, any_pending = false;
+    bool any_failed = false, any_running = false, any_pending = false,
+         any_warn = false, any_ignored = false;
     bool all_skipped = true;
     for (const auto &st : steps) {
       if (st.phase != pid)
@@ -338,6 +333,10 @@ void draw_progress_ui(size_t current_index) {
         any_running = true;
       else if (st.status == "PENDING")
         any_pending = true;
+      else if (st.status == "WARN")
+        any_warn = true;
+      else if (st.status == "IGNORED")
+        any_ignored = true;
       if (st.status != "SKIPPED")
         all_skipped = false;
     }
@@ -347,6 +346,10 @@ void draw_progress_ui(size_t current_index) {
       return string("RUNNING");
     if (any_pending)
       return string("PENDING");
+    if (any_warn)
+      return string("WARN");
+    if (any_ignored)
+      return string("IGNORED");
     if (all_skipped)
       return string("SKIPPED");
     return string("OK");
@@ -435,18 +438,19 @@ void execute() {
   string current_path = getenv("PATH") ? getenv("PATH") : "/usr/bin";
   setenv("PATH", ("/tmp/caelestia_bin:" + current_path).c_str(), 1);
 
-  // CONFIRM_ARG: package managers expect an argument or an empty string.
-  if (env_is_true("CONFIRM_ARG")) {
-    setenv("CONFIRM_ARG", "--noconfirm", 1);
-  } else {
-    setenv("CONFIRM_ARG", "", 1);
-  }
+  setenv("CONFIRM_ARG", "--noconfirm", 1);
 
   // One shared install log: every step appends to it, and the live log view
   // tails it from the Install screen.
   string log_path = cache_dir + "/install.log";
   int log_fd = open(log_path.c_str(),
                     O_WRONLY | O_CREAT | O_TRUNC | O_APPEND | O_CLOEXEC, 0644);
+  if (log_fd < 0) {
+    Term::restore();
+    cerr << "Could not open installation log at " << log_path << ": "
+         << strerror(errno) << endl;
+    exit(1);
+  }
 
   for (size_t i = 0; i < steps.size(); ++i) {
   retry_step:
@@ -480,7 +484,7 @@ void execute() {
       if (action == "Retry") {
         goto retry_step;
       } else if (action == "Ignore") {
-        steps[i].status = "SKIPPED";
+        steps[i].status = "IGNORED";
         continue;
       }
       Term::restore();
@@ -560,7 +564,7 @@ void execute() {
       if (action == "Retry") {
         goto retry_step;
       } else if (action == "Ignore") {
-        steps[i].status = "SKIPPED";
+        steps[i].status = "IGNORED";
       } else {
         Term::restore();
         exit(1);

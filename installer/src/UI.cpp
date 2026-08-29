@@ -315,7 +315,12 @@ namespace UI {
         return "";
     }
 
+    void init_menu_defaults(const json& items);
+
     void apply_profile(const std::string& profile_id) {
+        g_answers.clear();
+        if (!g_menu.is_null() && g_menu.contains("menu") && g_menu["menu"].is_array())
+            init_menu_defaults(g_menu["menu"]);
         if (g_menu.is_null() || !g_menu.contains("profiles") || !g_menu["profiles"].is_array()) return;
         for (auto& p : g_menu["profiles"]) {
             if (!p.contains("id") || !p["id"].is_string() || p["id"].get<string>() != profile_id) continue;
@@ -613,6 +618,7 @@ namespace UI {
 
             string key = Input::wait_key(100);
             if (key == "l" || key == "L" || key == "KEY_shift_tab" || key == "escape") return;
+            if (key == "signal_interrupt") return;
 
             if (key == "KEY_up") {
                 follow = false;

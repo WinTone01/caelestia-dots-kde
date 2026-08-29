@@ -107,7 +107,8 @@ namespace Draw {
         if (status == "OK") return glyph("ok");
         if (status == "WARN") return glyph("warn");
         if (status == "FAILED") return glyph("failed");
-        if (status == "SKIPPED" || status == "IGNORED") return glyph("skipped");
+        if (status == "SKIPPED") return glyph("skipped");
+        if (status == "IGNORED") return "[IGNORED]";
         return glyph("pending");
     }
 
@@ -116,7 +117,8 @@ namespace Draw {
         if (status == "OK") return "success";
         if (status == "WARN") return "warning";
         if (status == "FAILED") return "error";
-        return "muted"; // PENDING, SKIPPED, IGNORED
+        if (status == "IGNORED") return "warning";
+        return "muted"; // PENDING, SKIPPED
     }
 
     string to(int line, int col) {

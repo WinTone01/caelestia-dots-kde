@@ -228,13 +228,6 @@
       "help": "How the installer runs.",
       "items": [
         {
-          "id": "CONFIRM_ARG",
-          "type": "boolean",
-          "title": "Auto-confirm package installs",
-          "help": "Pass --noconfirm / -y so installs never stop for confirmation.",
-          "default": true
-        },
-        {
           "id": "REMOVE_CACHE",
           "type": "boolean",
           "title": "Remove build cache after install",

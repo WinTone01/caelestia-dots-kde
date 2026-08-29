@@ -6,6 +6,8 @@
 #include <fstream>
 #include <csignal>
 #include <cstdlib>
+#include <sys/wait.h>
+#include <unistd.h>
 
 using namespace std;
 
@@ -45,8 +47,15 @@ void check_signals() {
 // the next action.
 void run_external(const std::string& script_path) {
     Term::restore();
-    std::string cmd = "bash " + script_path;
-    int rc = system(cmd.c_str());
+    pid_t child = fork();
+    if (child == 0) {
+        execlp("bash", "bash", script_path.c_str(), static_cast<char*>(nullptr));
+        _exit(127);
+    }
+    int status = 1;
+    if (child > 0)
+        waitpid(child, &status, 0);
+    int rc = WIFEXITED(status) ? WEXITSTATUS(status) : 1;
     std::cout << "\n"
               << (rc == 0 ? "Finished." : "Finished with errors.")
               << std::endl;
@@ -54,8 +63,19 @@ void run_external(const std::string& script_path) {
 }
 
 int main(int argc, char** argv) {
-    // Detect bundle dir from arg or exe path. "--update"/"--uninstall"
-    // preselect that action instead of opening the wizard.
+    // Detect bundle dir from the executable. A non-action first argument can
+    // override it, while "--update"/"--uninstall" preselect the action.
+    char buf[1024];
+    ssize_t len = readlink("/proc/self/exe", buf, sizeof(buf)-1);
+    if (len != -1) {
+        buf[len] = '\0';
+        string path(buf);
+        size_t pos = path.find_last_of('/');
+        if (pos != string::npos) {
+            g_bundle_dir = path.substr(0, pos);
+        }
+    }
+
     std::string preset_action;
     if (argc > 1) {
         std::string first = argv[1];
@@ -65,17 +85,6 @@ int main(int argc, char** argv) {
             preset_action = "uninstall";
         } else {
             g_bundle_dir = first;
-        }
-    } else {
-        char buf[1024];
-        ssize_t len = readlink("/proc/self/exe", buf, sizeof(buf)-1);
-        if (len != -1) {
-            buf[len] = '\0';
-            string path(buf);
-            size_t pos = path.find_last_of('/');
-            if (pos != string::npos) {
-                g_bundle_dir = path.substr(0, pos);
-            }
         }
     }
 

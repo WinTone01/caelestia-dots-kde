@@ -13,7 +13,7 @@ namespace Runner {
     struct Step {
         std::string name;
         std::string script_path;
-        std::string status; // "PENDING", "RUNNING", "OK", "WARN", "FAILED", "SKIPPED"
+        std::string status; // "PENDING", "RUNNING", "OK", "WARN", "FAILED", "SKIPPED", "IGNORED"
         std::string phase;  // phase id
     };
 
