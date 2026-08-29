@@ -413,6 +413,14 @@ PageBase {
                     opacity: modelData ? 1 : 0
                     enabled: modelData
 
+                    isFolder: modelData && modelData.parentDir !== Paths.wallsdir
+                    folderCount: {
+                        if (!modelData || modelData.parentDir === Paths.wallsdir)
+                            return 0;
+                        const group = Wallpapers.grouped[Wallpapers.getCategoryFor(modelData)];
+                        return group ? group.length : 0;
+                    }
+
                     source: String(modelData?.path ?? "")
                     text: {
                         if (!modelData)
