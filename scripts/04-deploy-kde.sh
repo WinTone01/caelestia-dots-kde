@@ -83,8 +83,23 @@ ok "Cliphist background service enabled."
 ok "KDE settings applied."
 
 #  Set Default Wallpaper 
-info "Setting default wallpaper to Minimal-Paper.png..."
-WALLPAPER_PATH="$BUNDLE_DIR/shell/assets/wallpapers/Minimal-Paper.png"
+# Prefer the dharmx "digital" pack (downloaded by 03a-wallpapers.sh) when it
+# is present; otherwise keep the bundled Minimal-Paper.png fallback so a fresh
+# install still has a wallpaper even with no network.
+if [[ -n "${CAELESTIA_WALLPAPERS_DIR:-}" ]]; then
+    WALLS_DIR="$CAELESTIA_WALLPAPERS_DIR"
+else
+    WALLS_DIR="${XDG_PICTURES_DIR:-$HOME/Pictures}/Wallpapers"
+fi
+PACK_DEFAULT="$WALLS_DIR/dharmx-digital/a_couple_of_people_standing_on_a_mountain.png"
+FALLBACK_PATH="$BUNDLE_DIR/shell/assets/wallpapers/Minimal-Paper.png"
+
+if [[ -f "$PACK_DEFAULT" ]]; then
+    WALLPAPER_PATH="$PACK_DEFAULT"
+else
+    WALLPAPER_PATH="$FALLBACK_PATH"
+fi
+info "Setting default wallpaper to $(basename "$WALLPAPER_PATH")..."
 if [[ -f "$WALLPAPER_PATH" ]]; then
     qdbus6 org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "
         var allDesktops = desktops();
@@ -95,7 +110,8 @@ if [[ -f "$WALLPAPER_PATH" ]]; then
             d.writeConfig('Image', 'file://' + '$WALLPAPER_PATH');
         }
     " 2>/dev/null || true
-    # Also save it for Caelestia
-    mkdir -p "$HOME/.local/share/caelestia/state/wallpaper"
-    echo "$WALLPAPER_PATH" > "$HOME/.local/share/caelestia/state/wallpaper/path.txt"
+    # Also save it for Caelestia, in the state dir the shell actually reads.
+    STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/caelestia"
+    mkdir -p "$STATE_DIR/wallpaper"
+    echo "$WALLPAPER_PATH" > "$STATE_DIR/wallpaper/path.txt"
 fi

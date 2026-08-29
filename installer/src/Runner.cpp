@@ -158,6 +158,8 @@ vector<Step> steps = {
      "packages"},
     {"Deploy config files", "scripts/03-deploy-configs.sh", "PENDING",
      "configure"},
+    {"Download wallpapers", "scripts/03a-wallpapers.sh", "PENDING",
+     "configure"},
     {"Apply KDE theme", "scripts/04-deploy-kde.sh", "PENDING", "configure"},
     {"Enable system services", "scripts/06-services.sh", "PENDING",
      "configure"},
