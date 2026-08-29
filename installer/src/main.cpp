@@ -38,20 +38,19 @@ void check_signals() {
 }
 
 // Hands the terminal to an interactive external script (update.sh or
-// uninstall.sh): leave the TUI's raw/alternate screen, run the script on the
-// real terminal, pause, then re-enter the TUI.
+// uninstall.sh) and then exits. Those scripts drive the terminal themselves
+// (prompts, sudo, and a background shell restart), so re-entering the TUI's
+// raw/alternate screen afterward corrupts the terminal and leaves the
+// installer stuck. The installer is the single entry point: run it again for
+// the next action.
 void run_external(const std::string& script_path) {
     Term::restore();
     std::string cmd = "bash " + script_path;
     int rc = system(cmd.c_str());
-    std::cout << "\n" << (rc == 0 ? "[OK]    " : "[WARN]  ") << script_path
-              << " finished (exit code " << rc << ")." << std::endl;
-    std::cout << "Press Enter to continue..." << std::endl;
-    std::string dummy;
-    if (!std::cin.eof()) {
-        std::getline(std::cin, dummy);
-    }
-    Term::init();
+    std::cout << "\n"
+              << (rc == 0 ? "Finished." : "Finished with errors.")
+              << std::endl;
+    exit(rc == 0 ? 0 : 1);
 }
 
 int main(int argc, char** argv) {
@@ -145,14 +144,7 @@ int main(int argc, char** argv) {
         if (action == "update" || action == "uninstall") {
             std::cerr << "[installer] action: " << action << std::endl;
             std::string script = g_bundle_dir + (action == "update" ? "/update.sh" : "/uninstall.sh");
-            run_external(script);
-            if (action == "uninstall") {
-                Term::restore();
-                std::cout << "\nExiting installer.\n";
-                return 0;
-            }
-            action.clear();
-            continue; // back to the action menu
+            run_external(script); // exits; does not return
         }
         break; // install
     }

@@ -10,7 +10,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fcntl.h>
+#include <fstream>
 #include <iostream>
+#include <iterator>
 #include <string>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -24,6 +26,10 @@ extern volatile sig_atomic_t g_sigint_received;
 extern volatile sig_atomic_t g_sigterm_received;
 
 namespace {
+// Spinner frame for the running step's status glyph. Advanced on each poll
+// timeout so the Install screen shows ongoing activity.
+static size_t g_spin_frame = 0;
+
 std::string env_val(const char* name) {
   const char* v = getenv(name);
   return v ? std::string(v) : std::string();
@@ -72,6 +78,12 @@ pid_t spawn_step(const string& script_path, int log_fd) {
       dup2(log_fd, STDOUT_FILENO);
       dup2(log_fd, STDERR_FILENO);
     }
+    // stdbuf forces line buffering on the redirected stdout/stderr, so each
+    // log line reaches the file (and the live log view) as it is printed
+    // instead of sitting in a 4 KiB stdio buffer until the step ends.
+    execlp("stdbuf", "stdbuf", "-oL", "-eL", "bash", script_path.c_str(),
+           static_cast<char*>(nullptr));
+    // Fall back to plain bash if stdbuf is unavailable (e.g. minimal image).
     execlp("bash", "bash", script_path.c_str(), static_cast<char*>(nullptr));
     _exit(127);
   }
@@ -84,6 +96,47 @@ bool answer_is_true(const char* name) {
   if (it != g_answers.end())
     return it->second == "true";
   return env_is_true(name);
+}
+
+// Reads the last `max_lines` lines of the log (ANSI stripped). The log can be
+// large and is appended live, so only a fixed tail is read.
+bool read_log_tail(const std::string& log_path, size_t max_lines,
+                   std::vector<std::string>& out) {
+  out.clear();
+  std::ifstream in(log_path, std::ios::binary);
+  if (!in)
+    return false;
+  in.seekg(0, std::ios::end);
+  std::streamoff len = in.tellg();
+  const std::streamoff kMax = 512 * 1024;
+  if (len > kMax)
+    in.seekg(len - kMax, std::ios::beg);
+  else
+    in.seekg(0, std::ios::beg);
+  std::string content((std::istreambuf_iterator<char>(in)),
+                      std::istreambuf_iterator<char>());
+  std::vector<std::string> lines;
+  std::string line;
+  for (char ch : content) {
+    if (ch == '\n') {
+      lines.push_back(Draw::strip_ansi(line));
+      line.clear();
+    } else {
+      line += ch;
+    }
+  }
+  if (!line.empty())
+    lines.push_back(Draw::strip_ansi(line));
+  size_t start = lines.size() > max_lines ? lines.size() - max_lines : 0;
+  for (size_t i = start; i < lines.size(); ++i)
+    out.push_back(lines[i]);
+  return true;
+}
+
+// Animated status glyph for the currently running step.
+string spin_glyph() {
+  static const char* frames[] = {"[/]", "[-]", "[\\]", "[|]"};
+  return frames[g_spin_frame % 4];
 }
 } // namespace
 
@@ -143,9 +196,28 @@ bool step_is_skipped(const Step& step) {
 }
 
 string show_error_dialog(const string &step_name, const string &script_path,
-                         int term_w, int term_h) {
+                         const string &error_detail, int term_w, int term_h) {
   int selected = 0;
   vector<string> opts = {"Retry", "Ignore", "Exit"};
+
+  // Split the captured output into lines and keep only the last few so the
+  // dialog fits on screen while still showing the actual error.
+  vector<string> detail;
+  {
+    string line;
+    for (char ch : error_detail) {
+      if (ch == '\n') {
+        detail.push_back(line);
+        line.clear();
+      } else {
+        line += ch;
+      }
+    }
+    if (!line.empty())
+      detail.push_back(line);
+    while (detail.size() > 10)
+      detail.erase(detail.begin());
+  }
 
   while (true) {
     if (g_resized) {
@@ -157,31 +229,48 @@ string show_error_dialog(const string &step_name, const string &script_path,
 
     cout << Draw::sync_start() << Draw::clear();
 
-    int w = term_w - 8;
-    int h = term_h - 6;
+    int w = term_w - 6;
+    if (w < 30)
+      w = 30;
+    if (w > term_w - 2)
+      w = term_w - 2;
+    int h = 12 + (int)detail.size();
+    if (h > term_h - 2)
+      h = term_h - 2;
+    if (h < 12)
+      h = 12;
     if (w < 24 || h < 10) {
       cout << Draw::sync_end() << flush;
       return "Exit";
     }
     int x = (term_w - w) / 2;
+    if (x < 1)
+      x = 1;
     int y = (term_h - h) / 2;
+    if (y < 1)
+      y = 1;
 
     Draw::box(x, y, w, h, "INSTALLATION ERROR", "error", "error");
 
-    Draw::text(x + 2, y + 2, "Step failed:", "error");
-    Draw::text(x + 2, y + 3, Draw::fit(step_name, (size_t)(w - 4)),
+    int ly = y + 2;
+    Draw::text(x + 2, ly++, "Step failed:", "error");
+    Draw::text(x + 2, ly++, Draw::fit(step_name, (size_t)(w - 4)),
                "bold_on_surface");
-
-    Draw::text(x + 2, y + 5, "Script:", "error");
-    Draw::text(x + 2, y + 6, Draw::fit(script_path, (size_t)(w - 4)),
+    ly++;
+    Draw::text(x + 2, ly++, "Script:", "error");
+    Draw::text(x + 2, ly++, Draw::fit(script_path, (size_t)(w - 4)),
                "bold_on_surface");
-
-    Draw::text(x + 2, y + 8,
-               Draw::fit("Details are in install.log (see the Complete screen).",
-                         (size_t)(w - 4)),
-               "muted");
+    ly++;
+    Draw::text(x + 2, ly++, "Last output:", "error");
 
     int opt_y = y + h - 3;
+    for (auto &l : detail) {
+      if (ly >= opt_y)
+        break;
+      Draw::text(x + 2, ly++, Draw::fit(Draw::strip_ansi(l), (size_t)(w - 4)),
+                 "");
+    }
+
     for (size_t i = 0; i < opts.size(); ++i) {
       string col = ((int)i == selected) ? "bold_primary" : "muted";
       Draw::text(x + 4 + (int)i * 12, opt_y,
@@ -277,11 +366,12 @@ void draw_progress_ui(size_t current_index) {
       if (steps[i].phase != ph.id)
         continue;
       string color_name = Draw::status_color(steps[i].status);
-      if (i == current_index && steps[i].status == "RUNNING")
+      string glyph = Draw::status_glyph(steps[i].status);
+      if (i == current_index && steps[i].status == "RUNNING") {
         color_name = "bold_" + color_name;
-      lines.push_back({"  " + Draw::status_glyph(steps[i].status) + " " +
-                           steps[i].name,
-                       color_name, i});
+        glyph = spin_glyph();
+      }
+      lines.push_back({"  " + glyph + " " + steps[i].name, color_name, i});
     }
   }
 
@@ -313,7 +403,7 @@ void draw_progress_ui(size_t current_index) {
                ln.color);
   }
 
-  string hint = "L - Live log    Ctrl+C - Cancel";
+  string hint = "L - Full log    Ctrl+C - Cancel";
   Draw::text(x + 2, y + h - 2, Draw::fit(hint, (size_t)(w - 4)),
              Draw::color("muted"));
 
@@ -385,6 +475,7 @@ void execute() {
       steps[i].status = "FAILED";
       draw_progress_ui(i);
       string action = show_error_dialog(steps[i].name, steps[i].script_path,
+                                        "Could not start the step script.",
                                         g_term_width, g_term_height);
       if (action == "Retry") {
         goto retry_step;
@@ -431,6 +522,13 @@ void execute() {
         show_log = false;
         draw_progress_ui(i);
       }
+
+      // Advance the spinner on each poll timeout so the running step shows
+      // ongoing activity.
+      if (key.empty()) {
+        g_spin_frame++;
+        draw_progress_ui(i);
+      }
     }
 
     int exit_code = WIFEXITED(child_status) ? WEXITSTATUS(child_status) : 1;
@@ -447,8 +545,18 @@ void execute() {
       steps[i].status = "FAILED";
       draw_progress_ui(i);
 
+      string detail;
+      {
+        vector<string> tail;
+        read_log_tail(log_path, 12, tail);
+        for (size_t t = 0; t < tail.size(); ++t) {
+          if (t)
+            detail += "\n";
+          detail += tail[t];
+        }
+      }
       string action = show_error_dialog(steps[i].name, steps[i].script_path,
-                                        g_term_width, g_term_height);
+                                        detail, g_term_width, g_term_height);
       if (action == "Retry") {
         goto retry_step;
       } else if (action == "Ignore") {

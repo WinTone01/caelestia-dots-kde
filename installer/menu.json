@@ -3,7 +3,7 @@
     {
       "id": "full",
       "title": "Full",
-      "help": "Everything Caelestia offers: all packages, theming, and optional apps.",
+      "help": "All packages, theming, and optional apps.",
       "sets": {
         "INSTALL_FISH": true,
         "INSTALL_PAPIRUS": true,
@@ -25,13 +25,13 @@
     {
       "id": "standard",
       "title": "Standard",
-      "help": "The recommended everyday setup: packages and theming, no optional apps.",
+      "help": "Packages and theming, with no optional apps.",
       "sets": {}
     },
     {
       "id": "minimal",
       "title": "Minimal",
-      "help": "Shell and Darkly theme only. Fastest install, least changed.",
+      "help": "Shell and Darkly theme only. Quickest install, fewest changes.",
       "sets": {
         "INSTALL_FISH": true,
         "INSTALL_PAPIRUS": false,
@@ -47,7 +47,7 @@
     {
       "id": "custom",
       "title": "Custom",
-      "help": "Choose every option yourself. No preset applied.",
+      "help": "Pick each option yourself.",
       "sets": {}
     }
   ],
@@ -56,41 +56,41 @@
       "id": "menu_packages",
       "type": "submenu",
       "title": "Packages",
-      "help": "Distro packages and AUR builds installed during the Packages phase.",
+      "help": "Packages installed from your distribution's repositories and the AUR.",
       "items": [
         {
           "id": "INSTALL_FISH",
           "type": "boolean",
           "title": "Fish shell",
-          "help": "Install fish plus the Caelestia fish configuration.",
+          "help": "Fish, with the Caelestia configuration.",
           "default": true
         },
         {
           "id": "INSTALL_PAPIRUS",
           "type": "boolean",
           "title": "Papirus icon theme",
-          "help": "Install the Papirus icon set.",
+          "help": "The Papirus icon set.",
           "default": true
         },
         {
           "id": "INSTALL_DARKLY",
           "type": "boolean",
           "title": "Darkly theme package",
-          "help": "Install the Darkly Plasma/Qt theme packages.",
+          "help": "The Darkly Plasma and Qt theme packages.",
           "default": true
         },
         {
           "id": "INSTALL_KVANTUM",
           "type": "boolean",
           "title": "Kvantum theme engine",
-          "help": "Install Kvantum, the Qt style engine behind the Caelestia look.",
+          "help": "Kvantum, the Qt style engine the Caelestia look is built on.",
           "default": true
         },
         {
           "id": "INSTALL_THUNAR",
           "type": "boolean",
           "title": "Thunar integration files",
-          "help": "Deploy Caelestia configs for the Thunar file manager.",
+          "help": "Config files for the Thunar file manager.",
           "default": false
         },
         {
@@ -104,34 +104,34 @@
       "id": "menu_appearance",
       "type": "submenu",
       "title": "Appearance",
-      "help": "How the desktop looks, applied during the Configure phase.",
+      "help": "Desktop look and feel, applied during configuration.",
       "items": [
         {
           "id": "APPLY_DARKLY",
           "type": "boolean",
           "title": "Apply Darkly theme",
-          "help": "Set style, decorations, and window borders to Darkly.",
+          "help": "Set the style, window decorations, and borders to Darkly.",
           "default": true
         },
         {
           "id": "APPLY_MATERIAL_YOU",
           "type": "boolean",
           "title": "Material You dynamic colors",
-          "help": "Derive the accent palette from your wallpaper via kde-material-you-colors.",
+          "help": "Pick accent colors from your wallpaper with kde-material-you-colors.",
           "default": true
         },
         {
           "id": "APPLY_FONTS",
           "type": "boolean",
           "title": "Custom fonts",
-          "help": "Apply Rubik and JetBrains Mono Nerd Font system-wide.",
+          "help": "Apply Rubik and JetBrains Mono Nerd Font across the system.",
           "default": true
         },
         {
           "id": "APPLY_LOCKSCREEN",
           "type": "boolean",
           "title": "Custom lockscreen wallpaper",
-          "help": "Enable the plasma-wallpaper-application lockscreen plugin.",
+          "help": "Turn on the plasma-wallpaper-application lockscreen plugin.",
           "default": true
         },
         {
@@ -145,13 +145,13 @@
       "id": "menu_shell",
       "type": "submenu",
       "title": "Shell",
-      "help": "Your login shell, applied during the Finalize phase.",
+      "help": "The login shell, set during finalization.",
       "items": [
         {
           "id": "DEFAULT_SHELL",
           "type": "select",
           "title": "Default shell",
-          "help": "The login shell Caelestia configures.",
+          "help": "The login shell Caelestia sets up.",
           "default": "fish",
           "options": [
             "bash",
@@ -170,13 +170,13 @@
       "id": "menu_apps",
       "type": "submenu",
       "title": "Applications",
-      "help": "Optional third-party app theming, run only if any are enabled.",
+      "help": "Theming for third-party apps. Only applies to the ones you turn on.",
       "items": [
         {
           "id": "INSTALL_VSCODE",
           "type": "boolean",
           "title": "VSCode / VSCodium",
-          "help": "Settings, keybindings, and the Caelestia theme extension.",
+          "help": "Settings, keybindings, and the Caelestia theme.",
           "default": false
         },
         {
@@ -190,28 +190,28 @@
           "id": "INSTALL_SPICETIFY",
           "type": "boolean",
           "title": "Spicetify",
-          "help": "Spotify theming via Spicetify.",
+          "help": "Spotify theming through Spicetify.",
           "default": false
         },
         {
           "id": "INSTALL_DISCORD",
           "type": "boolean",
           "title": "Discord / Equibop",
-          "help": "Caelestia look for Discord or the Equibop client.",
+          "help": "The Caelestia look for Discord or Equibop.",
           "default": false
         },
         {
           "id": "INSTALL_TODOIST",
           "type": "boolean",
           "title": "Todoist",
-          "help": "Install the Todoist AppImage.",
+          "help": "The Todoist AppImage.",
           "default": false
         },
         {
           "id": "INSTALL_FIREFOX_THEME",
           "type": "boolean",
           "title": "Firefox theming",
-          "help": "Apply userChrome.css / user.js theming to Firefox.",
+          "help": "userChrome.css and user.js theming for Firefox.",
           "default": false
         },
         {
@@ -224,28 +224,28 @@
     {
       "id": "menu_behavior",
       "type": "submenu",
-      "title": "Installer Behavior",
-      "help": "How the installer itself behaves.",
+      "title": "Installer options",
+      "help": "How the installer runs.",
       "items": [
         {
           "id": "CONFIRM_ARG",
           "type": "boolean",
           "title": "Auto-confirm package installs",
-          "help": "Pass --noconfirm / -y to package managers so installs never pause.",
+          "help": "Pass --noconfirm / -y so installs never stop for confirmation.",
           "default": true
         },
         {
           "id": "REMOVE_CACHE",
           "type": "boolean",
           "title": "Remove build cache after install",
-          "help": "Delete the Caelestia build cache once installation finishes.",
+          "help": "Clear the Caelestia build cache when installation finishes.",
           "default": false
         },
         {
           "id": "SKIP_SYSTEM_UPDATE",
           "type": "boolean",
           "title": "Skip the full system update",
-          "help": "Skip pacman -Syu / dnf upgrade / apt upgrade during the Prepare phase.",
+          "help": "Skip the full system update (pacman -Syu / dnf upgrade / apt upgrade).",
           "default": false
         },
         {
@@ -259,7 +259,7 @@
       "id": "action_review",
       "type": "action",
       "title": "Review installation",
-      "help": "See every step that will run, grouped by phase, before anything changes."
+      "help": "See every step, grouped by phase, before anything runs."
     }
   ]
 }

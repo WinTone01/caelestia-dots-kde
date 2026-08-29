@@ -86,6 +86,39 @@ bool check_failed(const string& file, const string& target) {
     return false;
 }
 
+// True when the caelestia command (the shell wrapper installed by the
+// installer) exists. Update and Uninstall are only offered once it does.
+bool is_caelestia_installed() {
+    auto executable = [](const string& p) {
+        return access(p.c_str(), X_OK) == 0;
+    };
+
+    const char* home = getenv("HOME");
+    if (home && executable(string(home) + "/.local/bin/caelestia"))
+        return true;
+    if (executable("/usr/local/bin/caelestia"))
+        return true;
+    if (executable("/usr/bin/caelestia"))
+        return true;
+
+    // Fall back to a PATH search for installs in other prefixes.
+    const char* path = getenv("PATH");
+    if (path) {
+        string paths(path);
+        size_t start = 0;
+        while (start <= paths.size()) {
+            size_t end = paths.find(':', start);
+            if (end == string::npos)
+                end = paths.size();
+            string dir = paths.substr(start, end - start);
+            if (!dir.empty() && executable(dir + "/caelestia"))
+                return true;
+            start = end + 1;
+        }
+    }
+    return false;
+}
+
 } // anonymous namespace
 
 namespace UI {
@@ -173,12 +206,13 @@ namespace UI {
             string title;
             string help;
         };
-        vector<Action> actions = {
-            {"install", "Install Caelestia", "Install the shell, packages, themes, and configs."},
-            {"update", "Update Caelestia", "Pull the latest code and rebuild the shell."},
-            {"uninstall", "Uninstall Caelestia", "Remove the shell and restore backups where available."},
-            {"exit", "Exit", "Leave without changing anything."},
-        };
+        vector<Action> actions;
+        actions.push_back({"install", "Install Caelestia", "Install the shell, packages, themes, and configs."});
+        if (is_caelestia_installed()) {
+            actions.push_back({"update", "Update Caelestia", "Pull the latest code and rebuild the shell."});
+            actions.push_back({"uninstall", "Uninstall Caelestia", "Remove the shell and restore backups where available."});
+        }
+        actions.push_back({"exit", "Exit", "Leave without changing anything."});
 
         int selected = 0;
         while (!g_quit) {
@@ -353,8 +387,6 @@ namespace UI {
 
             if (!error_msg.empty()) {
                 Draw::text(left + 2, top + 5, error_msg, "error");
-            } else {
-                Draw::text(left + 2, top + 5, "Stored for this run only; cleared when the installer exits.", "muted");
             }
 
             Draw::text(left + 2, top + box_height - 2, "Esc - Cancel", "muted");
@@ -455,7 +487,7 @@ namespace UI {
                 lines.push_back({"", ""});
             }
 
-            int max_rows = h - 4;
+            int max_rows = h - 5;
             if (max_rows < 1) max_rows = 1;
             if (lines.size() > (size_t)max_rows) {
                 if (scroll > lines.size() - (size_t)max_rows) scroll = lines.size() - (size_t)max_rows;
@@ -469,8 +501,9 @@ namespace UI {
                 Draw::text(x + 2, y + 2 + r, Draw::fit(ln.text, (size_t)(w - 4)), ln.color);
             }
 
-            string bottom = "Enter - Begin installation    Esc - Back to configuration";
-            Draw::text(x + 2, y + h - 2, Draw::fit(bottom, (size_t)(w - 4)), "muted");
+            Draw::text_center(y + h - 3, "Press Enter to begin installation",
+                              Draw::bold + Draw::color("primary"));
+            Draw::text_center(y + h - 2, "Esc - go back to configuration", "muted");
 
             cout << Draw::sync_end() << flush;
 
@@ -490,6 +523,9 @@ namespace UI {
     void log_view(const std::string& log_path) {
         bool redraw = true;
         string last_content;
+        vector<string> lines;
+        long view_top = 0;  // index of the first visible line
+        bool follow = true; // auto-scroll to the newest line
 
         while (!g_quit) {
             if (g_resized) { Term::get_size(); g_resized = false; redraw = true; }
@@ -512,7 +548,27 @@ namespace UI {
             }
             if (content != last_content) {
                 last_content = content;
+                lines.clear();
+                string line;
+                for (char ch : content) {
+                    if (ch == '\n') { lines.push_back(Draw::strip_ansi(line)); line.clear(); }
+                    else line += ch;
+                }
+                if (!line.empty()) lines.push_back(Draw::strip_ansi(line));
                 redraw = true;
+            }
+
+            // Clamp the viewport and derive paging from the current size.
+            int show = g_term_height - 6;
+            if (show < 1) show = 1;
+            int page = show > 1 ? show - 1 : 1;
+            long max_scroll = (long)lines.size() - show;
+            if (max_scroll < 0) max_scroll = 0;
+            if (follow) {
+                view_top = max_scroll;
+            } else {
+                if (view_top > max_scroll) view_top = max_scroll;
+                if (view_top < 0) view_top = 0;
             }
 
             if (redraw) {
@@ -526,27 +582,48 @@ namespace UI {
 
                 Draw::box(x, y, w, h, "INSTALL LOG", "primary", "on_surface");
 
-                vector<string> lines;
-                string line;
-                for (char ch : content) {
-                    if (ch == '\n') { lines.push_back(Draw::strip_ansi(line)); line.clear(); }
-                    else line += ch;
-                }
-                if (!line.empty()) lines.push_back(Draw::strip_ansi(line));
-
-                int show = h - 4;
-                if (show < 1) show = 1;
-                size_t start = lines.size() > (size_t)show ? lines.size() - (size_t)show : 0;
-                for (int i = 0; i < show && (start + (size_t)i) < lines.size(); ++i) {
-                    Draw::text(x + 2, y + 2 + i, Draw::fit(lines[start + (size_t)i], (size_t)(w - 4)), "");
+                for (int i = 0; i < show && (view_top + (long)i) < (long)lines.size(); ++i) {
+                    Draw::text(x + 2, y + 2 + i, Draw::fit(lines[view_top + (long)i], (size_t)(w - 4)), "");
                 }
 
-                Draw::text(x + 2, y + h - 2, "L / Tab / Esc - Back to progress", "muted");
+                string status = follow ? "Following" : "Paused";
+                string help = "Up/Down/PgUp/PgDn scroll   Home/End jump   L - back";
+                Draw::text(x + 2, y + h - 2,
+                           Draw::fit(status + "    " + help, (size_t)(w - 4)), "muted");
                 cout << Draw::sync_end() << flush;
             }
 
-            string key = Input::wait_key(300);
+            string key = Input::wait_key(100);
             if (key == "l" || key == "L" || key == "KEY_shift_tab" || key == "escape") return;
+
+            if (key == "KEY_up") {
+                follow = false;
+                if (view_top > 0) { view_top--; redraw = true; }
+            } else if (key == "KEY_down") {
+                if (!follow) {
+                    if (view_top < max_scroll) { view_top++; redraw = true; }
+                    if (view_top >= max_scroll) follow = true;
+                }
+            } else if (key == "KEY_page_up") {
+                follow = false;
+                long before = view_top;
+                view_top -= page;
+                if (view_top < 0) view_top = 0;
+                if (view_top != before) redraw = true;
+            } else if (key == "KEY_page_down") {
+                if (!follow) {
+                    long before = view_top;
+                    view_top += page;
+                    if (view_top > max_scroll) view_top = max_scroll;
+                    if (view_top >= max_scroll) follow = true;
+                    if (view_top != before) redraw = true;
+                }
+            } else if (key == "KEY_home") {
+                follow = false;
+                if (view_top != 0) { view_top = 0; redraw = true; }
+            } else if (key == "KEY_end") {
+                if (!follow || view_top != max_scroll) { follow = true; view_top = max_scroll; redraw = true; }
+            }
         }
     }
 
@@ -555,6 +632,7 @@ namespace UI {
         string steps_file = cache_dir + "/failed_steps.txt";
         string pkgs_file = cache_dir + "/failed_packages.txt";
         string patches_file = cache_dir + "/failed_patches.txt";
+        string log_path = cache_dir + "/install.log";
 
         while (true) {
             if (g_resized) { Term::get_size(); g_resized = false; }
@@ -583,7 +661,7 @@ namespace UI {
             }
 
             auto print_step = [&](const string& name, const string& desc) {
-                if (y >= top + h - 2) return;
+                if (y >= top + h - 4) return;
                 bool failed = check_failed(steps_file, name);
                 string mark = failed ? Draw::glyph("failed") : Draw::glyph("ok");
                 string color = failed ? "error" : "success";
@@ -591,7 +669,7 @@ namespace UI {
             };
 
             auto print_patch = [&](const string& name, const string& desc) {
-                if (y >= top + h - 2) return;
+                if (y >= top + h - 4) return;
                 bool failed = check_failed(patches_file, name);
                 string mark = failed ? Draw::glyph("failed") : Draw::glyph("ok");
                 string color = failed ? "error" : "success";
@@ -620,7 +698,7 @@ namespace UI {
             print_step("Build Caelestia Shell", "Caelestia shell built and installed");
 
             y++;
-            if (y < top + h - 2) {
+            if (y < top + h - 4) {
                 Draw::text(left + 2, y++, "PATCH STATUS", Draw::bold + Draw::color("primary"));
                 print_patch("Caelestia CLI Hyprctl Mock Patch", "Caelestia CLI Hyprctl mock patch");
                 print_patch("Caelestia CLI Record/Dolphin Patch", "Caelestia CLI record/dolphin patch");
@@ -637,37 +715,40 @@ namespace UI {
                 y++;
                 Draw::text(left + 2, y++, "FAILED PACKAGES", Draw::bold + Draw::color("error"));
                 for (const auto& p : failed_pkgs) {
-                    if (y >= top + h - 2) break;
+                    if (y >= top + h - 4) break;
                     Draw::text(left + 2, y++, Draw::fit("- " + p, content_width), "error");
                 }
             }
 
-            if (check_failed(steps_file, "Build Caelestia Shell") && y < top + h - 4) {
+            if (check_failed(steps_file, "Build Caelestia Shell") && y < top + h - 6) {
                 y++;
                 Draw::text(left + 2, y++, "SHELL BUILD FAILED", Draw::bold + Draw::color("error"));
                 Draw::text(left + 2, y++, Draw::fit("Review the log, install missing dependencies, and re-run setup.sh.", content_width), "error");
             }
 
             y++;
-            if (y < top + h - 6) {
+            if (y < top + h - 8) {
                 Draw::text(left + 2, y++, "Next steps:", Draw::bold + Draw::color("warning"));
-                Draw::text(left + 2, y++, Draw::fit("1) Log out now, then log back in.", content_width));
-                Draw::text(left + 2, y++, Draw::fit("2) If a kernel update occurred, reboot immediately.", content_width));
-                Draw::text(left + 2, y++, Draw::fit("3) Remove KDE panels after login (Super+D -> panel config).", content_width));
-                Draw::text(left + 2, y++, Draw::fit("4) Desktop edit mode later: Super+D -> right click desktop.", content_width));
-                Draw::text(left + 2, y++, Draw::fit("5) Full log: " + cache_dir + "/install.log", content_width));
+                Draw::text(left + 2, y++, Draw::fit("- Log out and log back in.", content_width));
+                Draw::text(left + 2, y++, Draw::fit("- Reboot if the kernel was updated.", content_width));
+                Draw::text(left + 2, y++, Draw::fit("- Remove the old KDE panels (Super+D).", content_width));
+                Draw::text(left + 2, y++, Draw::fit("- Full log: " + cache_dir + "/install.log", content_width));
             }
 
-            Draw::text(left + 2, top + h - 2, Draw::fit("Would you like to log out now? (y/N): ", content_width), Draw::bold + Draw::color("on_surface"));
+            Draw::text(left + 2, top + h - 3, Draw::fit("Press L to view the full log", content_width), "muted");
+            Draw::text(left + 2, top + h - 2, Draw::fit("Log out now? (Y/n): ", content_width), Draw::bold + Draw::color("on_surface"));
             cout << Draw::sync_end() << flush;
 
             string key = Input::wait_key();
-            if (key == "y" || key == "Y") {
+            if (key == "y" || key == "Y" || key == "enter") {
                 g_logout = true;
                 break;
-            } else if (key == "n" || key == "N" || key == "enter" || key == "escape") {
+            } else if (key == "n" || key == "N" || key == "escape") {
                 g_logout = false;
                 break;
+            } else if (key == "l" || key == "L") {
+                log_view(log_path);
+                // The loop redraws the summary after returning from the log.
             }
         }
     }

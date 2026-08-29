@@ -232,13 +232,13 @@ if [[ -n "$PREBUILT_BIN" ]]; then
     stop_spinner
     rm -f "$BIN"
     mv "$PREBUILT_BIN" "$BIN"
-    echo "[OK]    Using prebuilt installer binary v$(tui_version) (skipped compilation)."
+    echo "[OK]    Using prebuilt installer binary v$(tui_version)."
 else
     stop_spinner
     if [[ -n "${CAELESTIA_FORCE_BUILD_INSTALLER:-}" ]]; then
         echo "[INFO]  CAELESTIA_FORCE_BUILD_INSTALLER set - compiling locally."
     else
-        echo "[INFO]  No prebuilt binary for v$(tui_version) - compiling locally (one time)."
+        echo "[INFO]  No prebuilt binary for v$(tui_version) - compiling locally."
     fi
     # Reuse a previously compiled binary that matches this checkout's TUI
     # version so repeated runs don't recompile every time.

@@ -23,7 +23,7 @@ namespace Runner {
     // True when a step is gated off by the user's configuration choices.
     bool step_is_skipped(const Step& step);
 
-    std::string show_error_dialog(const std::string& step_name, const std::string& script_path, int term_w, int term_h);
+    std::string show_error_dialog(const std::string& step_name, const std::string& script_path, const std::string& error_detail, int term_w, int term_h);
     void draw_progress_ui(size_t current_index);
     void execute();
 }
