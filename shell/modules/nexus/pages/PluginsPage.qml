@@ -83,7 +83,7 @@ PageBase {
         TextButton {
             text: qsTr("Restart Shell")
             type: TextButton.Filled
-            //visible: PluginStore.restartRequired
+            visible: PluginStore.restartRequired
             scale: pressed ? 0.95 : 1.0
 
             Behavior on scale {
@@ -136,6 +136,38 @@ PageBase {
         }
 
         Item { Layout.preferredHeight: Tokens.spacing.large }
+
+        ConnectedRect {
+            visible: PluginStore.restartRequired
+            Layout.fillWidth: true
+            first: true
+            last: true
+            implicitHeight: restartStatus.implicitHeight + Tokens.padding.largeIncreased * 2
+
+            RowLayout {
+                id: restartStatus
+
+                anchors.fill: parent
+                anchors.margins: Tokens.padding.largeIncreased
+                spacing: Tokens.spacing.medium
+
+                MaterialIcon {
+                    Layout.alignment: Qt.AlignTop
+                    text: "restart_alt"
+                    fontStyle: Tokens.font.icon.large
+                }
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: Tokens.spacing.extraSmall
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: qsTr("A shell restart is required for changes to take effect")
+                        font: Tokens.font.title.medium
+                    }
+                }
+            }
+        }
 
         // --- INSTALLED TAB ---
         ColumnLayout {
@@ -376,6 +408,8 @@ PageBase {
                     required property string name
                     required property string version
                     required property string description
+                    required property string authorName
+                    required property string icon
                     property string path: "plugins/" + pluginId
                     property string mediaurl: ""
 
