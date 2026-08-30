@@ -4,7 +4,9 @@ import Quickshell
 // Loads the bundled San Francisco fonts so the shell can use them.
 // - SF Pro is a variable font (upright + italic), covering every weight in two files.
 // - SF Mono ships as static per-weight files, so each weight is loaded separately.
-QtObject {
+// Item (not QtObject) is the root because QtObject has no default property and
+// cannot hold FontLoader children.
+Item {
     FontLoader {
         source: Quickshell.shellPath("assets/fonts/SF-Pro/SF-Pro.ttf")
     }
