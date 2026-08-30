@@ -30,9 +30,3 @@ plasma-workspace/
 /CONTEXT.md
 /CLAUDE.md
 /docs/agents/
-
-# Fonts under shell/assets/fonts are user-provided and not committed, except
-# the bundled google-sans-flex set and the README.
-/shell/assets/fonts/*
-!/shell/assets/fonts/README.md
-!/shell/assets/fonts/google-sans-flex/
