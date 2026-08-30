@@ -15,94 +15,6 @@ import qs.modules.nexus.common
 PageBase {
     id: root
 
-    title: qsTr("Colors")
-    isSubPage: true
-
-    component PaletteCard: StyledRect {
-        id: card
-
-        required property var modelData
-
-        readonly property bool isSelected: `${modelData?.name} ${modelData?.flavour}` === Schemes.currentScheme && ((modelData?.mode === "light") === Colours.light)
-
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        Layout.preferredWidth: 1
-        implicitHeight: cardRow.implicitHeight + Tokens.padding.large * 2
-        radius: Tokens.rounding.large
-        color: isSelected ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainer
-        border.width: isSelected ? 2 : 1
-        border.color: isSelected ? Colours.palette.m3secondary : Colours.palette.m3surfaceVariant
-
-        StateLayer {
-            radius: parent.radius
-            onClicked: Quickshell.execDetached(["caelestia", "scheme", "set", "-n", card.modelData.name, "-f", card.modelData.flavour, "-m", card.modelData.mode])
-        }
-
-        RowLayout {
-            id: cardRow
-
-            anchors.fill: parent
-            anchors.margins: Tokens.padding.large
-            spacing: Tokens.spacing.large
-
-            StyledRect {
-                Layout.preferredWidth: Tokens.sizes.launcher.itemHeight
-                Layout.preferredHeight: Tokens.sizes.launcher.itemHeight
-
-                border.width: 1
-                border.color: Qt.alpha(`#${card.modelData?.colours?.outline}`, 0.5)
-                color: `#${card.modelData?.colours?.surface}`
-                radius: Tokens.rounding.full
-
-                Item {
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
-                    anchors.right: parent.right
-
-                    width: parent.width / 2
-                    clip: true
-
-                    StyledRect {
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        anchors.right: parent.right
-
-                        width: parent.width
-                        color: `#${card.modelData?.colours?.primary}`
-                        radius: Tokens.rounding.full
-                    }
-                }
-            }
-
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: Tokens.spacing.extraSmall
-
-                StyledText {
-                    Layout.fillWidth: true
-                    text: card.modelData?.flavour ?? ""
-                    font: Tokens.font.title.small
-                    color: card.isSelected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
-                }
-                StyledText {
-                    Layout.fillWidth: true
-                    text: card.modelData?.name ?? ""
-                    font: Tokens.font.body.medium
-                    color: card.isSelected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
-                }
-            }
-
-            MaterialIcon {
-                Layout.alignment: Qt.AlignVCenter
-                visible: card.isSelected
-                text: "check"
-                color: Colours.palette.m3onSecondaryContainer
-                fontStyle: Tokens.font.icon.large
-            }
-        }
-    }
-
     property var lightSchemes: []
     property var darkSchemes: []
 
@@ -124,6 +36,9 @@ PageBase {
         root.lightSchemes = light;
         root.darkSchemes = dark;
     }
+
+    title: qsTr("Colors")
+    isSubPage: true
 
     Component.onCompleted: {
         Schemes.reload();
@@ -151,7 +66,17 @@ PageBase {
 
             StateLayer {
                 radius: parent.radius
-                onClicked: Quickshell.execDetached(["caelestia", "scheme", "set", "-n", "dynamic"])
+                onClicked: {
+                    // The CLI derives dynamic colours from the wallpaper it was
+                    // last told about (caelestia wallpaper). On a fresh install
+                    // the deploy script writes path.txt directly, so the CLI has
+                    // no wallpaper yet and `scheme set -n dynamic` fails silently.
+                    // Seed the wallpaper first, then switch to dynamic.
+                    const wall = Wallpapers.actualCurrent || Wallpapers.fallback;
+                    Quickshell.execDetached(["sh", "-c",
+                        'caelestia wallpaper -f "$1" >/dev/null 2>&1; caelestia scheme set -n dynamic',
+                        "--", wall]);
+                }
             }
 
             RowLayout {
@@ -317,6 +242,91 @@ PageBase {
             command: ["python3", Quickshell.shellPath("scripts/scheme-list.py")]
             stdout: StdioCollector {
                 onStreamFinished: root.parseSchemeList(text)
+            }
+        }
+    }
+
+    component PaletteCard: StyledRect {
+        id: card
+
+        required property var modelData
+
+        readonly property bool isSelected: `${modelData?.name} ${modelData?.flavour}` === Schemes.currentScheme && ((modelData?.mode === "light") === Colours.light)
+
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        Layout.preferredWidth: 1
+        implicitHeight: cardRow.implicitHeight + Tokens.padding.large * 2
+        radius: Tokens.rounding.large
+        color: isSelected ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainer
+        border.width: isSelected ? 2 : 1
+        border.color: isSelected ? Colours.palette.m3secondary : Colours.palette.m3surfaceVariant
+
+        StateLayer {
+            radius: parent.radius
+            onClicked: Quickshell.execDetached(["caelestia", "scheme", "set", "-n", card.modelData.name, "-f", card.modelData.flavour, "-m", card.modelData.mode])
+        }
+
+        RowLayout {
+            id: cardRow
+
+            anchors.fill: parent
+            anchors.margins: Tokens.padding.large
+            spacing: Tokens.spacing.large
+
+            StyledRect {
+                Layout.preferredWidth: Tokens.sizes.launcher.itemHeight
+                Layout.preferredHeight: Tokens.sizes.launcher.itemHeight
+
+                border.width: 1
+                border.color: Qt.alpha(`#${card.modelData?.colours?.outline}`, 0.5)
+                color: `#${card.modelData?.colours?.surface}`
+                radius: Tokens.rounding.full
+
+                Item {
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    anchors.right: parent.right
+
+                    width: parent.width / 2
+                    clip: true
+
+                    StyledRect {
+                        anchors.top: parent.top
+                        anchors.bottom: parent.bottom
+                        anchors.right: parent.right
+
+                        width: parent.width
+                        color: `#${card.modelData?.colours?.primary}`
+                        radius: Tokens.rounding.full
+                    }
+                }
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: Tokens.spacing.extraSmall
+
+                StyledText {
+                    Layout.fillWidth: true
+                    text: card.modelData?.flavour ?? ""
+                    font: Tokens.font.title.small
+                    color: card.isSelected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                }
+                StyledText {
+                    Layout.fillWidth: true
+                    text: card.modelData?.name ?? ""
+                    font: Tokens.font.body.medium
+                    color: card.isSelected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
+                }
+            }
+
+            MaterialIcon {
+                Layout.alignment: Qt.AlignVCenter
+                visible: card.isSelected
+                text: "check"
+                color: Colours.palette.m3onSecondaryContainer
+                fontStyle: Tokens.font.icon.large
             }
         }
     }
