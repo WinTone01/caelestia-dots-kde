@@ -10,7 +10,6 @@ is rendered as its own card by the shell.
 """
 
 import json
-import sys
 
 entries = []
 
