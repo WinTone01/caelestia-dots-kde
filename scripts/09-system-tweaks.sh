@@ -78,6 +78,76 @@ tweak_five_desktops() {
 }
 
 # 
+# TWEAK: Remove KDE panels so the Caelestia bar and dock take over
+# 
+tweak_remove_panels() {
+    info "Removing KDE Plasma panels..."
+
+    # Remove live panels first (persisted by plasmashell when it is running).
+    qdbus6 org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript \
+        "var p = panels(); for (var i = 0; i < p.length; i++) { p[i].remove(); }" \
+        2>/dev/null || true
+
+    # Then scrub the config so headless installs are covered too. konsave
+    # (00-backup-themes.sh) already backs up desktop-appletsrc; a .bak copy is
+    # kept next to the file as belt and braces.
+    python3 - <<'EOF' || warn "Failed to remove KDE panels from config."
+import os
+import re
+import shutil
+
+path = os.path.expanduser("~/.config/plasma-org.kde.plasma.desktop-appletsrc")
+if not os.path.exists(path):
+    raise SystemExit(0)
+
+lines = open(path, "r", encoding="utf-8").read().splitlines()
+
+panel_ids = set()
+current = None
+for line in lines:
+    s = line.strip()
+    m = re.match(r"^\[Containments\]\[(\d+)\]$", s)
+    if m:
+        current = m.group(1)
+    elif s.startswith("[Containments][") and not re.match(r"^\[Containments\]\[\d+\]$", s):
+        continue
+    elif s.startswith("[") and s.endswith("]"):
+        current = None
+    elif current is not None and re.match(r"^(formfactor\s*=\s*[23]|plugin\s*=\s*org\.kde\.plasma\.panel)\s*$", s, re.IGNORECASE):
+        panel_ids.add(current)
+
+if not panel_ids:
+    raise SystemExit(0)
+
+bak = path + ".caelestia.bak"
+if not os.path.exists(bak):
+    shutil.copy2(path, bak)
+
+out = []
+skip = False
+for line in lines:
+    s = line.strip()
+    m = re.match(r"^\[Containments\]\[(\d+)\]$", s)
+    if m:
+        skip = m.group(1) in panel_ids
+        if skip:
+            continue
+    elif s.startswith("[Containments][") and not m:
+        pass
+    elif s.startswith("[") and s.endswith("]"):
+        skip = False
+    if skip:
+        continue
+    out.append(line)
+
+open(path, "w", encoding="utf-8").write("\n".join(out) + "\n")
+print(f"Removed {len(panel_ids)} KDE panel(s)")
+EOF
+
+    ok "KDE panels removed."
+}
+
+# 
 # TWEAK: Reload KWin and KGlobalAccel to pick up config changes
 # 
 tweak_reload_kde() {
@@ -212,6 +282,7 @@ fi
 
 tweak_disable_kde_osd
 tweak_five_desktops
+tweak_remove_panels
 tweak_default_shell
 tweak_default_scheme
 tweak_patch_caelestia_cli
