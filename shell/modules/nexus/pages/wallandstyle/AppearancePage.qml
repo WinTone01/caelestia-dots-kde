@@ -16,8 +16,13 @@ PageBase {
     id: root
 
     property var fonts: [
-        { label: qsTr("San Francisco Pro"), family: "SF Pro" },
-        { label: qsTr("Google Sans Flex"), family: "GoogleSansFlex" },
+        { label: qsTr("San Francisco Pro"), family: "SF Pro", mono: false },
+        { label: qsTr("Google Sans Flex"), family: "GoogleSansFlex", mono: false },
+    ]
+
+    property var monoFonts: [
+        { label: qsTr("SF Mono"), family: "SF Mono", mono: true },
+        { label: qsTr("CaskaydiaCove NF"), family: "CaskaydiaCove NF", mono: true },
     ]
 
     function applyFont(family: string): void {
@@ -25,6 +30,10 @@ PageBase {
         GlobalConfig.appearance.font.title.family = family;
         GlobalConfig.appearance.font.body.family = family;
         GlobalConfig.appearance.font.label.family = family;
+    }
+
+    function applyMonoFont(family: string): void {
+        GlobalConfig.appearance.font.mono.family = family;
     }
 
     isSubPage: true
@@ -70,48 +79,17 @@ PageBase {
         Repeater {
             model: root.fonts
 
-            StyledRect {
-                id: fontCard
+            FontCard {}
+        }
 
-                required property var modelData
+        SectionHeader {
+            text: qsTr("Monospace font")
+        }
 
-                readonly property bool selected: GlobalConfig.appearance.font.body.family === modelData.family
+        Repeater {
+            model: root.monoFonts
 
-                Layout.fillWidth: true
-                implicitHeight: fontRow.implicitHeight + Tokens.padding.large * 2
-                radius: Tokens.rounding.large
-                color: selected ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainer
-                border.width: selected ? 2 : 1
-                border.color: selected ? Colours.palette.m3secondary : Colours.palette.m3surfaceVariant
-
-                StateLayer {
-                    radius: parent.radius
-                    onClicked: root.applyFont(fontCard.modelData.family)
-                }
-
-                RowLayout {
-                    id: fontRow
-
-                    anchors.fill: parent
-                    anchors.margins: Tokens.padding.large
-                    spacing: Tokens.spacing.large
-
-                    StyledText {
-                        Layout.fillWidth: true
-                        text: fontCard.modelData.label
-                        font: Tokens.font.body.medium
-                        color: fontCard.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
-                    }
-
-                    MaterialIcon {
-                        Layout.alignment: Qt.AlignVCenter
-                        visible: fontCard.selected
-                        text: "check"
-                        color: Colours.palette.m3onSecondaryContainer
-                        fontStyle: Tokens.font.icon.large
-                    }
-                }
-            }
+            FontCard {}
         }
 
         ColumnLayout {
@@ -287,6 +265,51 @@ PageBase {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
             }
             Layout.fillWidth: true
+        }
+    }
+
+    component FontCard: StyledRect {
+        id: fontCard
+
+        required property var modelData
+
+        readonly property bool selected: modelData.mono
+            ? GlobalConfig.appearance.font.mono.family === modelData.family
+            : GlobalConfig.appearance.font.body.family === modelData.family
+
+        Layout.fillWidth: true
+        implicitHeight: fontRow.implicitHeight + Tokens.padding.large * 2
+        radius: Tokens.rounding.large
+        color: selected ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainer
+        border.width: selected ? 2 : 1
+        border.color: selected ? Colours.palette.m3secondary : Colours.palette.m3surfaceVariant
+
+        StateLayer {
+            radius: parent.radius
+            onClicked: fontCard.modelData.mono ? root.applyMonoFont(fontCard.modelData.family) : root.applyFont(fontCard.modelData.family)
+        }
+
+        RowLayout {
+            id: fontRow
+
+            anchors.fill: parent
+            anchors.margins: Tokens.padding.large
+            spacing: Tokens.spacing.large
+
+            StyledText {
+                Layout.fillWidth: true
+                text: fontCard.modelData.label
+                font: Tokens.font.body.medium
+                color: fontCard.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+            }
+
+            MaterialIcon {
+                Layout.alignment: Qt.AlignVCenter
+                visible: fontCard.selected
+                text: "check"
+                color: Colours.palette.m3onSecondaryContainer
+                fontStyle: Tokens.font.icon.large
+            }
         }
     }
 }

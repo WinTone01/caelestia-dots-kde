@@ -1,14 +1,51 @@
 import QtQuick
 import Quickshell
 
-// Loads the SF Pro variable font (upright + italic) so the shell can use it
-// when the sans font family is set to "SF Pro". A variable font covers every
-// weight, so no per-weight static files are needed.
+// Loads the bundled San Francisco fonts so the shell can use them.
+// - SF Pro is a variable font (upright + italic), covering every weight in two files.
+// - SF Mono ships as static per-weight files, so each weight is loaded separately.
 QtObject {
     FontLoader {
         source: Quickshell.shellPath("assets/fonts/SF-Pro/SF-Pro.ttf")
     }
     FontLoader {
         source: Quickshell.shellPath("assets/fonts/SF-Pro/SF-Pro-Italic.ttf")
+    }
+
+    FontLoader {
+        source: Quickshell.shellPath("assets/fonts/SF-Mono/SF-Mono-Light.otf")
+    }
+    FontLoader {
+        source: Quickshell.shellPath("assets/fonts/SF-Mono/SF-Mono-LightItalic.otf")
+    }
+    FontLoader {
+        source: Quickshell.shellPath("assets/fonts/SF-Mono/SF-Mono-Regular.otf")
+    }
+    FontLoader {
+        source: Quickshell.shellPath("assets/fonts/SF-Mono/SF-Mono-RegularItalic.otf")
+    }
+    FontLoader {
+        source: Quickshell.shellPath("assets/fonts/SF-Mono/SF-Mono-Medium.otf")
+    }
+    FontLoader {
+        source: Quickshell.shellPath("assets/fonts/SF-Mono/SF-Mono-MediumItalic.otf")
+    }
+    FontLoader {
+        source: Quickshell.shellPath("assets/fonts/SF-Mono/SF-Mono-Semibold.otf")
+    }
+    FontLoader {
+        source: Quickshell.shellPath("assets/fonts/SF-Mono/SF-Mono-SemiboldItalic.otf")
+    }
+    FontLoader {
+        source: Quickshell.shellPath("assets/fonts/SF-Mono/SF-Mono-Bold.otf")
+    }
+    FontLoader {
+        source: Quickshell.shellPath("assets/fonts/SF-Mono/SF-Mono-BoldItalic.otf")
+    }
+    FontLoader {
+        source: Quickshell.shellPath("assets/fonts/SF-Mono/SF-Mono-Heavy.otf")
+    }
+    FontLoader {
+        source: Quickshell.shellPath("assets/fonts/SF-Mono/SF-Mono-HeavyItalic.otf")
     }
 }

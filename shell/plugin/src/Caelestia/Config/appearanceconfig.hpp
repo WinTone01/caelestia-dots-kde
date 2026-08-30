@@ -201,7 +201,7 @@ public:
         , m_mono(new FontStyleConfig(this))
         , m_icon(new IconFontStyleConfig(this)) {
         const auto sans = QStringLiteral("SF Pro");
-        const auto mono = QStringLiteral("CaskaydiaCove NF");
+        const auto mono = QStringLiteral("SF Mono");
         const auto icons = QStringLiteral("Material Symbols Rounded");
         const QVariantMap vaxes = { { "ROND", 25 } };
 
