@@ -304,6 +304,18 @@ Singleton {
         onLoaded: root.load(text(), false)
     }
 
+    // The external caelestia CLI rewrites scheme.json atomically (os.replace),
+    // which the FileView's watcher can miss after the first replacement. The
+    // C++ SchemeLoader re-arms its own watcher for exactly this case, so reload
+    // the palette from its signal as the authoritative trigger.
+    Connections {
+        target: SchemeLoader
+
+        function onCurrentSchemeChanged(): void {
+            schemeFile.reload();
+        }
+    }
+
     Timer {
         id: schemeRetryTimer
 
