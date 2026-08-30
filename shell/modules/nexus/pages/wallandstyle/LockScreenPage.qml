@@ -12,9 +12,6 @@ import qs.modules.nexus.common
 PageBase {
     id: root
 
-    isSubPage: true
-    title: qsTr("Lock Screen")
-
     readonly property list<MenuItem> fprintTriesItems: [
         MenuItem {
             property int value: 1
@@ -42,6 +39,9 @@ PageBase {
             text: qsTr("5 attempts")
         }
     ]
+
+    isSubPage: true
+    title: qsTr("Lock Screen")
 
     ColumnLayout {
         anchors.horizontalCenter: parent.horizontalCenter

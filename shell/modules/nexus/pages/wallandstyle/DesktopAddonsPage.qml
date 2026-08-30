@@ -12,9 +12,6 @@ import qs.modules.nexus.common
 PageBase {
     id: root
 
-    isSubPage: true
-    title: qsTr("Desktop Addons")
-
     readonly property list<MenuItem> positionItems: [
         MenuItem {
             property string value: "top-left"
@@ -70,6 +67,9 @@ PageBase {
             text: qsTr("Right")
         }
     ]
+
+    isSubPage: true
+    title: qsTr("Desktop Addons")
 
     ColumnLayout {
         anchors.horizontalCenter: parent.horizontalCenter

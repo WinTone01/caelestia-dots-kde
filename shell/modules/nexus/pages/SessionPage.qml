@@ -11,8 +11,6 @@ import qs.modules.nexus.common
 PageBase {
     id: root
 
-    title: qsTr("Session")
-
     function commandString(list: var): string {
         return (list || []).join(" ");
     }
@@ -21,40 +19,7 @@ PageBase {
         return text.split(" ").filter(s => s.length > 0);
     }
 
-    // Labelled text row for an icon name or command string.
-    component LabeledField: ConnectedRect {
-        id: field
-
-        property string label
-        property string value
-        signal committed(string v)
-
-        Layout.fillWidth: true
-        implicitHeight: row.implicitHeight + Tokens.padding.medium * 2
-
-        RowLayout {
-            id: row
-
-            anchors.fill: parent
-            anchors.margins: Tokens.padding.medium
-            anchors.leftMargin: Tokens.padding.largeIncreased
-            anchors.rightMargin: Tokens.padding.largeIncreased
-            spacing: Tokens.spacing.medium
-
-            StyledText {
-                text: field.label
-                font: Tokens.font.body.small
-                color: Colours.palette.m3onSurface
-                Layout.preferredWidth: 128
-            }
-            StyledInputField {
-                Layout.fillWidth: true
-                horizontalAlignment: TextInput.AlignLeft
-                text: field.value
-                onEditingFinished: field.committed(text)
-            }
-        }
-    }
+    title: qsTr("Session")
 
     ColumnLayout {
         anchors.horizontalCenter: parent.horizontalCenter
@@ -156,6 +121,42 @@ PageBase {
             label: qsTr("Reboot")
             value: root.commandString(Config.session.commands.reboot)
             onCommitted: v => GlobalConfig.session.commands.reboot = root.commandList(v)
+        }
+    }
+
+    // Labelled text row for an icon name or command string.
+    component LabeledField: ConnectedRect {
+        id: field
+
+        property string label
+        property string value
+
+        signal committed(string v)
+
+        Layout.fillWidth: true
+        implicitHeight: row.implicitHeight + Tokens.padding.medium * 2
+
+        RowLayout {
+            id: row
+
+            anchors.fill: parent
+            anchors.margins: Tokens.padding.medium
+            anchors.leftMargin: Tokens.padding.largeIncreased
+            anchors.rightMargin: Tokens.padding.largeIncreased
+            spacing: Tokens.spacing.medium
+
+            StyledText {
+                text: field.label
+                font: Tokens.font.body.small
+                color: Colours.palette.m3onSurface
+                Layout.preferredWidth: 128
+            }
+            StyledInputField {
+                Layout.fillWidth: true
+                horizontalAlignment: TextInput.AlignLeft
+                text: field.value
+                onEditingFinished: field.committed(text)
+            }
         }
     }
 }
