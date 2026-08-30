@@ -58,6 +58,9 @@ QtObject {
                 Component {
                     KMYCSettings {}
                 }
+                Component {
+                    LockScreenPage {}
+                }
             }
         },
         Component {

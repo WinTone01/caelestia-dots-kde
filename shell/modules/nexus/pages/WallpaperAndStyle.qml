@@ -52,6 +52,24 @@ PageBase {
         }
 
         SectionHeader {
+            text: qsTr("Lock screen")
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: Tokens.spacing.extraSmall / 2
+
+            NavRow {
+                first: true
+                last: true
+                icon: "lock"
+                label: qsTr("Lock screen")
+                status: qsTr("Wallpaper sync and lock screen settings")
+                onClicked: root.nState.openSubPage(10)
+            }
+        }
+
+        SectionHeader {
             text: qsTr("Colors")
         }
 
