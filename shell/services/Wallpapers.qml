@@ -147,8 +147,10 @@ Searcher {
         Quickshell.execDetached(["qdbus6", "org.kde.plasmashell", "/PlasmaShell", "org.kde.PlasmaShell.evaluateScript", script]);
 
         // Keep KDE's own lock screen wallpaper on the same image unless the user
-        // opted out of syncing the two.
-        if (Config.lock.syncWallpaper)
+        // opted out of syncing the two. Read the global singleton directly: the
+        // attached `Config` is per-screen aware and is not meant to be used from
+        // a singleton service like this one.
+        if (GlobalConfig.lock.syncWallpaper)
             Quickshell.execDetached(["kwriteconfig6", "--file", "kscreenlockerrc", "--group", "Greeter", "--group", "Wallpaper", "--group", "org.kde.image", "--group", "General", "--key", "Image", "file://" + imagePath]);
     }
 
