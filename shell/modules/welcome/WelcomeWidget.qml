@@ -42,12 +42,6 @@ FloatingWindow {
     minimumSize.width: 680
     minimumSize.height: 480
 
-    // Centre on the window's screen (primary screen as a fallback before
-    // the window is mapped). FloatingWindow is centred by default, but this
-    // makes it explicit and keeps it centred when the size changes.
-    x: Math.round(((screen ?? Quickshell.screens[0]).width - width) / 2)
-    y: Math.round(((screen ?? Quickshell.screens[0]).height - height) / 2)
-
     BackgroundEffect.blurRegion: Region {
         Region { x: -10; y: -10; width: 1; height: 1 } // Prevent full-window blur fallback when disabled
         Region { item: (GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur) ? container : null }
