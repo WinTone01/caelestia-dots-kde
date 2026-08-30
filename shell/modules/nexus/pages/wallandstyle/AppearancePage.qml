@@ -15,8 +15,21 @@ import qs.modules.nexus.common
 PageBase {
     id: root
 
+    property var fonts: [
+        { label: qsTr("San Francisco Pro"), family: "SF Pro" },
+        { label: qsTr("Google Sans Flex"), family: "GoogleSansFlex" },
+    ]
+
+    function applyFont(family: string): void {
+        GlobalConfig.appearance.font.headline.family = family;
+        GlobalConfig.appearance.font.title.family = family;
+        GlobalConfig.appearance.font.body.family = family;
+        GlobalConfig.appearance.font.label.family = family;
+    }
+
     isSubPage: true
     title: qsTr("Theme & Effects")
+
     headerActions: [
         IconTextButton {
             text: qsTr("Restart Shell")
@@ -48,6 +61,59 @@ PageBase {
             Layout.fillWidth: true
             Layout.preferredHeight: Tokens.padding.large
         }
+
+        SectionHeader {
+            first: true
+            text: qsTr("Font")
+        }
+
+        Repeater {
+            model: root.fonts
+
+            StyledRect {
+                id: fontCard
+
+                required property var modelData
+
+                readonly property bool selected: GlobalConfig.appearance.font.body.family === modelData.family
+
+                Layout.fillWidth: true
+                implicitHeight: fontRow.implicitHeight + Tokens.padding.large * 2
+                radius: Tokens.rounding.large
+                color: selected ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainer
+                border.width: selected ? 2 : 1
+                border.color: selected ? Colours.palette.m3secondary : Colours.palette.m3surfaceVariant
+
+                StateLayer {
+                    radius: parent.radius
+                    onClicked: root.applyFont(fontCard.modelData.family)
+                }
+
+                RowLayout {
+                    id: fontRow
+
+                    anchors.fill: parent
+                    anchors.margins: Tokens.padding.large
+                    spacing: Tokens.spacing.large
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: fontCard.modelData.label
+                        font: Tokens.font.body.medium
+                        color: fontCard.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                    }
+
+                    MaterialIcon {
+                        Layout.alignment: Qt.AlignVCenter
+                        visible: fontCard.selected
+                        text: "check"
+                        color: Colours.palette.m3onSecondaryContainer
+                        fontStyle: Tokens.font.icon.large
+                    }
+                }
+            }
+        }
+
         ColumnLayout {
             id: bbdxContainer
 

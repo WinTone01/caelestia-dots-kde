@@ -30,3 +30,6 @@ plasma-workspace/
 /CONTEXT.md
 /CLAUDE.md
 /docs/agents/
+
+# Downloaded font sources - only the variable fonts are bundled under shell/assets
+/.github/assets/fonts/
