@@ -233,6 +233,14 @@ QtObject {
             }
         },
         Component {
+            // Session
+            StackPage {
+                Component {
+                    SessionPage {}
+                }
+            }
+        },
+        Component {
             // Shortcuts
             StackPage {
                 Component {

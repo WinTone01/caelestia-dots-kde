@@ -266,6 +266,98 @@ PageBase {
             }
             Layout.fillWidth: true
         }
+
+        SectionHeader {
+            text: qsTr("Scaling")
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 0
+
+            StepperRow {
+                first: true
+                Layout.fillWidth: true
+                label: qsTr("Font scale")
+                value: GlobalConfig.appearance.font.scale
+                from: 0.5
+                to: 2
+                stepSize: 0.05
+                onMoved: v => GlobalConfig.appearance.font.scale = v
+            }
+
+            StepperRow {
+                Layout.fillWidth: true
+                label: qsTr("Spacing scale")
+                value: GlobalConfig.appearance.spacing.scale
+                from: 0.5
+                to: 2
+                stepSize: 0.05
+                onMoved: v => GlobalConfig.appearance.spacing.scale = v
+            }
+
+            StepperRow {
+                Layout.fillWidth: true
+                label: qsTr("Padding scale")
+                value: GlobalConfig.appearance.padding.scale
+                from: 0.5
+                to: 2
+                stepSize: 0.05
+                onMoved: v => GlobalConfig.appearance.padding.scale = v
+            }
+
+            StepperRow {
+                last: true
+                Layout.fillWidth: true
+                label: qsTr("Animation speed scale")
+                value: GlobalConfig.appearance.anim.durations.scale
+                from: 0.25
+                to: 4
+                stepSize: 0.05
+                onMoved: v => GlobalConfig.appearance.anim.durations.scale = v
+            }
+        }
+
+        SectionHeader {
+            text: qsTr("Corners & effects")
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 0
+
+            StepperRow {
+                first: true
+                Layout.fillWidth: true
+                label: qsTr("Border rounding")
+                value: GlobalConfig.border.rounding
+                from: 0
+                to: 100
+                stepSize: 1
+                onMoved: v => GlobalConfig.border.rounding = v
+            }
+
+            StepperRow {
+                Layout.fillWidth: true
+                label: qsTr("Border smoothing")
+                value: GlobalConfig.border.smoothing
+                from: 0
+                to: 100
+                stepSize: 1
+                onMoved: v => GlobalConfig.border.smoothing = v
+            }
+
+            StepperRow {
+                last: true
+                Layout.fillWidth: true
+                label: qsTr("Blur deform")
+                value: GlobalConfig.appearance.deformScale
+                from: 0
+                to: 1.5
+                stepSize: 0.05
+                onMoved: v => GlobalConfig.appearance.deformScale = v
+            }
+        }
     }
 
     component FontCard: StyledRect {

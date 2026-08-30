@@ -126,6 +126,18 @@ QtObject {
             ]
         },
         {
+            label: qsTr("Session"),
+            key: "session",
+            icon: "power_settings_new",
+            description: qsTr("Shutdown, logout, and reboot menu"),
+            category: "controls",
+            settings: [
+                { label: qsTr("Session Menu"), keywords: ["power", "shutdown", "logout", "reboot", "hibernate"] },
+                { label: qsTr("Session Icons"), keywords: ["icon", "logout", "shutdown"] },
+                { label: qsTr("Session Commands"), keywords: ["command", "logout", "shutdown"] }
+            ]
+        },
+        {
             label: qsTr("Shortcuts"),
             key: "shortcuts",
             icon: "keyboard",
