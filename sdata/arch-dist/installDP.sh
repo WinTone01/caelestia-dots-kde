@@ -76,11 +76,12 @@ if [[ "$PACKAGE_GROUP" == "all" || "$PACKAGE_GROUP" == "themes" ]]; then
     fi
 fi
 
-# libcava is the last package that would compile from source. It is prebuilt by
-# CI into a binary repo hosted on GitHub Releases (see
-# .github/workflows/prebuilt-artifacts.yml) and falls back to an AUR source
-# build when the repo is unreachable. Darkly is installed prebuilt (own binary
-# repo, or the darkly-bin AUR package) so it is never compiled on the machine.
+# libcava is installed only via package managers: it is prebuilt by CI into a
+# binary repo hosted on GitHub Releases (see
+# .github/workflows/prebuilt-artifacts.yml) and falls back to the AUR package
+# when the repo is unreachable. It is never compiled from source on the
+# machine. Darkly is installed prebuilt (own binary repo, or the darkly-bin
+# AUR package) so it is never compiled on the machine.
 PREBUILT_PKGS=()
 if [[ "$PACKAGE_GROUP" == "all" || "$PACKAGE_GROUP" == "core" ]]; then
     PREBUILT_PKGS+=(libcava)
@@ -152,7 +153,6 @@ FAILED_PKGS=()
 # select the build backend.
 SOURCE_BUILD_REPOS=(
     # package            repo
-    "libcava             https://github.com/LukashonakV/cava"
     "ttf-rubik-vf        https://github.com/googlefonts/rubik"
     "app2unit            https://github.com/Vladimir-csp/app2unit"
     "python-materialyoucolor https://github.com/gregwym/MaterialYouColor.py"

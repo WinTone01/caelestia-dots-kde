@@ -114,7 +114,7 @@ The project enables ccache in both `installer/CMakeLists.txt` and `shell/CMakeLi
 | `quickshell-git` | `errornointernet/quickshell` | COPR may be out of date |
 | `gpu-screen-recorder` | `brycensranch/gpu-screen-recorder-git` | May need `ffmpeg` from RPM Fusion |
 | `app2unit` | `celestelove/app2unit` | Falls back to `make install` |
-| `libcava` | `celestelove/libcava` | Falls back to manual build from GitHub |
+| `libcava` | `celestelove/libcava` | Package-manager only; no source build |
 | `starship` | `atim/starship` | Stable, rarely fails |
 | `wl-clip-persist` | `leloubil/wl-clip-persist` | Needed for clipboard persistence |
 

@@ -184,26 +184,6 @@ for pkg in "${COPR_PKGS[@]}"; do
 
     log "Copr fallback failed or not defined for $pkg. Attempting manual build..."
     case "$pkg" in
-        libcava)
-            tmpdir="$(mktemp -d)"
-            sudo dnf install -y alsa-lib-devel fftw-devel pulseaudio-libs-devel iniparser-devel meson ninja-build cmake gcc-c++
-            if git clone --depth 1 https://github.com/LukashonakV/cava "$tmpdir"; then
-                (
-                    cd "$tmpdir" || exit 1
-                    if [ -f "meson.build" ]; then
-                        meson setup build && meson compile -C build && sudo meson install -C build
-                    elif [ -f "CMakeLists.txt" ]; then
-                        cmake -B build && cmake --build build && sudo cmake --install build
-                    else
-                        ./autogen.sh && ./configure && make && sudo make install
-                    fi
-                ) || { err "Manual build for $pkg failed."; FAILED_PKGS+=("$pkg"); }
-            else
-                err "Failed to clone $pkg."
-                FAILED_PKGS+=("$pkg")
-            fi
-            rm -rf "$tmpdir"
-            ;;
         app2unit)
             tmpdir="$(mktemp -d)"
             sudo dnf install -y make

@@ -71,19 +71,19 @@ UTILITY_PACKAGES=(
 
 # Packages that need manual build or script fallback on Debian if apt package missing
 FALLBACK_PKGS=(
-    quickshell starship libcava app2unit gpu-screen-recorder wl-clip-persist satty adw-gtk3 uv konsave
+    quickshell starship cava app2unit gpu-screen-recorder wl-clip-persist satty adw-gtk3 uv konsave
 )
 
 # Build final package list based on selected group
 PACKAGES=()
 FALLBACK_TARGETS=()
 case "$PACKAGE_GROUP" in
-    core)   PACKAGES=("${CORE_PACKAGES[@]}");   FALLBACK_TARGETS=("libcava" "app2unit") ;;
+    core)   PACKAGES=("${CORE_PACKAGES[@]}");   FALLBACK_TARGETS=("cava" "app2unit") ;;
     shell)  PACKAGES=("${SHELL_PACKAGES[@]}");  FALLBACK_TARGETS=("quickshell" "starship") ;;
     themes) PACKAGES=("${THEME_PACKAGES[@]}");  FALLBACK_TARGETS=("adw-gtk3") ;;
     utils)  PACKAGES=("${UTILITY_PACKAGES[@]}"); FALLBACK_TARGETS=("gpu-screen-recorder" "wl-clip-persist" "satty" "uv" "konsave") ;;
     all|*)  PACKAGES=("${CORE_PACKAGES[@]}" "${SHELL_PACKAGES[@]}" "${THEME_PACKAGES[@]}" "${UTILITY_PACKAGES[@]}")
-            FALLBACK_TARGETS=("quickshell" "starship" "libcava" "app2unit" "gpu-screen-recorder" "wl-clip-persist" "satty" "adw-gtk3" "uv" "konsave") ;;
+            FALLBACK_TARGETS=("quickshell" "starship" "cava" "app2unit" "gpu-screen-recorder" "wl-clip-persist" "satty" "adw-gtk3" "uv" "konsave") ;;
 esac
 
 log "Installing packages (group: $PACKAGE_GROUP)..."
@@ -157,25 +157,19 @@ for pkg in "${FALLBACK_TARGETS[@]}"; do
             sudo apt-get update || true
             sudo apt-get install -y quickshell || { err "Failed to install quickshell from PPA."; FAILED_PKGS+=("$pkg"); }
             ;;
-        libcava|cava)
-            tmpdir="$(mktemp -d)"
-            sudo apt-get install -y libasound2-dev libfftw3-dev libpulse-dev libiniparser-dev meson ninja-build cmake gcc g++ || true
-            if git clone --depth 1 https://github.com/LukashonakV/cava "$tmpdir"; then
-                (
-                    cd "$tmpdir" || exit 1
-                    if [ -f "meson.build" ]; then
-                        meson setup build && meson compile -C build && sudo meson install -C build
-                    elif [ -f "CMakeLists.txt" ]; then
-                        cmake -B build && cmake --build build && sudo cmake --install build
-                    else
-                        ./autogen.sh && ./configure && make && sudo make install
-                    fi
-                ) || { err "Manual build for $pkg failed."; FAILED_PKGS+=("$pkg"); }
+        cava)
+            # Package-manager only: cava ships in Debian 12 (Bookworm) and
+            # Ubuntu 20.10+; older Ubuntu uses the community PPA. Never built
+            # from source.
+            sudo apt-get install -y software-properties-common || true
+            sudo add-apt-repository -y ppa:hsheth2/ppa || true
+            sudo apt-get update || true
+            if sudo apt-get install -y cava; then
+                log "cava installed via apt."
             else
-                err "Failed to clone $pkg."
+                err "apt failed to install cava; no cava package available for this release."
                 FAILED_PKGS+=("$pkg")
             fi
-            rm -rf "$tmpdir"
             ;;
         app2unit)
             tmpdir="$(mktemp -d)"

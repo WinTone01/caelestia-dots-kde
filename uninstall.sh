@@ -645,7 +645,7 @@ if [[ "$REMOVE_PACKAGES" == "true" ]]; then
     DEBIAN_PACKAGES=(
         cmake ninja-build ccache g++ build-essential
         wl-clipboard cliphist inotify-tools wireplumber trash-cli jq yq
-        libaubio-dev aubio-tools lm-sensors libsensors-dev
+        libaubio-dev aubio-tools lm-sensors libsensors-dev cava
         libpipewire-0.3-dev pipewire
         qt6-base-dev qt6-base-private-dev qt6-declarative-dev qml6-module-qtquick qt6-wayland qt6-wayland-dev qt6-svg-dev qt6-shadertools-dev
         libkf6globalaccel-dev libkf6windowsystem-dev libkf6kpipewire-dev libsecret-1-dev libkirigami-dev libkdecorations3-dev libkf6style-dev libkf6kcmutils-dev libkf6colorscheme-dev
