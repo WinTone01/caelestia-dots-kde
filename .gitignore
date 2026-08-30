@@ -30,3 +30,8 @@ plasma-workspace/
 /CONTEXT.md
 /CLAUDE.md
 /docs/agents/
+
+# Fonts are user-provided (dropped into shell/assets/fonts), not committed.
+# The README in that folder is tracked; the font files themselves are not.
+/shell/assets/fonts/*
+!/shell/assets/fonts/README.md
