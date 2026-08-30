@@ -145,6 +145,8 @@ Searcher {
             '    d.writeConfig("Image", "file://" + ' + JSON.stringify(imagePath) + ');' +
             '}';
         Quickshell.execDetached(["qdbus6", "org.kde.plasmashell", "/PlasmaShell", "org.kde.PlasmaShell.evaluateScript", script]);
+
+        Quickshell.execDetached(["kwriteconfig6", "--file", "kscreenlockerrc", "--group", "Greeter", "--group", "Wallpaper", "--group", "org.kde.image", "--group", "General", "--key", "Image", "file://" + imagePath]);
     }
 
     function preview(path: string): void {
@@ -275,11 +277,18 @@ Searcher {
             }
             root.actualCurrent = wall;
             root.previewColourLock = false;
+            // Bring the KDE lock screen in line with the shell whenever the
+            // persisted wallpaper is (re)loaded, e.g. on startup. Videos are
+            // skipped: the lock screen falls back to an image, and the video
+            // path has no still to show until onVideoThumb() provides one.
+            if (!Images.isVideo(wall))
+                syncPlasmaWallpaper(wall);
         }
         onLoadFailed: {
             root.actualCurrent = root.fallback;
             root.previewColourLock = false;
             Quickshell.execDetached(["caelestia", "wallpaper", "-f", root.fallback, ...root.smartArg]);
+            syncPlasmaWallpaper(root.fallback);
         }
     }
 
