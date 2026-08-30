@@ -2,16 +2,11 @@ import QtQuick
 import Quickshell
 import Caelestia.Models
 
-// Loads every font the shell ships with or the user drops into assets/fonts.
-// - The bundled Google Sans Flex is loaded explicitly.
-// - Any .ttf/.otf found under assets/fonts (e.g. SF-Pro/, SF-Mono/, or your
-//   own folder) is picked up automatically, so adding a font never requires
-//   touching this file.
+// Loads every font found under assets/fonts - both the bundled ones
+// (google-sans-flex) and anything the user drops in (e.g. SF-Pro/, SF-Mono/,
+// or their own folders) - recursively. Adding a font never requires touching
+// this file.
 Item {
-    FontLoader {
-        source: Quickshell.shellPath("assets/google-sans-flex/GoogleSansFlex-Subset.ttf")
-    }
-
     FileSystemModel {
         id: fontsModel
 

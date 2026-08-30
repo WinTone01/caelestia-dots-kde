@@ -1,8 +1,11 @@
 # Fonts
 
-Drop font folders here (for example `SF-Pro/` and `SF-Mono/`) and the shell
-loads every `.ttf`/`.otf` found here - recursively - at startup. Any folder you
-add is picked up automatically, so a new font never requires a code change.
+The shell loads every `.ttf`/`.otf` found here - recursively - at startup.
+
+- `google-sans-flex/` is bundled with the shell.
+- Drop other font folders here (for example `SF-Pro/` and `SF-Mono/`); any
+  folder you add is picked up automatically, so a new font never requires a
+  code change.
 
 The shell's default families are:
 

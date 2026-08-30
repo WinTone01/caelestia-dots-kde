@@ -31,7 +31,8 @@ plasma-workspace/
 /CLAUDE.md
 /docs/agents/
 
-# Fonts are user-provided (dropped into shell/assets/fonts), not committed.
-# The README in that folder is tracked; the font files themselves are not.
+# Fonts under shell/assets/fonts are user-provided and not committed, except
+# the bundled google-sans-flex set and the README.
 /shell/assets/fonts/*
 !/shell/assets/fonts/README.md
+!/shell/assets/fonts/google-sans-flex/
