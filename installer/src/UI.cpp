@@ -693,94 +693,65 @@ namespace UI {
             int top = 1;
             const size_t content_width = w > 4 ? static_cast<size_t>(w - 4) : 0;
 
-            Draw::box(left, top, w, h, "INSTALLATION COMPLETE", "success", "on_surface");
+            // Gather error status
+            vector<string> failed_pkgs;
+            ifstream pf(pkgs_file);
+            string pkg;
+            while (getline(pf, pkg)) {
+                if (!pkg.empty()) failed_pkgs.push_back(pkg);
+            }
+            bool shell_failed = check_failed(steps_file, "Build Caelestia Shell");
+            bool has_errors = !failed_pkgs.empty() || shell_failed;
+
+            Draw::box(left, top, w, h, has_errors ? "INSTALLATION COMPLETED WITH WARNINGS" : "INSTALLATION COMPLETE", has_errors ? "warning" : "success", "on_surface");
 
             int y = top + 2;
 
             const char* start_epoch_str = getenv("INSTALL_START_EPOCH");
-            if (start_epoch_str) {
+            if (start_epoch_str && y < top + h - 4) {
                 long elapsed = time(NULL) - atol(start_epoch_str);
                 long hours = elapsed / 3600;
                 long mins = (elapsed % 3600) / 60;
                 long secs = elapsed % 60;
                 char buf[64];
-                snprintf(buf, sizeof(buf), "Total time: %ldh %ldm %lds", hours, mins, secs);
+                snprintf(buf, sizeof(buf), "Finished in %ldh %ldm %lds", hours, mins, secs);
                 Draw::text(left + 2, y++, Draw::fit(Draw::glyph("ok") + " " + buf, content_width), "success");
             }
 
-            auto print_step = [&](const string& name, const string& desc) {
-                if (y >= top + h - 4) return;
-                bool failed = check_failed(steps_file, name);
-                string mark = failed ? Draw::glyph("failed") : Draw::glyph("ok");
-                string color = failed ? "error" : "success";
-                Draw::text(left + 2, y++, Draw::fit(mark + " " + desc, content_width), color);
-            };
-
-            auto print_patch = [&](const string& name, const string& desc) {
-                if (y >= top + h - 4) return;
-                bool failed = check_failed(patches_file, name);
-                string mark = failed ? Draw::glyph("failed") : Draw::glyph("ok");
-                string color = failed ? "error" : "success";
-                Draw::text(left + 2, y++, Draw::fit(mark + " " + desc, content_width), color);
-            };
-
-            const char* skip_update = getenv("SKIP_SYSTEM_UPDATE");
-            if (skip_update && std::string(skip_update) == "true") {
-                Draw::text(left + 2, y++, Draw::fit(Draw::glyph("skipped") + " System update skipped by user choice", content_width), "warning");
-            } else if (g_base_distro == "arch") {
-                Draw::text(left + 2, y++, Draw::fit(Draw::glyph("ok") + " System updated (pacman -Syu)", content_width), "success");
-            } else if (g_base_distro == "fedora") {
-                Draw::text(left + 2, y++, Draw::fit(Draw::glyph("ok") + " System updated (dnf upgrade)", content_width), "success");
-            } else if (g_base_distro == "debian") {
-                Draw::text(left + 2, y++, Draw::fit(Draw::glyph("ok") + " System updated (apt-get upgrade)", content_width), "success");
-            } else {
-                Draw::text(left + 2, y++, Draw::fit(Draw::glyph("ok") + " System updated", content_width), "success");
-            }
-
-            print_step("Package installation", "Packages installed (PKGBUILDs + fonts + deps)");
-            print_step("Config deployment", "Configs (repo-base + KDE overrides, clean deploy)");
-            print_step("KDE settings", "Darkly theme + Kvantum + default wallpaper");
-            print_step("System tweaks", "5 virtual desktops + KDE OSDs disabled");
-            print_step("Keyboard shortcuts", "Keyboard shortcuts (KDE native + keyd)");
-            print_step("Autostart", "Quickshell + kde-material-you-colors autostart");
-            print_step("Build Caelestia Shell", "Caelestia shell built and installed");
-
-            y++;
-            if (y < top + h - 4) {
-                Draw::text(left + 2, y++, "PATCH STATUS", Draw::bold + Draw::color("primary"));
-                print_patch("Caelestia CLI Hyprctl Mock Patch", "Caelestia CLI Hyprctl mock patch");
-                print_patch("Caelestia CLI Record/Dolphin Patch", "Caelestia CLI record/dolphin patch");
-                print_patch("Caelestia CLI Theme Sequence Patch", "Caelestia CLI theme sequence patch");
-            }
-
-            ifstream pf(pkgs_file);
-            string pkg;
-            vector<string> failed_pkgs;
-            while (getline(pf, pkg)) {
-                if (!pkg.empty()) failed_pkgs.push_back(pkg);
-            }
-            if (!failed_pkgs.empty() && y < top + h - 4) {
+            if (has_errors) {
                 y++;
-                Draw::text(left + 2, y++, "FAILED PACKAGES", Draw::bold + Draw::color("error"));
-                for (const auto& p : failed_pkgs) {
-                    if (y >= top + h - 4) break;
-                    Draw::text(left + 2, y++, Draw::fit("- " + p, content_width), "error");
+                if (y < top + h - 4) {
+                    Draw::text(left + 2, y++, "ATTENTION NEEDED", Draw::bold + Draw::color("error"));
+                }
+                if (shell_failed && y < top + h - 4) {
+                    Draw::text(left + 2, y++, Draw::fit("- Shell build failed (check missing dependencies in log).", content_width), "error");
+                }
+                if (!failed_pkgs.empty() && y < top + h - 4) {
+                    string pkg_str = "- Failed packages: ";
+                    for (size_t i = 0; i < failed_pkgs.size(); ++i) {
+                        if (i > 0) pkg_str += ", ";
+                        pkg_str += failed_pkgs[i];
+                    }
+                    Draw::text(left + 2, y++, Draw::fit(pkg_str, content_width), "error");
                 }
             }
 
-            if (check_failed(steps_file, "Build Caelestia Shell") && y < top + h - 6) {
-                y++;
-                Draw::text(left + 2, y++, "SHELL BUILD FAILED", Draw::bold + Draw::color("error"));
-                Draw::text(left + 2, y++, Draw::fit("Review the log, install missing dependencies, and re-run setup.sh.", content_width), "error");
+            y++;
+            if (y < top + h - 11) {
+                Draw::text(left + 2, y++, "QUICK START & SHORTCUTS", Draw::bold + Draw::color("primary"));
+                Draw::text(left + 2, y++, Draw::fit("  Super / Super+Space   Application Launcher", content_width), "on_surface");
+                Draw::text(left + 2, y++, Draw::fit("  Super+Return          Terminal", content_width), "on_surface");
+                Draw::text(left + 2, y++, Draw::fit("  Super+/               Show Keybinds Helper", content_width), "on_surface");
+                Draw::text(left + 2, y++, Draw::fit("  Super+V               Clipboard History", content_width), "on_surface");
+                Draw::text(left + 2, y++, Draw::fit("  Super+Shift+S         Screenshot Tool", content_width), "on_surface");
+                Draw::text(left + 2, y++, Draw::fit("  Super+B               Sidebar & Notifications", content_width), "on_surface");
             }
 
             y++;
-            if (y < top + h - 8) {
-                Draw::text(left + 2, y++, "Next steps:", Draw::bold + Draw::color("warning"));
-                Draw::text(left + 2, y++, Draw::fit("- Log out and log back in.", content_width));
-                Draw::text(left + 2, y++, Draw::fit("- Reboot if the kernel was updated.", content_width));
-                Draw::text(left + 2, y++, Draw::fit("- Remove the old KDE panels (Super+D).", content_width));
-                Draw::text(left + 2, y++, Draw::fit("- Full log: " + cache_dir + "/install.log", content_width));
+            if (y < top + h - 6) {
+                Draw::text(left + 2, y++, "NEXT STEPS", Draw::bold + Draw::color("warning"));
+                Draw::text(left + 2, y++, Draw::fit("- Log out and back in to start your new Caelestia session.", content_width));
+                Draw::text(left + 2, y++, Draw::fit("- Full log saved to: " + log_path, content_width), "muted");
             }
 
             Draw::text(left + 2, top + h - 3, Draw::fit("Press L to view the full log", content_width), "muted");
