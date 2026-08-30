@@ -86,20 +86,12 @@ PageBase {
             ToggleRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
                 Layout.fillWidth: true
+                last: true
                 text: qsTr("Hide on all monitors")
                 subtext: qsTr("Also hide on all other monitors if disabled by a window")
                 checked: Config.background.visualiser.hideOnAllMonitors
                 onToggled: GlobalConfig.background.visualiser.hideOnAllMonitors = checked
                 enabled: Config.background.visualiser.enabled && Config.background.visualiser.autoHide
-            }
-
-            ToggleRow {
-                Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
-                Layout.fillWidth: true
-                last: true
-                text: qsTr("Shimeji characters")
-                checked: Config.shimeji.enabled
-                onToggled: GlobalConfig.shimeji.enabled = checked
             }
         }
     }
