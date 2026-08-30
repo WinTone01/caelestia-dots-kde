@@ -49,7 +49,9 @@ PageBase {
             Layout.preferredHeight: Tokens.padding.large
         }
         ColumnLayout {
-            property bool isBbdxEnabled: (bbdxCheck.stdout || "").trim() === "true"
+            id: bbdxContainer
+
+            property bool isBbdxEnabled: false
 
             spacing: 0
 
@@ -77,6 +79,16 @@ PageBase {
                 to: 50
                 stepSize: 1
                 onMoved: v => GlobalConfig.border.thickness = v
+                Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
+            }
+            StepperRow {
+                label: qsTr("Corner radius scale")
+                subtext: qsTr("Multiplies the shell's corner rounding")
+                value: GlobalConfig.appearance.rounding.scale
+                from: 0.5
+                to: 2.0
+                stepSize: 0.1
+                onMoved: v => GlobalConfig.appearance.rounding.scale = v
                 Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
             }
             ToggleRow {
@@ -114,6 +126,9 @@ PageBase {
 
                 command: ["bash", "-c", "kreadconfig6 --file kwinrc --group Plugins --key better_blur_dxEnabled"]
                 running: true
+                stdout: StdioCollector {
+                    onStreamFinished: bbdxContainer.isBbdxEnabled = text.trim() === "true"
+                }
             }
             Process {
                 id: bbdxFixProcess

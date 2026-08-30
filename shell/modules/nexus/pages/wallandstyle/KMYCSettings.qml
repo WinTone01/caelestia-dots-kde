@@ -17,6 +17,8 @@ PageBase {
     title: "Advanced Colors"
     isSubPage: true
 
+    property bool showAdvanced: false
+
     property bool pywal: false
 
     property bool pywalLight: false
@@ -207,11 +209,21 @@ PageBase {
 
         }
 
+        ToggleRow {
+            first: true
+            last: true
+            text: "Show advanced options"
+            subtext: "Engine behavior, color tuning and window decoration settings"
+            checked: root.showAdvanced
+            onToggled: root.showAdvanced = checked
+        }
+
         SectionHeader {
             text: "Engine & Behavior"
-            first: true
+            visible: root.showAdvanced
         }
         ColumnLayout {
+            visible: root.showAdvanced
             Layout.fillWidth: true
             spacing: 0
 
@@ -241,8 +253,10 @@ PageBase {
 
         SectionHeader {
             text: "Color Attributes"
+            visible: root.showAdvanced
         }
         ColumnLayout {
+            visible: root.showAdvanced
             Layout.fillWidth: true
             spacing: 0
 
@@ -321,8 +335,10 @@ PageBase {
         
         SectionHeader {
             text: "Window Decorations (Requires Plugins)"
+            visible: root.showAdvanced
         }
         ColumnLayout {
+            visible: root.showAdvanced
             Layout.fillWidth: true
             spacing: 0
 
