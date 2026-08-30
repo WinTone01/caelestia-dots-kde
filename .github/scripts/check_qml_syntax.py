@@ -176,10 +176,15 @@ def _skip_regex(text: str, i: int, line: int) -> tuple[int, int]:
 def scan(text: str) -> list[str]:
     """Return human-readable structural issues found in a QML file's text."""
     issues: list[str] = []
-    stack: list[tuple[str, int]] = []
+    # (delimiter, line, is_a_QtObject_scope) - the third field is meaningful
+    # only for '{' entries and drives the no-default-property check below.
+    stack: list[tuple[str, int, bool]] = []
     i = 0
     n = len(text)
     line = 1
+    pending_word: str | None = None
+    pending_at_stmt_start = False
+    pending_qtobject = False
 
     while i < n:
         c = text[i]
@@ -245,8 +250,52 @@ def scan(text: str) -> list[str]:
             i += 9
             continue
 
+        # Identifiers: remember the last one so a following '{' can be
+        # classified as an object declaration (type name) vs a JS block.
+        if c.isalpha() or c == "_":
+            j = i
+            while j < n and (text[j].isalnum() or text[j] == "_"):
+                j += 1
+            word = text[i:j]
+            k = i - 1
+            while k >= 0 and text[k] in " \t":
+                k -= 1
+            prev = text[k] if k >= 0 else ""
+            pending_at_stmt_start = prev in ("", "\n", ";", "{", "}")
+            pending_word = word
+            pending_qtobject = word == "QtObject"
+            i = j
+            continue
+
         if c in "([{":
-            stack.append((c, line))
+            if c == "{":
+                if pending_qtobject:
+                    # A QtObject declared directly inside another QtObject is
+                    # also an object declaration and equally invalid.
+                    if pending_at_stmt_start and stack and stack[-1][2]:
+                        issues.append(
+                            f"line {line}: object 'QtObject' declared as a child of "
+                            "QtObject, which has no default property"
+                        )
+                    stack.append((c, line, True))
+                else:
+                    if (
+                        pending_word is not None
+                        and pending_at_stmt_start
+                        and pending_word[:1].isupper()
+                        and stack
+                        and stack[-1][2]
+                    ):
+                        issues.append(
+                            f"line {line}: object '{pending_word}' declared as a child of "
+                            "QtObject, which has no default property"
+                        )
+                    stack.append((c, line, False))
+            else:
+                stack.append((c, line, False))
+            pending_word = None
+            pending_at_stmt_start = False
+            pending_qtobject = False
             i += 1
             continue
 
@@ -254,18 +303,25 @@ def scan(text: str) -> list[str]:
             if not stack:
                 issues.append(f"line {line}: unmatched closing '{c}'")
             else:
-                opener, opened = stack.pop()
+                opener, opened, _qtobj = stack.pop()
                 if opener != PAIRS[c]:
                     issues.append(
                         f"line {line}: closing '{c}' does not match "
                         f"'{opener}' opened on line {opened}"
                     )
+            pending_word = None
+            pending_at_stmt_start = False
+            pending_qtobject = False
             i += 1
             continue
 
+        if c not in " \t\r":
+            pending_word = None
+            pending_at_stmt_start = False
+            pending_qtobject = False
         i += 1
 
-    for opener, opened in stack:
+    for opener, opened, _qtobj in stack:
         issues.append(f"line {opened}: unclosed '{opener}'")
 
     return issues
