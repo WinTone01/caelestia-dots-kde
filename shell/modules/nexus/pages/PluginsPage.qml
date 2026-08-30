@@ -410,6 +410,7 @@ PageBase {
                     required property string description
                     required property string authorName
                     required property string icon
+                    required property string type
                     property string path: "plugins/" + pluginId
                     property string mediaurl: ""
 
@@ -448,7 +449,7 @@ PageBase {
                             text: storeDelegate.isUpdateAvailable ? qsTr("Update") : (storeDelegate.isInstalled ? qsTr("Installed") : qsTr("Install"))
                             enabled: (!storeDelegate.isInstalled || storeDelegate.isUpdateAvailable) && !PluginStore.installing
                             onClicked: {
-                                PluginStore.installPlugin(storeDelegate.pluginId, storeDelegate.path, root.storeBranch);
+                                PluginStore.installPlugin(storeDelegate.pluginId, storeDelegate.path, root.storeBranch, storeDelegate.type);
                             }
                         }
                     }

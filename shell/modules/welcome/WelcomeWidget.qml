@@ -31,11 +31,37 @@ FloatingWindow {
         return lower.endsWith(".mp4") || lower.endsWith(".webm") || lower.endsWith(".mkv") || lower.endsWith(".avi") || lower.endsWith(".mov");
     }
 
+    // Append the given feature ids to the seen state file. Ids are passed as
+    // argv (never interpolated into the script) so ids containing '#' or
+    // quotes cannot break the shell command or be interpreted as comments.
+    function persistSeen(ids: var): void {
+        if (!ids || ids.length === 0) return;
+        let args = [
+            "bash", "-c",
+            "mkdir -p ~/.local/share/caelestia/state && for id in \"$@\"; do echo \"$id\"; done >> ~/.local/share/caelestia/state/seen_features.txt",
+            "mark-seen"
+        ];
+        for (let i = 0; i < ids.length; ++i)
+            args.push(String(ids[i]));
+        writeStateProcess.command = args;
+        writeStateProcess.running = true;
+    }
+
     color: Colours.tPalette.m3surface
     surfaceFormat.opaque: false
     title: qsTr("What's New in Caelestia")
 
     visible: loaded && unseenFeatures.length > 0
+
+    // Dismissing the window (close button/Esc rather than "got it"/"done
+    // all") still has to mark the remaining features as seen, otherwise the
+    // popup comes back on every shell restart.
+    onVisibleChanged: {
+        if (!visible && loaded && unseenFeatures.length > 0) {
+            persistSeen(unseenFeatures.map(f => f.id));
+            unseenFeatures = [];
+        }
+    }
 
     implicitWidth: 920
     implicitHeight: 640
@@ -308,9 +334,7 @@ FloatingWindow {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                let script = "for id in " + root.unseenFeatures.map(f => f.id).join(" ") + "; do echo \"$id\" >> ~/.local/share/caelestia/state/seen_features.txt; done"
-                                writeStateProcess.command = ["bash", "-c", script]
-                                writeStateProcess.running = true
+                                root.persistSeen(root.unseenFeatures.map(f => f.id))
                                 root.unseenFeatures = []
                             }
                         }
@@ -391,8 +415,7 @@ FloatingWindow {
 
                             onClicked: {
                                 let currentId = featureData.id
-                                writeStateProcess.command = ["bash", "-c", "echo '" + currentId + "' >> ~/.local/share/caelestia/state/seen_features.txt"]
-                                writeStateProcess.running = true
+                                root.persistSeen([currentId])
 
                                 stackView.pop()
 
