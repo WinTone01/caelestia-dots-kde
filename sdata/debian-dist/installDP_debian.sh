@@ -6,6 +6,38 @@ set -uo pipefail
 log()  { printf '  [INFO]  %s\n' "$*"; }
 err()  { printf '  [ERR]   %s\n' "$*" >&2; }
 
+# Return the download URL of the Darkly prebuilt .deb that matches this distro
+# from the latest GitHub release (https://github.com/Bali10050/Darkly/releases).
+darkly_deb_asset_url() {
+    local release_json id ver needle url
+    release_json="$(curl -fsSL "https://api.github.com/repos/Bali10050/Darkly/releases/latest" 2>/dev/null || true)"
+    [[ -n "$release_json" ]] || return 1
+    id="$(grep -E '^ID=' /etc/os-release 2>/dev/null | cut -d= -f2 | tr -d '"' | tr '[:upper:]' '[:lower:]')"
+    ver="$(grep -E '^VERSION_ID=' /etc/os-release 2>/dev/null | cut -d= -f2 | tr -d '"')"
+
+    local needles=()
+    case "$id" in
+        neon|kdeneon) needles=("kdeneon") ;;
+        ubuntu|kubuntu|linuxmint|pop) needles=("kubuntu-${ver}" "kubuntu") ;;
+        debian)
+            case "$ver" in
+                14*|15*) needles=("debian14" "debian13" "debian") ;;
+                *)        needles=("debian13" "debian14" "debian") ;;
+            esac
+            ;;
+        *) needles=("debian13" "debian14" "kubuntu" "kdeneon" "debian") ;;
+    esac
+
+    for needle in "${needles[@]}"; do
+        url="$(printf '%s' "$release_json" | grep -oE 'https://[^"]*_amd64\.deb' | grep -F "$needle" | head -n1)"
+        if [[ -n "$url" ]]; then
+            echo "$url"
+            return 0
+        fi
+    done
+    return 1
+}
+
 log "Installing Debian packages..."
 
 INSTALL_FISH="${INSTALL_FISH:-true}"
@@ -300,19 +332,36 @@ unzip -qo "/tmp/JetBrainsMono.zip" -d "${XDG_DATA_HOME:-$HOME/.local/share}/font
 
 fc-cache -f
 
-log "Building and Installing Darkly KDE Theme..."
+log "Installing Darkly KDE Theme from prebuilt package..."
 if [[ "$INSTALL_DARKLY" == "true" ]]; then
-    if ! command -v darkly >/dev/null 2>&1; then
-        tmpdir="$(mktemp -d)"
-        sudo apt-get install -y cmake extra-cmake-modules gettext libkf6config-dev libkf6configwidgets-dev libkf6coreaddons-dev libkf6guiaddons-dev libkf6i18n-dev libkf6iconthemes-dev libkf6kio-dev libkf6widgetsaddons-dev libkf6windowsystem-dev libkf6colorscheme-dev libkf6kcmutils-dev libkirigami-dev libkdecorations3-dev libkf6style-dev qt6-base-dev qt6-declarative-dev || true
-        if git clone --depth 1 https://github.com/Bali10050/Darkly "$tmpdir"; then
-            (
-                cd "$tmpdir" || exit 1
-                cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_QT5=OFF && cmake --build build -j"$(nproc)" && cd build && sudo cmake --install .
-            ) || err "Failed to build Darkly theme from source."
+    if ! command -v darkly >/dev/null 2>&1 && ! dpkg -s darkly >/dev/null 2>&1; then
+        _darkly_deb="$(darkly_deb_asset_url || true)"
+        if [[ -n "$_darkly_deb" ]]; then
+            tmpdir="$(mktemp -d)"
+            log "Downloading Darkly .deb from GitHub releases..."
+            if curl -fsSL "$_darkly_deb" -o "$tmpdir/darkly.deb"; then
+                sudo apt-get install -y "$tmpdir/darkly.deb" || sudo dpkg -i "$tmpdir/darkly.deb" || err "Failed to install Darkly .deb."
+            else
+                err "Failed to download Darkly .deb from GitHub releases."
+            fi
+            rm -rf "$tmpdir"
+        else
+            err "No prebuilt Darkly .deb found for this distro."
         fi
-        rm -rf "$tmpdir"
     fi
+
+    log "Installing Darkly GTK theme..."
+    sudo apt-get install -y sassc || true
+    tmpdir="$(mktemp -d)"
+    if git clone --depth 1 https://github.com/wrymt/darkly-gtk "$tmpdir"; then
+        (
+            cd "$tmpdir" || exit 1
+            ./install.sh -l || err "Failed to install Darkly GTK theme."
+        )
+    else
+        err "Failed to clone Darkly GTK theme."
+    fi
+    rm -rf "$tmpdir"
 else
     log "Skipping Darkly package installation by user choice."
 fi

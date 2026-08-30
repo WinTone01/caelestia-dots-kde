@@ -289,7 +289,7 @@ The lock screen renders via a nested Wayland compositor using **software composi
 |---|---|
 | Plasma style unchanged | `APPLY_DARKLY` was set to `false` in the configuration menu |
 | Window decorations missing | The installer tries `org.kde.darkly` library, falls back silently to `org.kde.breeze` |
-| `lookandfeeltool --apply "Darkly"` failed | The `darkly` package may not be installed (AUR/COPR only) |
+| `lookandfeeltool --apply "Darkly"` failed | The `darkly` package may not be installed (AUR/COPR/prebuilt packages) |
 
 **Manual apply:**
 ```bash
