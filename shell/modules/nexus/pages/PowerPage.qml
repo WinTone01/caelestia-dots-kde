@@ -178,11 +178,18 @@ PageBase {
         }
 
         ToggleRow {
-            last: true
             text: qsTr("Inhibit while audio")
             subtext: qsTr("Prevent idle actions while audio is playing")
             checked: Config.general.idle.inhibitWhenAudio
             onToggled: GlobalConfig.general.idle.inhibitWhenAudio = checked
+        }
+
+        ToggleRow {
+            last: true
+            text: qsTr("Inhibit while charging")
+            subtext: qsTr("Prevent idle actions while charging")
+            checked: Config.general.idle.inhibitWhenCharging
+            onToggled: GlobalConfig.general.idle.inhibitWhenCharging = checked
         }
 
         SectionHeader {
