@@ -1,6 +1,6 @@
 #pragma once
 
-#include "settings/objectnode.hpp"
+#include "../Settings/objectnode.hpp"
 #include "common.hpp"
 
 #include <qstring.h>
@@ -47,13 +47,13 @@ class BarWorkspaces : public settings::ObjectNode {
     CONFIG_PROPERTY(QString, occupiedLabel, u" 󰮯"_s)
     CONFIG_PROPERTY(QString, activeLabel, u"󰮯 "_s)
     CONFIG_PROPERTY(QString, capitalisation, u"preserve"_s)
-    CONFIG_GLOBAL_PROPERTY(QVariantList, specialWorkspaceIcons)
+    CONFIG_GLOBAL_PROPERTY(QVariantList, specialWorkspaceIcons, QVariantList())
     CONFIG_GLOBAL_PROPERTY(QVariantList, windowIcons,
         { vmap({
             { u"regex"_s, u"steam(_app_(default|[0-9]+))?"_s },
             { u"icon"_s, u"sports_esports"_s },
         }) })
-    CONFIG_GLOBAL_PROPERTY(QVariantList, wsIcons)
+    CONFIG_GLOBAL_PROPERTY(QVariantList, wsIcons, QVariantList())
 
 };
 
@@ -72,8 +72,8 @@ class BarTray : public settings::ObjectNode {
     CONFIG_PROPERTY(bool, background, false)
     CONFIG_PROPERTY(bool, recolour, false)
     CONFIG_PROPERTY(bool, compact, true)
-    CONFIG_GLOBAL_PROPERTY(QVariantList, iconSubs)
-    CONFIG_GLOBAL_PROPERTY(QStringList, hiddenIcons)
+    CONFIG_GLOBAL_PROPERTY(QVariantList, iconSubs, QVariantList())
+    CONFIG_GLOBAL_PROPERTY(QStringList, hiddenIcons, QStringList())
 
 };
 
@@ -88,7 +88,7 @@ class BarStatus : public settings::ObjectNode {
     CONFIG_PROPERTY(bool, showBluetooth, true)
     CONFIG_PROPERTY(bool, showBattery, true)
     CONFIG_PROPERTY(bool, showPeripheralBattery, false)
-    CONFIG_PROPERTY(QStringList, peripheralBatteryExcluded)
+    CONFIG_PROPERTY(QStringList, peripheralBatteryExcluded, QStringList())
     CONFIG_PROPERTY(bool, showLockStatus, true)
     CONFIG_PROPERTY(bool, showNotifications, true)
     CONFIG_PROPERTY(bool, showNightLight, true)
@@ -210,7 +210,7 @@ class BarConfig : public settings::ObjectNode {
     CONFIG_SUBOBJECT(BarGithub, github)
     CONFIG_SUBOBJECT(BarPerformance, performance)
     CONFIG_PROPERTY(QVariantList, entries,
-        {
+        DEFAULT_ARG({
             vmap({ { u"id"_s, u"logo"_s }, { u"enabled"_s, true }, { u"zone"_s, u"left"_s } }),
             vmap({ { u"id"_s, u"workspaces"_s }, { u"enabled"_s, true }, { u"zone"_s, u"left"_s } }),
             vmap({ { u"id"_s, u"activeWindow"_s }, { u"enabled"_s, true }, { u"zone"_s, u"left"_s } }),
@@ -230,8 +230,8 @@ class BarConfig : public settings::ObjectNode {
             vmap({ { u"id"_s, u"perfBattery"_s }, { u"enabled"_s, false }, { u"zone"_s, u"right"_s } }),
             vmap({ { u"id"_s, u"showDesktop"_s }, { u"enabled"_s, true }, { u"zone"_s, u"right"_s } }),
             vmap({ { u"id"_s, u"power"_s }, { u"enabled"_s, true }, { u"zone"_s, u"right"_s } }),
-        })
-    CONFIG_PROPERTY(QStringList, excludedScreens)
+        }))
+    CONFIG_PROPERTY(QStringList, excludedScreens, QStringList())
 
 };
 

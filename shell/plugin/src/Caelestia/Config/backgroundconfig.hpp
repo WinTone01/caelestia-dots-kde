@@ -1,6 +1,6 @@
 #pragma once
 
-#include "settings/objectnode.hpp"
+#include "../Settings/objectnode.hpp"
 #include "common.hpp"
 
 #include <qstring.h>

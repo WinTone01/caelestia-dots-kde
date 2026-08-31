@@ -1,6 +1,6 @@
 #pragma once
 
-#include "settings/objectnode.hpp"
+#include "../Settings/objectnode.hpp"
 #include "common.hpp"
 
 #include <qstring.h>
@@ -38,7 +38,7 @@ class UtilitiesVpn : public settings::ObjectNode {
     CONFIG_NODE(UtilitiesVpn, settings::ObjectNode)
 
     CONFIG_GLOBAL_PROPERTY(bool, enabled, false)
-    CONFIG_GLOBAL_PROPERTY(QVariantList, provider)
+    CONFIG_GLOBAL_PROPERTY(QVariantList, provider, QVariantList())
 
 };
 
@@ -56,7 +56,7 @@ class UtilitiesGameMode : public settings::ObjectNode {
     CONFIG_GLOBAL_PROPERTY(bool, disableVisualizer, true)
 
     CONFIG_GLOBAL_PROPERTY(bool, autoEnable, true)
-    CONFIG_GLOBAL_PROPERTY(QStringList, autoEnableRegexes)
+    CONFIG_GLOBAL_PROPERTY(QStringList, autoEnableRegexes, QStringList())
 
 };
 
@@ -76,7 +76,7 @@ class UtilitiesConfig : public settings::ObjectNode {
     CONFIG_PROPERTY(bool, showScreenRecorder, true)
     CONFIG_PROPERTY(bool, showQuickToggles, true)
     CONFIG_PROPERTY(QVariantList, quickToggles,
-        {
+        DEFAULT_ARG({
             vmap({ { u"id"_s, u"wifi"_s }, { u"enabled"_s, true } }),
             vmap({ { u"id"_s, u"bluetooth"_s }, { u"enabled"_s, true } }),
             vmap({ { u"id"_s, u"mic"_s }, { u"enabled"_s, true } }),
@@ -86,7 +86,7 @@ class UtilitiesConfig : public settings::ObjectNode {
             vmap({ { u"id"_s, u"vpn"_s }, { u"enabled"_s, false } }),
             vmap({ { u"id"_s, u"wallpaper"_s }, { u"enabled"_s, true } }),
             vmap({ { u"id"_s, u"badapple"_s }, { u"enabled"_s, true } }),
-        })
+        }))
 
 };
 

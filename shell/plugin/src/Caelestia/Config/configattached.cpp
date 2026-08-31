@@ -81,7 +81,7 @@ CONFIG_ATTACHED_GETTER(UserPaths, paths)
 #undef CONFIG_ATTACHED_GETTER
 
 ConfigRoot* Config::forScreen(const QString& screen) {
-    return ConfigSingleton::forScreen(screen);
+    return ConfigSingleton::instance()->forScreen(screen);
 }
 
 Config* Config::qmlAttachedProperties(QObject* object) {

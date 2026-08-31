@@ -11,8 +11,10 @@ class AppearancePadding;
 class AppearanceRounding;
 class AppearanceSpacing;
 class AppearanceTransparency;
+class ConfigRoot;
 class FontTokens;
 class SizeTokens;
+class TokensRoot;
 
 class Tokens : public QQuickAttachedPropertyPropagator, public QQmlParserStatus {
     Q_OBJECT

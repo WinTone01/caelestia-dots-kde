@@ -3,8 +3,8 @@
 #include <qloggingcategory.h>
 #include <qstring.h>
 
-#include "settings/macros.hpp"
-#include "settings/objectnode.hpp"
+#include "../Settings/macros.hpp"
+#include "../Settings/objectnode.hpp"
 
 #define CONFIG_NODE_NO_CTOR SETTINGS_NODE_NO_CTOR
 #define CONFIG_NODE SETTINGS_NODE

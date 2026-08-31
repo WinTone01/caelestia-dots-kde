@@ -1,6 +1,5 @@
 qml_module(caelestia-config
     URI Caelestia.Config
-    INCLUDE_PREFIX config
     SOURCES
         common.cpp
         rootnodes.cpp

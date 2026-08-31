@@ -1,6 +1,6 @@
 #pragma once
 
-#include "settings/objectnode.hpp"
+#include "../Settings/objectnode.hpp"
 #include "common.hpp"
 
 #include <qstring.h>
@@ -43,12 +43,12 @@ class LauncherConfig : public settings::ObjectNode {
     CONFIG_GLOBAL_PROPERTY(bool, vimKeybinds, false)
     CONFIG_GLOBAL_PROPERTY(bool, confirmClearClipboard, true)
     CONFIG_GLOBAL_PROPERTY(QStringList, favouriteApps, QStringList({ u"firefox"_s, u"org.kde.dolphin"_s }))
-    CONFIG_GLOBAL_PROPERTY(QStringList, hiddenApps)
-    CONFIG_GLOBAL_PROPERTY(QStringList, favouriteEmojis)
-    CONFIG_GLOBAL_PROPERTY(QStringList, favouriteClips)
+    CONFIG_GLOBAL_PROPERTY(QStringList, hiddenApps, QStringList())
+    CONFIG_GLOBAL_PROPERTY(QStringList, favouriteEmojis, QStringList())
+    CONFIG_GLOBAL_PROPERTY(QStringList, favouriteClips, QStringList())
     CONFIG_SUBOBJECT(LauncherUseFuzzy, useFuzzy)
     CONFIG_GLOBAL_PROPERTY(QVariantList, actions,
-        {
+        DEFAULT_ARG({
             vmap({
                 { u"name"_s, u"Calculator"_s },
                 { u"icon"_s, u"calculate"_s },
@@ -161,7 +161,7 @@ class LauncherConfig : public settings::ObjectNode {
                 { u"description"_s, u"Switch your animation style"_s },
                 { u"command"_s, QStringList{ u"autocomplete"_s, u"animations"_s } },
             }),
-        })
+        }))
 
 };
 

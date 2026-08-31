@@ -121,7 +121,7 @@ const AnimTokens* Tokens::anim() const {
 }
 
 TokensRoot* Tokens::forScreen(const QString& screen) {
-    return TokensSingleton::forScreen(screen);
+    return TokensSingleton::instance()->forScreen(screen);
 }
 
 Tokens* Tokens::qmlAttachedProperties(QObject* object) {

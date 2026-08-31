@@ -1,6 +1,6 @@
 #pragma once
 
-#include "settings/objectnode.hpp"
+#include "../Settings/objectnode.hpp"
 #include "common.hpp"
 
 #include <qfont.h>
@@ -30,7 +30,7 @@ class AppearanceRounding : public settings::ObjectNode {
     Q_PROPERTY(int extraExtraLarge READ extraExtraLarge NOTIFY valuesChanged)
     Q_PROPERTY(int full READ full NOTIFY valuesChanged)
 
-
+public:
     void bindTokens(RoundingTokens* tokens);
 
     [[nodiscard]] int extraSmall() const;
@@ -64,7 +64,7 @@ class AppearanceSpacing : public settings::ObjectNode {
     Q_PROPERTY(int extraLargeIncreased READ extraLargeIncreased NOTIFY valuesChanged)
     Q_PROPERTY(int extraExtraLarge READ extraExtraLarge NOTIFY valuesChanged)
 
-
+public:
     void bindTokens(SpacingTokens* tokens);
 
     [[nodiscard]] int extraSmall() const;
@@ -97,7 +97,7 @@ class AppearancePadding : public settings::ObjectNode {
     Q_PROPERTY(int extraLargeIncreased READ extraLargeIncreased NOTIFY valuesChanged)
     Q_PROPERTY(int extraExtraLarge READ extraExtraLarge NOTIFY valuesChanged)
 
-
+public:
     void bindTokens(PaddingTokens* tokens);
 
     [[nodiscard]] int extraSmall() const;
@@ -126,7 +126,7 @@ class FontConfig : public settings::ObjectNode {
     CONFIG_PROPERTY(bool, italic, false)
     CONFIG_PROPERTY(QVariantMap, vaxes, {})
 
-
+public:
     void setDefaults(int size, int weight = QFont::Normal, const QVariantMap& vaxes = {});
 };
 
@@ -138,7 +138,7 @@ class FontStyleConfig : public settings::ObjectNode {
     CONFIG_SUBOBJECT(FontConfig, medium)
     CONFIG_SUBOBJECT(FontConfig, small)
 
-
+public:
     void setDefaultFamily(const QString& family);
 };
 
@@ -162,6 +162,7 @@ class AppearanceFont : public settings::ObjectNode {
     // Google Sans Flex doesn't play well with unicode symbols apparently, so use Rubik instead
     CONFIG_PROPERTY(QString, workspaces, QStringLiteral("Rubik"))
 
+public:
     void bindFont();
 };
 
@@ -181,7 +182,7 @@ class AnimDurations : public settings::ObjectNode {
     Q_PROPERTY(int expressiveDefaultEffects READ expressiveDefaultEffects NOTIFY valuesChanged)
     Q_PROPERTY(int expressiveSlowEffects READ expressiveSlowEffects NOTIFY valuesChanged)
 
-
+public:
     void bindTokens(AnimDurationTokens* tokens);
 
     [[nodiscard]] int small() const;

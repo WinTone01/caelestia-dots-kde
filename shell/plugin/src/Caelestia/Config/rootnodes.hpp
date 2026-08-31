@@ -3,8 +3,8 @@
 #include <qjsengine.h>
 #include <qqmlengine.h>
 
-#include "settings/layerregistry.hpp"
-#include "settings/rootnode.hpp"
+#include "../Settings/layerregistry.hpp"
+#include "../Settings/rootnode.hpp"
 #include "appearanceconfig.hpp"
 #include "aiconfig.hpp"
 #include "audioconfig.hpp"
