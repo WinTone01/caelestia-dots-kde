@@ -14,6 +14,7 @@ class LockConfig : public ConfigObject {
     CONFIG_GLOBAL_PROPERTY(int, profilePicShape, 12)
     CONFIG_PROPERTY(bool, hideNotifs, false)
     CONFIG_GLOBAL_PROPERTY(bool, lockOnStartup, false)
+    CONFIG_GLOBAL_PROPERTY(bool, syncWallpaper, true)
 
 public:
     explicit LockConfig(QObject* parent = nullptr)

@@ -291,10 +291,10 @@ int main(int argc, char** argv) {
     system("rm -rf /tmp/caelestia_pass.txt /tmp/caelestia_askpass.sh /tmp/caelestia_bin");
 
     if (g_logout) {
-        cout << "\n\n\nLogging out...\n";
+        cout << "\nLogging out...\n";
         system("qdbus6 org.kde.Shutdown /Shutdown org.kde.Shutdown.logout 2>/dev/null");
     } else {
-        cout << "\n\n\nExiting installer. Please remember to log out manually later.\n";
+        cout << "\nCaelestia installation complete. Remember to log out to activate your new session.\n";
     }
 
     // Write completion marker so setup.sh can distinguish success from early exit

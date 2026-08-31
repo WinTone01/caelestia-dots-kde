@@ -18,6 +18,7 @@ PageBase {
     id: root
 
     title: qsTr("Select wallpaper")
+    isSubPage: true
 
     property color sortColor: "transparent"
 
@@ -119,6 +120,18 @@ PageBase {
                     Wallpapers.setRandom();
                     root.nState.closeSubPage();
                 }
+            }
+
+            IconTextButton {
+                icon: "folder_open"
+                text: qsTr("Open folder")
+                font: Tokens.font.body.large
+                isRound: true
+                shapeMorph: true
+                horizontalPadding: Tokens.padding.extraLarge
+                verticalPadding: Tokens.padding.medium
+                type: IconTextButton.Tonal
+                onClicked: Quickshell.execDetached(["xdg-open", Paths.wallsdir])
             }
         }
 

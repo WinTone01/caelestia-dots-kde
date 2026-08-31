@@ -120,8 +120,8 @@ else
     fi
 fi
 
-#  darkly (plasma theme) 
-# (darkly is installed via illogical-impulse-fonts-themes in installDP.sh or feddeps.toml)
+#  darkly (plasma theme)
+# (installed by the installDP.sh scripts as a prebuilt package, COPR, or AUR)
 
 # Update plasma configuration for default look/feel if needed
     kwriteconfig6 --file plasmarc --group "Theme" --key "name" "Darkly" 2>/dev/null || true

@@ -24,9 +24,9 @@ echo ""
 echo "  caelestia KDE  Live System Tweaks"
 echo ""
 
-# 
+#
 # TWEAK: Disable KDE OSD popups (volume, brightness notifications)
-# 
+#
 tweak_disable_kde_osd() {
     info "Disabling KDE OSD popups (volume/brightness)..."
 
@@ -62,9 +62,9 @@ EOF
     ok "KDE OSD popups disabled."
 }
 
-# 
+#
 # TWEAK: Create 5 virtual desktops
-# 
+#
 tweak_five_desktops() {
     info "Configuring 5 virtual desktops..."
 
@@ -77,9 +77,79 @@ tweak_five_desktops() {
     ok "5 virtual desktops configured."
 }
 
-# 
+#
+# TWEAK: Remove KDE panels so the Caelestia bar and dock take over
+#
+tweak_remove_panels() {
+    info "Removing KDE Plasma panels..."
+
+    # Remove live panels first (persisted by plasmashell when it is running).
+    qdbus6 org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript \
+        "var p = panels(); for (var i = 0; i < p.length; i++) { p[i].remove(); }" \
+        2>/dev/null || true
+
+    # Then scrub the config so headless installs are covered too. konsave
+    # (00-backup-themes.sh) already backs up desktop-appletsrc; a .bak copy is
+    # kept next to the file as belt and braces.
+    python3 - <<'EOF' || warn "Failed to remove KDE panels from config."
+import os
+import re
+import shutil
+
+path = os.path.expanduser("~/.config/plasma-org.kde.plasma.desktop-appletsrc")
+if not os.path.exists(path):
+    raise SystemExit(0)
+
+lines = open(path, "r", encoding="utf-8").read().splitlines()
+
+panel_ids = set()
+current = None
+for line in lines:
+    s = line.strip()
+    m = re.match(r"^\[Containments\]\[(\d+)\]$", s)
+    if m:
+        current = m.group(1)
+    elif s.startswith("[Containments][") and not re.match(r"^\[Containments\]\[\d+\]$", s):
+        continue
+    elif s.startswith("[") and s.endswith("]"):
+        current = None
+    elif current is not None and re.match(r"^(formfactor\s*=\s*[23]|plugin\s*=\s*org\.kde\.plasma\.panel)\s*$", s, re.IGNORECASE):
+        panel_ids.add(current)
+
+if not panel_ids:
+    raise SystemExit(0)
+
+bak = path + ".caelestia.bak"
+if not os.path.exists(bak):
+    shutil.copy2(path, bak)
+
+out = []
+skip = False
+for line in lines:
+    s = line.strip()
+    m = re.match(r"^\[Containments\]\[(\d+)\]$", s)
+    if m:
+        skip = m.group(1) in panel_ids
+        if skip:
+            continue
+    elif s.startswith("[Containments][") and not m:
+        pass
+    elif s.startswith("[") and s.endswith("]"):
+        skip = False
+    if skip:
+        continue
+    out.append(line)
+
+open(path, "w", encoding="utf-8").write("\n".join(out) + "\n")
+print(f"Removed {len(panel_ids)} KDE panel(s)")
+EOF
+
+    ok "KDE panels removed."
+}
+
+#
 # TWEAK: Reload KWin and KGlobalAccel to pick up config changes
-# 
+#
 tweak_reload_kde() {
     info "Reloading KWin and plasma-kglobalaccel..."
     qdbus6 org.kde.KWin /KWin reconfigure 2>/dev/null || true
@@ -87,45 +157,54 @@ tweak_reload_kde() {
     ok "KDE daemons reloaded."
 }
 
-# 
+#
 # TWEAK: Set default Caelestia shell scheme
-# 
+#
 tweak_default_scheme() {
     info "Setting default Caelestia color scheme..."
     if command -v caelestia >/dev/null 2>&1; then
+        # Dynamic derives colours from the wallpaper the CLI was last told about
+        # (caelestia wallpaper). 04-deploy-kde.sh writes path.txt directly without
+        # seeding the CLI, so seed it here first, then switch to dynamic - otherwise
+        # `scheme set -n dynamic` fails silently and the default stays mocha.
+        STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/caelestia"
+        WALLPAPER="$(cat "$STATE_DIR/wallpaper/path.txt" 2>/dev/null || true)"
+        if [[ -n "$WALLPAPER" && -f "$WALLPAPER" ]]; then
+            timeout 10s caelestia wallpaper -f "$WALLPAPER" >/dev/null 2>&1 || true
+        fi
         timeout 10s caelestia scheme set -n dynamic >/dev/null 2>&1 || true
     fi
     ok "Default Caelestia color scheme set."
 }
 
 
-# 
+#
 # TWEAK: Set default shell to Fish
-# 
+#
 tweak_default_shell() {
     local target_shell="${DEFAULT_SHELL:-fish}"
     info "Setting default shell to $target_shell..."
-    
+
     if command -v "$target_shell" >/dev/null 2>&1; then
         local shell_path
         shell_path="$(command -v "$target_shell")"
-        
+
         # Compare with current login shell
         local current_shell
         current_shell="$(getent passwd "$USER" | cut -d: -f7)"
         if [[ -z "$current_shell" ]]; then
             current_shell="$SHELL"
         fi
-        
+
         if [[ "$current_shell" == "$shell_path" ]]; then
             info "Shell is already set to $shell_path. Skipping chsh."
         else
             caelestia_sudo_quiet chsh -s "$shell_path" "$USER" 2>/dev/null || warn "Failed to change shell for $USER without prompting. You may need to run 'sudo chsh -s $shell_path $USER' manually."
         fi
-        
+
         local konsole_profile_dir="$HOME/.local/share/konsole"
         mkdir -p "$konsole_profile_dir"
-        
+
         # Inject target shell into all existing Konsole profiles
         local profiles_found=0
         for profile in "$konsole_profile_dir"/*.profile; do
@@ -134,7 +213,7 @@ tweak_default_shell() {
                 profiles_found=1
             fi
         done
-        
+
         # If no profiles existed, create the standard fallback one so the shell works
         if [[ $profiles_found -eq 0 ]]; then
             kwriteconfig6 --file "$konsole_profile_dir/Profile 1.profile" --group "General" --key "Name" "Profile 1"
@@ -148,15 +227,15 @@ tweak_default_shell() {
     ok "Shell configuration applied."
 }
 
-# 
+#
 # TWEAK: Patch caelestia-cli to prevent terminal sequence bleeding
-# 
+#
 tweak_patch_caelestia_cli() {
     info "Patching caelestia CLI to fix terminal sequence bleeding..."
-    
+
     local theme_file
     theme_file=$(python3 -c "import importlib.util; spec = importlib.util.find_spec('caelestia.utils.theme'); print(spec.origin) if spec and spec.origin else print('')" 2>/dev/null)
-    
+
     if [[ -n "$theme_file" && -f "$theme_file" ]]; then
         local python_code="
 import sys, pathlib, subprocess, re
@@ -192,16 +271,16 @@ if old in text:
     fi
 }
 
-# 
-#  ADD NEW TWEAKS ABOVE THIS LINE 
+#
+#  ADD NEW TWEAKS ABOVE THIS LINE
 # To add a new tweak:
 #   1. Define a function: tweak_<name>() { ... }
 #   2. Call it in the main() section below
-# 
+#
 
-# 
+#
 # Main  apply all tweaks in order
-# 
+#
 if [[ "${1:-}" == "--list" ]]; then
     echo
     echo "Available tweaks:"
@@ -212,6 +291,7 @@ fi
 
 tweak_disable_kde_osd
 tweak_five_desktops
+tweak_remove_panels
 tweak_default_shell
 tweak_default_scheme
 tweak_patch_caelestia_cli

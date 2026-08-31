@@ -15,8 +15,30 @@ import qs.modules.nexus.common
 PageBase {
     id: root
 
+    property var fonts: [
+        { label: qsTr("San Francisco Pro"), family: "SF Pro", mono: false },
+        { label: qsTr("Google Sans Flex"), family: "GoogleSansFlex", mono: false },
+    ]
+
+    property var monoFonts: [
+        { label: qsTr("SF Mono"), family: "SF Mono", mono: true },
+        { label: qsTr("CaskaydiaCove NF"), family: "CaskaydiaCove NF", mono: true },
+    ]
+
+    function applyFont(family: string): void {
+        GlobalConfig.appearance.font.headline.family = family;
+        GlobalConfig.appearance.font.title.family = family;
+        GlobalConfig.appearance.font.body.family = family;
+        GlobalConfig.appearance.font.label.family = family;
+    }
+
+    function applyMonoFont(family: string): void {
+        GlobalConfig.appearance.font.mono.family = family;
+    }
+
     isSubPage: true
     title: qsTr("Theme & Effects")
+
     headerActions: [
         IconTextButton {
             text: qsTr("Restart Shell")
@@ -48,8 +70,32 @@ PageBase {
             Layout.fillWidth: true
             Layout.preferredHeight: Tokens.padding.large
         }
+
+        SectionHeader {
+            first: true
+            text: qsTr("Font")
+        }
+
+        Repeater {
+            model: root.fonts
+
+            FontCard {}
+        }
+
+        SectionHeader {
+            text: qsTr("Monospace font")
+        }
+
+        Repeater {
+            model: root.monoFonts
+
+            FontCard {}
+        }
+
         ColumnLayout {
-            property bool isBbdxEnabled: (bbdxCheck.stdout || "").trim() === "true"
+            id: bbdxContainer
+
+            property bool isBbdxEnabled: false
 
             spacing: 0
 
@@ -77,6 +123,16 @@ PageBase {
                 to: 50
                 stepSize: 1
                 onMoved: v => GlobalConfig.border.thickness = v
+                Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
+            }
+            StepperRow {
+                label: qsTr("Corner radius scale")
+                subtext: qsTr("Multiplies the shell's corner rounding")
+                value: GlobalConfig.appearance.rounding.scale
+                from: 0.5
+                to: 2.0
+                stepSize: 0.1
+                onMoved: v => GlobalConfig.appearance.rounding.scale = v
                 Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
             }
             ToggleRow {
@@ -114,6 +170,9 @@ PageBase {
 
                 command: ["bash", "-c", "kreadconfig6 --file kwinrc --group Plugins --key better_blur_dxEnabled"]
                 running: true
+                stdout: StdioCollector {
+                    onStreamFinished: bbdxContainer.isBbdxEnabled = text.trim() === "true"
+                }
             }
             Process {
                 id: bbdxFixProcess
@@ -206,6 +265,143 @@ PageBase {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
             }
             Layout.fillWidth: true
+        }
+
+        SectionHeader {
+            text: qsTr("Scaling")
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 0
+
+            StepperRow {
+                first: true
+                Layout.fillWidth: true
+                label: qsTr("Font scale")
+                value: GlobalConfig.appearance.font.scale
+                from: 0.5
+                to: 2
+                stepSize: 0.05
+                onMoved: v => GlobalConfig.appearance.font.scale = v
+            }
+
+            StepperRow {
+                Layout.fillWidth: true
+                label: qsTr("Spacing scale")
+                value: GlobalConfig.appearance.spacing.scale
+                from: 0.5
+                to: 2
+                stepSize: 0.05
+                onMoved: v => GlobalConfig.appearance.spacing.scale = v
+            }
+
+            StepperRow {
+                Layout.fillWidth: true
+                label: qsTr("Padding scale")
+                value: GlobalConfig.appearance.padding.scale
+                from: 0.5
+                to: 2
+                stepSize: 0.05
+                onMoved: v => GlobalConfig.appearance.padding.scale = v
+            }
+
+            StepperRow {
+                last: true
+                Layout.fillWidth: true
+                label: qsTr("Animation speed scale")
+                value: GlobalConfig.appearance.anim.durations.scale
+                from: 0.25
+                to: 4
+                stepSize: 0.05
+                onMoved: v => GlobalConfig.appearance.anim.durations.scale = v
+            }
+        }
+
+        SectionHeader {
+            text: qsTr("Corners & effects")
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 0
+
+            StepperRow {
+                first: true
+                Layout.fillWidth: true
+                label: qsTr("Border rounding")
+                value: GlobalConfig.border.rounding
+                from: 0
+                to: 100
+                stepSize: 1
+                onMoved: v => GlobalConfig.border.rounding = v
+            }
+
+            StepperRow {
+                Layout.fillWidth: true
+                label: qsTr("Border smoothing")
+                value: GlobalConfig.border.smoothing
+                from: 0
+                to: 100
+                stepSize: 1
+                onMoved: v => GlobalConfig.border.smoothing = v
+            }
+
+            StepperRow {
+                last: true
+                Layout.fillWidth: true
+                label: qsTr("Blur deform")
+                value: GlobalConfig.appearance.deformScale
+                from: 0
+                to: 1.5
+                stepSize: 0.05
+                onMoved: v => GlobalConfig.appearance.deformScale = v
+            }
+        }
+    }
+
+    component FontCard: StyledRect {
+        id: fontCard
+
+        required property var modelData
+
+        readonly property bool selected: modelData.mono
+            ? GlobalConfig.appearance.font.mono.family === modelData.family
+            : GlobalConfig.appearance.font.body.family === modelData.family
+
+        Layout.fillWidth: true
+        implicitHeight: fontRow.implicitHeight + Tokens.padding.large * 2
+        radius: Tokens.rounding.large
+        color: selected ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainer
+        border.width: selected ? 2 : 1
+        border.color: selected ? Colours.palette.m3secondary : Colours.palette.m3surfaceVariant
+
+        StateLayer {
+            radius: parent.radius
+            onClicked: fontCard.modelData.mono ? root.applyMonoFont(fontCard.modelData.family) : root.applyFont(fontCard.modelData.family)
+        }
+
+        RowLayout {
+            id: fontRow
+
+            anchors.fill: parent
+            anchors.margins: Tokens.padding.large
+            spacing: Tokens.spacing.large
+
+            StyledText {
+                Layout.fillWidth: true
+                text: fontCard.modelData.label
+                font: Tokens.font.body.medium
+                color: fontCard.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+            }
+
+            MaterialIcon {
+                Layout.alignment: Qt.AlignVCenter
+                visible: fontCard.selected
+                text: "check"
+                color: Colours.palette.m3onSecondaryContainer
+                fontStyle: Tokens.font.icon.large
+            }
         }
     }
 }

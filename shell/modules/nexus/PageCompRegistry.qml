@@ -58,6 +58,9 @@ QtObject {
                 Component {
                     KMYCSettings {}
                 }
+                Component {
+                    LockScreenPage {}
+                }
             }
         },
         Component {
@@ -226,6 +229,14 @@ QtObject {
             StackPage {
                 Component {
                     PowerPage {}
+                }
+            }
+        },
+        Component {
+            // Session
+            StackPage {
+                Component {
+                    SessionPage {}
                 }
             }
         },

@@ -114,7 +114,7 @@ The project enables ccache in both `installer/CMakeLists.txt` and `shell/CMakeLi
 | `quickshell-git` | `errornointernet/quickshell` | COPR may be out of date |
 | `gpu-screen-recorder` | `brycensranch/gpu-screen-recorder-git` | May need `ffmpeg` from RPM Fusion |
 | `app2unit` | `celestelove/app2unit` | Falls back to `make install` |
-| `libcava` | `celestelove/libcava` | Falls back to manual build from GitHub |
+| `libcava` | `celestelove/libcava` | Package-manager only; no source build |
 | `starship` | `atim/starship` | Stable, rarely fails |
 | `wl-clip-persist` | `leloubil/wl-clip-persist` | Needed for clipboard persistence |
 
@@ -289,7 +289,7 @@ The lock screen renders via a nested Wayland compositor using **software composi
 |---|---|
 | Plasma style unchanged | `APPLY_DARKLY` was set to `false` in the configuration menu |
 | Window decorations missing | The installer tries `org.kde.darkly` library, falls back silently to `org.kde.breeze` |
-| `lookandfeeltool --apply "Darkly"` failed | The `darkly` package may not be installed (AUR/COPR only) |
+| `lookandfeeltool --apply "Darkly"` failed | The `darkly` package may not be installed (AUR/COPR/prebuilt packages) |
 
 **Manual apply:**
 ```bash

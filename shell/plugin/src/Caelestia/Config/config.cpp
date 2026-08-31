@@ -16,7 +16,6 @@
 #include "overviewconfig.hpp"
 #include "serviceconfig.hpp"
 #include "sessionconfig.hpp"
-#include "shimejiconfig.hpp"
 #include "sidebarconfig.hpp"
 #include "tokens.hpp"
 #include "userpaths.hpp"
@@ -52,7 +51,6 @@ GlobalConfig::GlobalConfig(QObject* parent)
     , m_osd(new OsdConfig(this))
     , m_overview(new OverviewConfig(this))
     , m_services(new ServiceConfig(this))
-    , m_shimeji(new ShimejiConfig(this))
     , m_session(new SessionConfig(this))
     , m_sidebar(new SidebarConfig(this))
     , m_utilities(new UtilitiesConfig(this))
@@ -78,7 +76,6 @@ GlobalConfig::GlobalConfig(GlobalConfig* fallback, const QString& filePath, cons
     , m_osd(new OsdConfig(this))
     , m_overview(new OverviewConfig(this))
     , m_services(new ServiceConfig(this))
-    , m_shimeji(new ShimejiConfig(this))
     , m_session(new SessionConfig(this))
     , m_sidebar(new SidebarConfig(this))
     , m_utilities(new UtilitiesConfig(this))

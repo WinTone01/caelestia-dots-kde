@@ -52,7 +52,7 @@ Item {
         fetchProc.running = true;
     }
 
-    function installPlugin(id, repoPath, branch) {
+    function installPlugin(id, repoPath, branch, type) {
         if (!id) return;
 
         let installBranch = branch || "main";
@@ -81,6 +81,7 @@ echo "DONE"`;
 
         installProc.pendingId = id;
         installProc.pendingTargetDir = targetDir;
+        installProc.pendingType = type || "quickshell";
         installProc.command = ["bash", "-c", script];
         installProc.running = true;
     }
@@ -88,6 +89,17 @@ echo "DONE"`;
     function removePlugin(id) {
         let targetDir = (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/caelestia/plugins/" + id;
         removeProc.pendingId = id;
+        // Determine whether this type actually requires a restart before it's
+        // removed from the available list.
+        let type = "quickshell";
+        for (let i = 0; i < CaelestiaApi.plugins.available.count; i++) {
+            let p = CaelestiaApi.plugins.available.get(i);
+            if ((p.id || p.name) === id) {
+                type = p.type || "quickshell";
+                break;
+            }
+        }
+        removeProc.pendingType = type;
         removeProc.command = ["rm", "-rf", targetDir];
         removeProc.running = true;
     }
@@ -154,6 +166,7 @@ echo "DONE"`;
 
         property string pendingId: ""
         property string pendingTargetDir: ""
+        property string pendingType: "quickshell"
 
         stdout: StdioCollector { id: installOut }
         stderr: StdioCollector { id: installErr }
@@ -164,7 +177,8 @@ echo "DONE"`;
                 console.log("PluginStore: install error for", installProc.pendingId, ":", installErr.text, installOut.text);
             } else {
                 console.log("PluginStore: install success for", installProc.pendingId);
-                storeRoot.restartRequired = true;
+                if (installProc.pendingType !== "quickshell")
+                    storeRoot.restartRequired = true;
                 // Track as installed for UI prediction (predicted post-restart state)
                 let ids = storeRoot.installedPluginIds.slice();
                 if (ids.indexOf(installProc.pendingId) === -1)
@@ -183,9 +197,11 @@ echo "DONE"`;
         id: removeProc
 
         property string pendingId: ""
+        property string pendingType: "quickshell"
 
         onExited: (code) => {
-            storeRoot.restartRequired = true;
+            if (removeProc.pendingType !== "quickshell")
+                storeRoot.restartRequired = true;
             // Remove from predicted installed set
             let ids = storeRoot.installedPluginIds.slice();
             let idx = ids.indexOf(removeProc.pendingId);

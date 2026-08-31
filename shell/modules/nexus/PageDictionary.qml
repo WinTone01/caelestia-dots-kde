@@ -14,11 +14,10 @@ QtObject {
             category: "personalization",
             settings: [
                 { label: qsTr("Theme & Effects"), pagePath: "wallandstyle/AppearancePage.qml", subPageIdx: 8 },
-                { label: qsTr("Accent Colors"), pagePath: "wallandstyle/ColourSelect.qml", subPageIdx: 3 },
+                { label: qsTr("Colors"), keywords: ["accent", "palette", "scheme", "theme", "color"], pagePath: "wallandstyle/ColourSelect.qml", subPageIdx: 3 },
                 { label: qsTr("Blur & Opacity"), pagePath: "wallandstyle/AppearancePage.qml", subPageIdx: 8 },
-                { label: qsTr("Corner Radius"), pagePath: "wallandstyle/AppearancePage.qml", subPageIdx: 8 },
-                { label: qsTr("Wallpapers"), pagePath: "wallandstyle/WallpaperSelect.qml", subPageIdx: 1 },
-                { label: qsTr("Animations"), pagePath: "wallandstyle/AppearancePage.qml", subPageIdx: 8 }
+                { label: qsTr("Corner Radius"), keywords: ["rounding", "radius"], pagePath: "wallandstyle/AppearancePage.qml", subPageIdx: 8 },
+                { label: qsTr("Wallpapers"), pagePath: "wallandstyle/WallpaperSelect.qml", subPageIdx: 1 }
             ]
         },
         {
@@ -124,6 +123,18 @@ QtObject {
                 { label: qsTr("Battery Status"), keywords: ["percentage", "charging", "health"] },
                 { label: qsTr("Power Saving"), keywords: ["suspend", "sleep", "idle"] },
                 { label: qsTr("Screen Timeout"), keywords: ["dim", "turn off screen"] }
+            ]
+        },
+        {
+            label: qsTr("Session"),
+            key: "session",
+            icon: "power_settings_new",
+            description: qsTr("Shutdown, logout, and reboot menu"),
+            category: "controls",
+            settings: [
+                { label: qsTr("Session Menu"), keywords: ["power", "shutdown", "logout", "reboot", "hibernate"] },
+                { label: qsTr("Session Icons"), keywords: ["icon", "logout", "shutdown"] },
+                { label: qsTr("Session Commands"), keywords: ["command", "logout", "shutdown"] }
             ]
         },
         {

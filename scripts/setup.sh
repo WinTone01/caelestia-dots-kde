@@ -346,9 +346,6 @@ elif [[ $_reached_done -eq 0 ]]; then
     else
         _diag_title="INSTALLER EXITED UNEXPECTEDLY (no completion marker)"
     fi
-elif [[ -s /tmp/caelestia_installer_err.log ]]; then
-    _show_diagnostic=1
-    _diag_title="INSTALLER COMPLETED (stderr output captured below)"
 fi
 
 if [[ $_show_diagnostic -eq 1 ]]; then

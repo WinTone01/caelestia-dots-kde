@@ -149,7 +149,7 @@ class FontStyleConfig : public ConfigObject {
     Q_OBJECT
     QML_ANONYMOUS
 
-    CONFIG_PROPERTY(QString, family, QStringLiteral("GoogleSansFlex"))
+    CONFIG_PROPERTY(QString, family, QStringLiteral("SF Pro"))
     CONFIG_SUBOBJECT(FontConfig, large)
     CONFIG_SUBOBJECT(FontConfig, medium)
     CONFIG_SUBOBJECT(FontConfig, small)
@@ -200,8 +200,8 @@ public:
         , m_label(new FontStyleConfig(this))
         , m_mono(new FontStyleConfig(this))
         , m_icon(new IconFontStyleConfig(this)) {
-        const auto sans = QStringLiteral("GoogleSansFlex");
-        const auto mono = QStringLiteral("CaskaydiaCove NF");
+        const auto sans = QStringLiteral("SF Pro");
+        const auto mono = QStringLiteral("SF Mono");
         const auto icons = QStringLiteral("Material Symbols Rounded");
         const QVariantMap vaxes = { { "ROND", 25 } };
 

@@ -22,7 +22,6 @@ class OsdConfig;
 class OverviewConfig;
 class ServiceConfig;
 class SessionConfig;
-class ShimejiConfig;
 class SidebarConfig;
 class UserPaths;
 class UtilitiesConfig;
@@ -48,7 +47,6 @@ class GlobalConfig : public RootConfig {
     Q_MOC_INCLUDE("overviewconfig.hpp")
     Q_MOC_INCLUDE("serviceconfig.hpp")
     Q_MOC_INCLUDE("sessionconfig.hpp")
-    Q_MOC_INCLUDE("shimejiconfig.hpp")
     Q_MOC_INCLUDE("sidebarconfig.hpp")
     Q_MOC_INCLUDE("userpaths.hpp")
     Q_MOC_INCLUDE("utilitiesconfig.hpp")
@@ -68,7 +66,6 @@ class GlobalConfig : public RootConfig {
     CONFIG_SUBOBJECT(OsdConfig, osd)
     CONFIG_SUBOBJECT(OverviewConfig, overview)
     CONFIG_SUBOBJECT(ServiceConfig, services)
-    CONFIG_SUBOBJECT(ShimejiConfig, shimeji)
     CONFIG_SUBOBJECT(SessionConfig, session)
     CONFIG_SUBOBJECT(SidebarConfig, sidebar)
     CONFIG_SUBOBJECT(UtilitiesConfig, utilities)

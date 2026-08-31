@@ -162,7 +162,8 @@ For detailed debug logs, enable Debug Mode in Nexus -> About -> Advanced, then r
 - [ladybug-me](https://github.com/ladybug-me) - KDE port lead & maintainer
 - [0xSolanaceae](https://github.com/0xSolanaceae) - maintainer
 - [dim-ghub](https://github.com/dim-ghub/caelestia-shell) - v2.0.0 features
-- [nlohmann](https://github.com/nlohmann/json) - JSON parser
+- [Bali10050](https://github.com/Bali10050/Darkly) - Darkly Qt
+- [wrymt](https://github.com/wrymt/darkly-gtk) - Darkly GTK
 - [Haidir](https://bitbucket.org/dirn-typo/yet-another-monochrome-icon-set) - icon set
 
 ## License

@@ -32,15 +32,24 @@ Item {
 
         let mainFile = meta.path + "/main.qml";
         let component = Qt.createComponent("file://" + mainFile);
-        if (component.status === Component.Ready) {
-            let obj = component.createObject(pluginLoader);
-            if (obj !== null) {
-                pluginInstances[id] = obj;
-            } else {
-                console.log("Plugin createObject failed: " + mainFile);
+
+        let finishLoad = () => {
+            if (component.status === Component.Ready) {
+                let obj = component.createObject(pluginLoader);
+                if (obj !== null) {
+                    pluginInstances[id] = obj;
+                } else {
+                    console.log("Plugin createObject failed: " + mainFile);
+                }
+            } else if (component.status === Component.Error) {
+                console.log("Plugin compile error: " + mainFile + "\n" + component.errorString());
             }
-        } else if (component.status === Component.Error) {
-            console.log("Plugin compile error: " + mainFile + "\n" + component.errorString());
+        };
+
+        if (component.status === Component.Loading) {
+            component.statusChanged.connect(finishLoad);
+        } else {
+            finishLoad();
         }
     }
 
@@ -190,6 +199,7 @@ Item {
     }
 
     function removePluginFromAvailable(id) {
+        unloadPlugin(id);
         for (let i = 0; i < CaelestiaApi.plugins.available.count; i++) {
             if (CaelestiaApi.plugins.available.get(i).id === id) {
                 CaelestiaApi.plugins.available.remove(i);
@@ -245,6 +255,7 @@ Item {
                     meta.enabled = (disabled.indexOf(meta.id) === -1 && disabled.indexOf(meta.name) === -1);
                     meta.settings = meta.settings || [];
                     meta.mediaurl = meta.mediaurl || "";
+                    meta.icon = meta.icon || "extension";
 
                     // Extract author information
                     meta.authorName = meta.author ? (meta.author.name || "") : "";
@@ -258,6 +269,9 @@ Item {
                     console.log("addPluginToAvailable: adding", meta.id, "to available list. mediaurl:", meta.mediaurl);
                     CaelestiaApi.plugins.available.append(meta);
                     pluginsReloaded();
+                    if (meta.enabled) {
+                        pluginLoader.loadPlugin(meta);
+                    }
                 } catch(e) {
                     console.log("addPluginToAvailable: error parsing metadata:", e);
                 }
