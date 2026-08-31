@@ -16,6 +16,8 @@ StyledRect {
 
     required property int index
     required property int activeWsId
+    /// Screen this overview belongs to; window icons are limited to it.
+    required property string screenName
     required property var occupied
     required property int groupOffset
     readonly property bool isWorkspace: true
@@ -134,7 +136,7 @@ StyledRect {
             } else {
                 if (typeof KWinWorkspaceState !== "undefined") {
                     const wId = KWinWorkspaceState.workspaces[root.ws - 1]?.id || root.ws.toString();
-                    KWinWorkspaceState.switchTo(wId);
+                    KWinWorkspaceState.switchTo(wId, root.screenName);
                 } else {
                     const isKWin = typeof KWinActiveWindowBridge !== "undefined" && KWinActiveWindowBridge.windowList;
                     if (isKWin) {
@@ -225,6 +227,10 @@ StyledRect {
                         const wins = KWinActiveWindowBridge.windowsForWorkspace(wsId, false);
                         for (let i = 0; i < wins.length; ++i) {
                             const w = wins[i];
+                            // windowsForWorkspace already filtered by workspace;
+                            // this strip only shows its own screen.
+                            if (w.output !== root.screenName)
+                                continue;
                             if (w["class"] !== "quickshell" && w["class"] !== "plasmashell") {
                                 windows.push(w);
                             }

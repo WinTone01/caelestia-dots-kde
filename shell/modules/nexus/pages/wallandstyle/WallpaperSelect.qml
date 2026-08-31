@@ -18,6 +18,7 @@ PageBase {
     id: root
 
     title: qsTr("Select wallpaper")
+    isSubPage: true
 
     property color sortColor: "transparent"
 
@@ -120,69 +121,17 @@ PageBase {
                     root.nState.closeSubPage();
                 }
             }
-        }
 
-        StyledText {
-            Layout.topMargin: Tokens.spacing.medium
-            text: qsTr("Featured wallpapers")
-            font: Tokens.font.title.small
-        }
-
-        GridLayout {
-            property list<var> featuredList: [
-                {
-                    path: "assets/wallpapers/Gravitation.png",
-                    name: "Gravitation",
-                    author: "PixelKhaos"
-                },
-                {
-                    path: "assets/wallpapers/CelestialTech.png",
-                    name: "CelestialTech",
-                    author: "DiM"
-                },
-                {
-                    path: "assets/wallpapers/Material-Nebula.png",
-                    name: "Material-Nebula",
-                    author: "DiM"
-                },
-                {
-                    path: "assets/wallpapers/Material-Wave.png",
-                    name: "Material-Wave",
-                    author: "Marv"
-                },
-                {
-                    path: "assets/wallpapers/Minimal-Paper.png",
-                    name: "Minimal-Paper",
-                    author: "Forger"
-                },
-                {
-                    path: "assets/wallpapers/silly-lestia.png",
-                    name: "silly-lestia",
-                    author: "DiM"
-                }
-            ]
-
-            Layout.fillWidth: true
-
-            columns: Config.nexus.wallpapersPerRow
-            rowSpacing: Tokens.spacing.medium
-            columnSpacing: Tokens.spacing.large
-
-            Repeater {
-                model: parent.featuredList
-
-                WallItem {
-                    required property var modelData
-
-                    imgHeight: Math.round(width * 0.3)
-                    radius: Tokens.rounding.extraLarge
-                    source: Quickshell.shellPath(modelData.path)
-                    text: modelData.name
-                    fillLabel: false
-                    onClicked: {
-                        Wallpapers.setWallpaper(Quickshell.shellPath(modelData.path));
-                    }
-                }
+            IconTextButton {
+                icon: "folder_open"
+                text: qsTr("Open folder")
+                font: Tokens.font.body.large
+                isRound: true
+                shapeMorph: true
+                horizontalPadding: Tokens.padding.extraLarge
+                verticalPadding: Tokens.padding.medium
+                type: IconTextButton.Tonal
+                onClicked: Quickshell.execDetached(["xdg-open", Paths.wallsdir])
             }
         }
 
@@ -476,6 +425,14 @@ PageBase {
                     // Empty placeholders for sizing
                     opacity: modelData ? 1 : 0
                     enabled: modelData
+
+                    isFolder: modelData && modelData.parentDir !== Paths.wallsdir
+                    folderCount: {
+                        if (!modelData || modelData.parentDir === Paths.wallsdir)
+                            return 0;
+                        const group = Wallpapers.grouped[Wallpapers.getCategoryFor(modelData)];
+                        return group ? group.length : 0;
+                    }
 
                     source: String(modelData?.path ?? "")
                     text: {

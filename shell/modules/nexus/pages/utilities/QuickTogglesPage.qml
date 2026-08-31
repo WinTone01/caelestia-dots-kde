@@ -16,7 +16,7 @@ PageBase {
     ]
     readonly property var toolToggles: [
         { id: "settings", label: qsTr("Settings") },
-        { id: "colorpicker", label: Strings.localizeEnglishSpelling(qsTr("Colour Picker")) },
+        { id: "colorpicker", label: qsTr("Color Picker") },
         { id: "wallpaper", label: qsTr("Wallpaper") },
         { id: "badapple", label: qsTr("Bad Apple") },
     ]

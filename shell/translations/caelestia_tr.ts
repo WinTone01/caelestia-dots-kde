@@ -103,6 +103,90 @@
     </message>
 </context>
 <context>
+    <name>AddNetworkPage</name>
+    <message>
+        <location filename="../modules/nexus/pages/network/AddNetworkPage.qml" line="+53"/>
+        <source>Add network</source>
+        <translation>Ağ ekle</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Enter the details below to manually connect to a network.</source>
+        <translation>Bir ağa elle bağlanmak için aşağıdaki bilgileri girin.</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Network name (SSID)</source>
+        <translation>Ağ adı (SSID)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>e.g. MyHiddenNetwork</source>
+        <translation>örn. GizliAgim</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Network name is required</source>
+        <translation>Ağ adı gerekli</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Hidden network</source>
+        <translation>Gizli ağ</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Actively probe for a network that doesn&apos;t broadcast its name</source>
+        <translation>Adını yayınlamayan bir ağı etkin olarak arar</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Security</source>
+        <translation>Güvenlik</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+6"/>
+        <source>WPA/WPA2/WPA3 Personal</source>
+        <translation>WPA/WPA2/WPA3 Kişisel</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>None (open)</source>
+        <translation>Yok (açık)</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>Password</source>
+        <translation>Parola</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>WPA passwords are at least 8 characters</source>
+        <translation>WPA parolaları en az 8 karakterdir</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Connection failed — check the password</source>
+        <translation>Bağlantı başarısız — parolayı denetleyin</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Password must be at least 8 characters</source>
+        <translation>Parola en az 8 karakter olmalı</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Cancel</source>
+        <translation>İptal</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Connect</source>
+        <translation>Bağlan</translation>
+    </message>
+</context>
+<context>
     <name>AddShortcutDialog</name>
     <message>
         <location filename="../modules/nexus/pages/wallandstyle/AddShortcutDialog.qml" line="+60"/>
@@ -136,11 +220,105 @@
     </message>
 </context>
 <context>
+    <name>AddVpnPage</name>
+    <message>
+        <location filename="../modules/nexus/pages/network/AddVpnPage.qml" line="+76"/>
+        <source>Edit VPN provider</source>
+        <translation>VPN sağlayıcısını düzenle</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Add VPN provider</source>
+        <translation>VPN sağlayıcısı ekle</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Built-in names (wireguard, warp, tailscale, netbird) auto-fill their commands. For others, provide the connect/disconnect commands.</source>
+        <translation>Yerleşik adlar (wireguard, warp, tailscale, netbird) komutlarını kendiliğinden doldurur. Diğerleri için bağlanma/kesme komutlarını girin.</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Provider name</source>
+        <translation>Sağlayıcı adı</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Built-in id or a custom name</source>
+        <translation>Yerleşik kimlik ya da özel bir ad</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Provider name is required</source>
+        <translation>Sağlayıcı adı gerekli</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Display name</source>
+        <translation>Görünen ad</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Shown in the list</source>
+        <translation>Listede gösterilir</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Interface</source>
+        <translation>Arayüz</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Network interface (for WireGuard / status checks)</source>
+        <translation>Ağ arayüzü (WireGuard / durum denetimleri için)</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Custom commands (optional)</source>
+        <translation>Özel komutlar (isteğe bağlı)</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Connect command</source>
+        <translation>Bağlanma komutu</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <location line="+12"/>
+        <source>Leave empty to use the built-in default</source>
+        <translation>Yerleşik varsayılanı kullanmak için boş bırakın</translation>
+    </message>
+    <message>
+        <location line="-2"/>
+        <source>Disconnect command</source>
+        <translation>Bağlantıyı kesme komutu</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>Delete</source>
+        <translation>Sil</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Cancel</source>
+        <translation>İptal</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Save</source>
+        <translation>Kaydet</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Add</source>
+        <translation>Ekle</translation>
+    </message>
+</context>
+<context>
     <name>AiAssistant</name>
     <message>
         <location filename="../modules/sidebar/AiAssistant.qml" line="+789"/>
         <location line="+1352"/>
-        <source>Rate limited — retrying in %1s…</source>
+        <source>Rate limited - retrying in %1s…</source>
         <translation>Hız sınırına takıldı — %1 sn içinde yeniden denenecek…</translation>
     </message>
     <message>
@@ -414,6 +592,39 @@
     </message>
 </context>
 <context>
+    <name>AllNetworksPage</name>
+    <message>
+        <location filename="../modules/nexus/pages/network/AllNetworksPage.qml" line="+14"/>
+        <source>All networks</source>
+        <translation>Tüm ağlar</translation>
+    </message>
+    <message>
+        <location line="+36"/>
+        <source>Filters</source>
+        <translation>Süzgeçler</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Saved</source>
+        <translation>Kayıtlı</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>Secured</source>
+        <translation>Korumalı</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>5 GHz</source>
+        <translation>5 GHz</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>2.4 GHz</source>
+        <translation>2,4 GHz</translation>
+    </message>
+</context>
+<context>
     <name>AnimationsList</name>
     <message>
         <location filename="../modules/launcher/AnimationsList.qml" line="+144"/>
@@ -439,17 +650,7 @@
         <translation>Başlatıcı</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <source>Favourite</source>
-        <translation>Sık kullanılan</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Matched by a regex in favouriteApps — edit the config file to change</source>
-        <translation>favouriteApps içindeki bir düzenli ifadeyle eşleşti — değiştirmek için yapılandırma dosyasını düzenleyin</translation>
-    </message>
-    <message>
-        <location line="+0"/>
+        <location line="+6"/>
         <source>Pin to the top of the launcher</source>
         <translation>Başlatıcının en üstüne sabitle</translation>
     </message>
@@ -459,14 +660,24 @@
         <translation>Gizli</translation>
     </message>
     <message>
+        <location line="-12"/>
+        <source>Favorite</source>
+        <translation>Sık kullanılan</translation>
+    </message>
+    <message>
         <location line="+1"/>
-        <source>Matched by a regex in hiddenApps — edit the config file to change</source>
-        <translation>hiddenApps içindeki bir düzenli ifadeyle eşleşti — değiştirmek için yapılandırma dosyasını düzenleyin</translation>
+        <source>Matched by a regex in favouriteApps - edit the config file to change</source>
+        <translation>favouriteApps içindeki bir düzenli ifadeyle eşleşti — değiştirmek için yapılandırma dosyasını düzenleyin</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Hide from the launcher</source>
+        <translation>Başlatıcıda gizle</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>Hide from the launcher</source>
-        <translation>Başlatıcıda gizle</translation>
+        <source>Matched by a regex in hiddenApps - edit the config file to change</source>
+        <translation>hiddenApps içindeki bir düzenli ifadeyle eşleşti — değiştirmek için yapılandırma dosyasını düzenleyin</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -514,16 +725,46 @@
     <name>AppearancePage</name>
     <message>
         <location filename="../modules/nexus/pages/wallandstyle/AppearancePage.qml" line="+19"/>
+        <source>San Francisco Pro</source>
+        <translation>San Francisco Pro</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Google Sans Flex</source>
+        <translation>Google Sans Flex</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>SF Mono</source>
+        <translation>SF Mono</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>CaskaydiaCove NF</source>
+        <translation>CaskaydiaCove NF</translation>
+    </message>
+    <message>
+        <location line="+15"/>
         <source>Theme &amp; Effects</source>
         <translation>Tema ve Efektler</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Restart Shell</source>
         <translation>Kabuğu Yeniden Başlat</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+32"/>
+        <source>Font</source>
+        <translation>Yazı tipi</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Monospace font</source>
+        <translation>Eş aralıklı yazı tipi</translation>
+    </message>
+    <message>
+        <location line="+18"/>
         <source>Bezel mode (Pitch black)</source>
         <translation>Çerçeve kipi (Zifiri siyah)</translation>
     </message>
@@ -554,6 +795,16 @@
     </message>
     <message>
         <location line="+9"/>
+        <source>Corner radius scale</source>
+        <translation>Köşe yarıçapı ölçeği</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Multiplies the shell&apos;s corner rounding</source>
+        <translation>Kabuğun köşe yuvarlatmasını çarpar</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>Transparency</source>
         <translation>Şeffaflık</translation>
     </message>
@@ -578,7 +829,7 @@
         <translation>Kabuğun yeniden başlatılmasını gerektirir</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+55"/>
         <source>Background Blur</source>
         <translation>Arka Plan Bulanıklığı</translation>
     </message>
@@ -611,6 +862,51 @@
         <location line="+1"/>
         <source>Increasing this can cause lags! Requires shell restart</source>
         <translation>Bunu artırmak takılmalara yol açabilir! Kabuğun yeniden başlatılmasını gerektirir</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Scaling</source>
+        <translation>Ölçekleme</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Font scale</source>
+        <translation>Yazı tipi ölçeği</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Spacing scale</source>
+        <translation>Boşluk ölçeği</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Padding scale</source>
+        <translation>İç boşluk ölçeği</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Animation speed scale</source>
+        <translation>Animasyon hızı ölçeği</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Corners &amp; effects</source>
+        <translation>Köşeler ve efektler</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Border rounding</source>
+        <translation>Kenarlık yuvarlatması</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Border smoothing</source>
+        <translation>Kenarlık yumuşatması</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Blur deform</source>
+        <translation>Bulanıklık deformasyonu</translation>
     </message>
 </context>
 <context>
@@ -667,7 +963,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Browse installed apps, set favourites and hidden</source>
+        <source>Browse installed apps, set favorites and hidden</source>
         <translation>Kurulu uygulamalara göz atın, sık kullanılanları ve gizlileri belirleyin</translation>
     </message>
     <message>
@@ -775,7 +1071,7 @@
     </message>
     <message>
         <location line="+106"/>
-        <source>Custom label (optional) — use {class}, {title}</source>
+        <source>Custom label (optional) - use {class}, {title}</source>
         <translation>Özel etiket (isteğe bağlı) — {class}, {title} kullanabilirsiniz</translation>
     </message>
     <message>
@@ -1269,12 +1565,12 @@
     </message>
     <message>
         <location line="+13"/>
-        <source>Recolour icons</source>
+        <source>Recolor icons</source>
         <translation>Simgeleri yeniden renklendir</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Recolour application icons using the system theme</source>
+        <source>Recolor application icons using the system theme</source>
         <translation>Uygulama simgelerini sistem temasına göre yeniden renklendirir</translation>
     </message>
 </context>
@@ -1473,12 +1769,12 @@
     </message>
     <message>
         <location line="+8"/>
-        <source>Caps lock</source>
+        <source>Caps Lock</source>
         <translation>Caps Lock</translation>
     </message>
     <message>
         <location line="+7"/>
-        <source>Behaviour</source>
+        <source>Behavior</source>
         <translation>Davranış</translation>
     </message>
     <message>
@@ -1506,7 +1802,7 @@
     </message>
     <message>
         <location line="+6"/>
-        <source>Recolour icons</source>
+        <source>Recolor icons</source>
         <translation>Simgeleri yeniden renklendir</translation>
     </message>
     <message>
@@ -2046,54 +2342,39 @@
 <context>
     <name>ColourSelect</name>
     <message>
-        <location filename="../modules/nexus/pages/wallandstyle/ColourSelect.qml" line="+17"/>
-        <source>Colours</source>
+        <location filename="../modules/nexus/pages/wallandstyle/ColourSelect.qml" line="+40"/>
+        <source>Colors</source>
         <translation>Renkler</translation>
     </message>
     <message>
-        <location line="+46"/>
-        <source>Advanced Material You Settings</source>
-        <translation>Gelişmiş Material You Ayarları</translation>
+        <location line="+84"/>
+        <source>Dynamic</source>
+        <translation>Dinamik</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <source>Configure advanced color engine settings and integrations</source>
-        <translation>Gelişmiş renk motoru ayarlarını ve tümleşimleri yapılandırın</translation>
+        <location line="+6"/>
+        <source>Colors that follow your wallpaper</source>
+        <translation>Duvar kâğıdınızı izleyen renkler</translation>
     </message>
     <message>
-        <location line="+16"/>
-        <source>Color Theme</source>
-        <translation>Renk Teması</translation>
-    </message>
-    <message>
-        <location line="+13"/>
+        <location line="+37"/>
         <source>Dark</source>
         <translation>Koyu</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Dark theme mode</source>
-        <translation>Koyu tema kipi</translation>
+        <location line="+53"/>
+        <source>Advanced color settings</source>
+        <translation>Gelişmiş renk ayarları</translation>
     </message>
     <message>
         <location line="+5"/>
+        <source>Material You engine, terminal and window decoration options</source>
+        <translation>Material You motoru, uçbirim ve pencere süsleme seçenekleri</translation>
+    </message>
+    <message>
+        <location line="-77"/>
         <source>Light</source>
         <translation>Açık</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Light theme mode</source>
-        <translation>Açık tema kipi</translation>
-    </message>
-    <message>
-        <location line="+68"/>
-        <source>Schemes</source>
-        <translation>Şemalar</translation>
-    </message>
-    <message>
-        <location line="+103"/>
-        <source>Variants</source>
-        <translation>Türevler</translation>
     </message>
 </context>
 <context>
@@ -2201,7 +2482,7 @@
         <translation>Uçbirim</translation>
     </message>
     <message>
-        <location filename="../modules/launcher/Content.qml" line="+43"/>
+        <location filename="../modules/launcher/Content.qml" line="+44"/>
         <source>Clipboard history cleared</source>
         <translation>Pano geçmişi temizlendi</translation>
     </message>
@@ -2211,7 +2492,7 @@
         <translation>Pano geçmişi temizlenemedi</translation>
     </message>
     <message>
-        <location line="+71"/>
+        <location line="+69"/>
         <source>Log Out</source>
         <translation>Oturumu Kapat</translation>
     </message>
@@ -2236,7 +2517,7 @@
         <translation>Komutlar için &quot;%1&quot; yazın</translation>
     </message>
     <message>
-        <location line="+204"/>
+        <location line="+226"/>
         <source>Clear clipboard history?</source>
         <translation>Pano geçmişi temizlensin mi?</translation>
     </message>
@@ -2647,16 +2928,31 @@
     </message>
     <message>
         <location line="+7"/>
-        <source>Recolour media GIF</source>
+        <source>Recolor media GIF</source>
         <translation>Ortam GIF&apos;ini yeniden renklendir</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Apply system theme colours to the media GIF</source>
+        <source>Apply system theme colors to the media GIF</source>
         <translation>Ortam GIF&apos;ine sistem tema renklerini uygular</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+15"/>
+        <source>Randomize shape colors</source>
+        <translation>Biçim renklerini rastgele seç</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Randomly shift shape colors while morphing</source>
+        <translation>Biçim değişirken renkleri rastgele kaydırır</translation>
+    </message>
+    <message>
+        <location line="+68"/>
+        <source>Behavior</source>
+        <translation>Davranış</translation>
+    </message>
+    <message>
+        <location line="-77"/>
         <source>Use material shapes</source>
         <translation>Materyal biçimlerini kullan</translation>
     </message>
@@ -2666,17 +2962,7 @@
         <translation>Ortam GIF&apos;ini sese tepki veren materyal biçimleriyle değiştirir</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>Randomize shape colours</source>
-        <translation>Biçim renklerini rastgele seç</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Randomly shift shape colours while morphing</source>
-        <translation>Biçim değişirken renkleri rastgele kaydırır</translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="+15"/>
         <source>Sync with music</source>
         <translation>Müzikle eşitle</translation>
     </message>
@@ -2731,12 +3017,7 @@
         <translation>Ağ</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>Behaviour</source>
-        <translation>Davranış</translation>
-    </message>
-    <message>
-        <location line="+5"/>
+        <location line="+12"/>
         <source>Hover trigger depth</source>
         <translation>Üzerine gelme tetikleyici derinliği</translation>
     </message>
@@ -2769,22 +3050,70 @@
 <context>
     <name>DesktopAddonsPage</name>
     <message>
-        <location filename="../modules/nexus/pages/wallandstyle/DesktopAddonsPage.qml" line="+16"/>
+        <location filename="../modules/nexus/pages/wallandstyle/DesktopAddonsPage.qml" line="+19"/>
+        <source>Top left</source>
+        <translation>Sol üst</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Top center</source>
+        <translation>Üst orta</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Top right</source>
+        <translation>Sağ üst</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <location line="+28"/>
+        <source>Center</source>
+        <translation>Orta</translation>
+    </message>
+    <message>
+        <location line="-23"/>
+        <source>Bottom left</source>
+        <translation>Sol alt</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Bottom center</source>
+        <translation>Alt orta</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Bottom right</source>
+        <translation>Sağ alt</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Left</source>
+        <translation>Sol</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Right</source>
+        <translation>Sağ</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Desktop Addons</source>
         <translation>Masaüstü Eklentileri</translation>
     </message>
     <message>
         <location line="+20"/>
+        <location line="+63"/>
         <source>Desktop clock</source>
         <translation>Masaüstü saati</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="-55"/>
+        <location line="+97"/>
         <source>Desktop lyrics</source>
         <translation>Masaüstü şarkı sözleri</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="-85"/>
         <source>Auto-hide lyrics</source>
         <translation>Şarkı sözlerini otomatik gizle</translation>
     </message>
@@ -2814,7 +3143,7 @@
         <translation>Bir pencere tam ekranken görselleştiriciyi gizler</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+10"/>
         <source>Hide on all monitors</source>
         <translation>Tüm ekranlarda gizle</translation>
     </message>
@@ -2824,9 +3153,47 @@
         <translation>Bir pencere tarafından kapatıldığında diğer tüm ekranlarda da gizler</translation>
     </message>
     <message>
+        <location line="+18"/>
+        <location line="+42"/>
+        <source>Scale</source>
+        <translation>Ölçek</translation>
+    </message>
+    <message>
+        <location line="-32"/>
+        <location line="+42"/>
+        <source>Position</source>
+        <translation>Konum</translation>
+    </message>
+    <message>
+        <location line="-27"/>
+        <location line="+56"/>
+        <source>Invert colors</source>
+        <translation>Renkleri ters çevir</translation>
+    </message>
+    <message>
+        <location line="-15"/>
+        <source>Alignment</source>
+        <translation>Hizalama</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Visualiser</source>
+        <translation>Görselleştirici</translation>
+    </message>
+    <message>
         <location line="+10"/>
-        <source>Shimeji characters</source>
-        <translation>Shimeji karakterleri</translation>
+        <source>Blur</source>
+        <translation>Bulanıklık</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Rounding</source>
+        <translation>Yuvarlatma</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Spacing</source>
+        <translation>Boşluk</translation>
     </message>
 </context>
 <context>
@@ -2949,8 +3316,8 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Clock, Lyrics, Visualiser, Shimeji</source>
-        <translation>Saat, Şarkı Sözleri, Görselleştirici, Shimeji</translation>
+        <source>Clock, Lyrics, Visualiser</source>
+        <translation>Saat, Şarkı Sözleri, Görselleştirici</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -3072,6 +3439,187 @@
         <location filename="../modules/launcher/items/EmojiItem.qml" line="+22"/>
         <source>Copied to clipboard</source>
         <translation>Panoya kopyalandı</translation>
+    </message>
+</context>
+<context>
+    <name>EthernetDetailPage</name>
+    <message>
+        <location filename="../modules/nexus/pages/network/EthernetDetailPage.qml" line="+98"/>
+        <source>Ethernet</source>
+        <translation>Ethernet</translation>
+    </message>
+    <message>
+        <location line="+56"/>
+        <source>Disconnect</source>
+        <translation>Bağlantıyı kes</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Connect</source>
+        <translation>Bağlan</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Connection</source>
+        <translation>Bağlantı</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Status</source>
+        <translation>Durum</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Connected</source>
+        <translation>Bağlı</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Not connected</source>
+        <translation>Bağlı değil</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Interface</source>
+        <translation>Arayüz</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+13"/>
+        <location line="+6"/>
+        <location line="+7"/>
+        <source>—</source>
+        <translation>—</translation>
+    </message>
+    <message>
+        <location line="-21"/>
+        <source>Speed</source>
+        <translation>Hız</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>IP address</source>
+        <translation>IP adresi</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+76"/>
+        <source>Gateway</source>
+        <translation>Ağ geçidi</translation>
+    </message>
+    <message>
+        <location line="-69"/>
+        <source>MAC address</source>
+        <translation>MAC adresi</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>IP assignment</source>
+        <translation>IP atama</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+11"/>
+        <source>Automatic (DHCP)</source>
+        <translation>Otomatik (DHCP)</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Automatic, DNS only</source>
+        <translation>Otomatik, yalnızca DNS</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Manual</source>
+        <translation>Elle</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Address (CIDR)</source>
+        <translation>Adres (CIDR)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>IP and prefix, e.g. 192.168.1.50/24</source>
+        <translation>IP ve ön ek, örn. 192.168.1.50/24</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Enter a valid address in CIDR notation</source>
+        <translation>CIDR gösteriminde geçerli bir adres girin</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Enter a valid gateway address</source>
+        <translation>Geçerli bir ağ geçidi adresi girin</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>DNS servers</source>
+        <translation>DNS sunucuları</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Comma-separated</source>
+        <translation>Virgülle ayrılmış</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Enter valid DNS server addresses</source>
+        <translation>Geçerli DNS sunucu adresleri girin</translation>
+    </message>
+    <message>
+        <location line="+55"/>
+        <source>Apply</source>
+        <translation>Uygula</translation>
+    </message>
+</context>
+<context>
+    <name>EthernetSection</name>
+    <message>
+        <location filename="../modules/nexus/common/EthernetSection.qml" line="+53"/>
+        <source>Ethernet</source>
+        <translation>Ethernet</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Connected</source>
+        <translation>Bağlı</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Not connected</source>
+        <translation>Bağlı değil</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Data usage: %1</source>
+        <translation>Veri kullanımı: %1</translation>
+    </message>
+    <message>
+        <location line="+72"/>
+        <source>Wired connection</source>
+        <translation>Kablolu bağlantı</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Not connected • %1</source>
+        <translation>Bağlı değil • %1</translation>
+    </message>
+    <message>
+        <location line="+44"/>
+        <source>Local IP Address</source>
+        <translation>Yerel IP Adresi</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Primary DNS</source>
+        <translation>Birincil DNS</translation>
     </message>
 </context>
 <context>
@@ -3230,11 +3778,6 @@
         <location line="+5"/>
         <source>Disable visualizer</source>
         <translation>Görselleştiriciyi kapat</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Disable shimeji pets</source>
-        <translation>Shimeji dostlarını kapat</translation>
     </message>
 </context>
 <context>
@@ -3431,7 +3974,7 @@
         <translation>Gelişmiş Renkler</translation>
     </message>
     <message>
-        <location line="+134"/>
+        <location line="+136"/>
         <source>Konsole &amp; Pywal Integrations</source>
         <translation>Konsole ve Pywal Tümleşimleri</translation>
     </message>
@@ -3496,12 +4039,22 @@
         <translation>Pywal ve/veya Konsole için açık/koyu kipi zorlar</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+10"/>
+        <source>Show advanced options</source>
+        <translation>Gelişmiş seçenekleri göster</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Engine behavior, color tuning and window decoration settings</source>
+        <translation>Motor davranışı, renk ince ayarı ve pencere süsleme ayarları</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Engine &amp; Behavior</source>
         <translation>Motor ve Davranış</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+10"/>
         <source>Pause Mode</source>
         <translation>Duraklatma Kipi</translation>
     </message>
@@ -3536,7 +4089,7 @@
         <translation>Renk Öznitelikleri</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+10"/>
         <source>Material Design Spec Version</source>
         <translation>Material Design Belirtim Sürümü</translation>
     </message>
@@ -3606,7 +4159,7 @@
         <translation>Koyu kipte arka planlarda algılanabilir renk miktarı</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+20"/>
         <source>Titlebar Opacity Override</source>
         <translation>Başlık Çubuğu Saydamlığını Geçersiz Kıl</translation>
     </message>
@@ -4255,7 +4808,32 @@
     </message>
     <message>
         <location line="+10"/>
-        <source>Behaviour</source>
+        <source>Clipboard</source>
+        <translation>Pano</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Max clipboard entries</source>
+        <translation>En fazla pano girdisi</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Number of copied items kept in history</source>
+        <translation>Geçmişte tutulan kopyalanmış öge sayısı</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Confirm clear</source>
+        <translation>Temizlemeyi onayla</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ask before clearing the clipboard history</source>
+        <translation>Pano geçmişini temizlemeden önce sorar</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Behavior</source>
         <translation>Davranış</translation>
     </message>
     <message>
@@ -4310,6 +4888,114 @@
     </message>
 </context>
 <context>
+    <name>LockScreenPage</name>
+    <message>
+        <location filename="../modules/nexus/pages/wallandstyle/LockScreenPage.qml" line="+19"/>
+        <source>1 attempt</source>
+        <translation>1 deneme</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>2 attempts</source>
+        <translation>2 deneme</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>3 attempts</source>
+        <translation>3 deneme</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>4 attempts</source>
+        <translation>4 deneme</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>5 attempts</source>
+        <translation>5 deneme</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Lock Screen</source>
+        <translation>Kilit Ekranı</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Wallpaper</source>
+        <translation>Duvar kâğıdı</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Sync with desktop wallpaper</source>
+        <translation>Masaüstü duvar kâğıdıyla eşitle</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Keep the lock screen wallpaper in sync with the desktop wallpaper</source>
+        <translation>Kilit ekranı duvar kâğıdını masaüstü duvar kâğıdıyla eşitlenmiş tutar</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Authentication</source>
+        <translation>Kimlik doğrulama</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Fingerprint unlock</source>
+        <translation>Parmak iziyle kilit açma</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Allow fingerprint authentication on the lock screen</source>
+        <translation>Kilit ekranında parmak izi doğrulamasına izin verir</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Fingerprint attempts</source>
+        <translation>Parmak izi denemesi</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Tries before falling back to password</source>
+        <translation>Parolaya dönmeden önceki deneme sayısı</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>General</source>
+        <translation>Genel</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Lock on startup</source>
+        <translation>Açılışta kilitle</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Lock the session shortly after logging in</source>
+        <translation>Oturum açıldıktan kısa süre sonra kilitler</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Hide notifications</source>
+        <translation>Bildirimleri gizle</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Hide notification previews until you unlock</source>
+        <translation>Kilidi açana dek bildirim önizlemelerini gizler</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Recolor logo</source>
+        <translation>Logoyu yeniden renklendir</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Tint the lock screen artwork to match the palette</source>
+        <translation>Kilit ekranı görselini palete uyacak şekilde renklendirir</translation>
+    </message>
+</context>
+<context>
     <name>LockStatus</name>
     <message>
         <location filename="../modules/bar/popouts/LockStatus.qml" line="+20"/>
@@ -4318,12 +5004,12 @@
     </message>
     <message>
         <location line="+22"/>
-        <source>Capslock: %1</source>
+        <source>Caps Lock: %1</source>
         <translation>Caps Lock: %1</translation>
     </message>
     <message>
         <location line="+5"/>
-        <source>Numlock: %1</source>
+        <source>Num Lock: %1</source>
         <translation>Num Lock: %1</translation>
     </message>
 </context>
@@ -4399,32 +5085,17 @@
         <translation>Tonal Nokta</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Default for Material theme colours. A pastel palette with a low chroma.</source>
-        <translation>Materyal tema renkleri için varsayılan. Düşük kromalı pastel bir palet.</translation>
-    </message>
-    <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Expressive</source>
         <translation>Etkileyici</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>A medium chroma palette. The primary palette&apos;s hue is different from the seed colour, for variety.</source>
-        <translation>Orta kromalı bir palet. Birincil paletin tonu, çeşitlilik için tohum renginden farklıdır.</translation>
-    </message>
-    <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Fidelity</source>
         <translation>Sadakat</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Matches the seed colour, even if the seed colour is very bright (high chroma).</source>
-        <translation>Tohum rengi çok parlak (yüksek kromalı) olsa bile onunla eşleşir.</translation>
-    </message>
-    <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Content</source>
         <translation>İçerik</translation>
     </message>
@@ -4439,9 +5110,24 @@
         <translation>Meyve Salatası</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-23"/>
+        <source>Default for Material theme colors. A pastel palette with a low chroma.</source>
+        <translation>Materyal tema renkleri için varsayılan. Düşük kromalı pastel bir palet.</translation>
+    </message>
+    <message>
         <location line="+6"/>
-        <source>A playful theme - the seed colour&apos;s hue does not appear in the theme.</source>
+        <source>A medium chroma palette. The primary palette&apos;s hue is different from the seed color, for variety.</source>
+        <translation>Orta kromalı bir palet. Birincil paletin tonu, çeşitlilik için tohum renginden farklıdır.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Matches the seed color, even if the seed color is very bright (high chroma).</source>
+        <translation>Tohum rengi çok parlak (yüksek kromalı) olsa bile onunla eşleşir.</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <location line="+6"/>
+        <source>A playful theme - the seed color&apos;s hue does not appear in the theme.</source>
         <translation>Eğlenceli bir tema - tohum renginin tonu temada görünmez.</translation>
     </message>
     <message>
@@ -4466,7 +5152,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>All colours are grayscale, no chroma.</source>
+        <source>All colors are grayscale, no chroma.</source>
         <translation>Tüm renkler gri tonlamalı, kroma yok.</translation>
     </message>
 </context>
@@ -4680,20 +5366,168 @@
     </message>
 </context>
 <context>
-    <name>NetworkPage</name>
+    <name>NetworkDetailPage</name>
     <message>
-        <location filename="../modules/nexus/pages/NetworkPage.qml" line="+18"/>
+        <location filename="../modules/nexus/pages/network/NetworkDetailPage.qml" line="+90"/>
         <source>Network</source>
         <translation>Ağ</translation>
     </message>
     <message>
-        <location line="+34"/>
-        <location line="+5"/>
-        <source>Wi-Fi</source>
-        <translation>Wi-Fi</translation>
+        <location line="+53"/>
+        <source>Forget</source>
+        <translation>Unut</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+39"/>
+        <source>Disconnect</source>
+        <translation>Bağlantıyı kes</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Connection</source>
+        <translation>Bağlantı</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Signal</source>
+        <translation>Sinyal</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>%1%</source>
+        <translation>%1%</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <location line="+14"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+8"/>
+        <source>—</source>
+        <translation>—</translation>
+    </message>
+    <message>
+        <location line="-30"/>
+        <source>Security</source>
+        <translation>Güvenlik</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Open</source>
+        <translation>Açık</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Frequency</source>
+        <translation>Frekans</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>%1 MHz</source>
+        <translation>%1 MHz</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>IP address</source>
+        <translation>IP adresi</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location line="+161"/>
+        <source>Gateway</source>
+        <translation>Ağ geçidi</translation>
+    </message>
+    <message>
+        <location line="-153"/>
+        <source>MAC address</source>
+        <translation>MAC adresi</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Behaviour</source>
+        <translation>Davranış</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Connect automatically</source>
+        <translation>Otomatik bağlan</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Join this network when it&apos;s in range</source>
+        <translation>Menzildeyken bu ağa katılır</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>IP assignment</source>
+        <translation>IP atama</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+10"/>
+        <source>Automatic (DHCP)</source>
+        <translation>Otomatik (DHCP)</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Automatic, DNS only</source>
+        <translation>Otomatik, yalnızca DNS</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Manual</source>
+        <translation>Elle</translation>
+    </message>
+    <message>
+        <location line="+83"/>
+        <source>Address (CIDR)</source>
+        <translation>Adres (CIDR)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>IP and prefix, e.g. 192.168.1.50/24</source>
+        <translation>IP ve ön ek, örn. 192.168.1.50/24</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Enter a valid address in CIDR notation</source>
+        <translation>CIDR gösteriminde geçerli bir adres girin</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Enter a valid gateway address</source>
+        <translation>Geçerli bir ağ geçidi adresi girin</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>DNS servers</source>
+        <translation>DNS sunucuları</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Comma-separated</source>
+        <translation>Virgülle ayrılmış</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Enter valid DNS server addresses</source>
+        <translation>Geçerli DNS sunucu adresleri girin</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>Apply</source>
+        <translation>Uygula</translation>
+    </message>
+</context>
+<context>
+    <name>NetworkList</name>
+    <message>
+        <location filename="../modules/nexus/common/NetworkList.qml" line="+28"/>
         <source>No networks found</source>
         <translation>Ağ bulunamadı</translation>
     </message>
@@ -4703,7 +5537,7 @@
         <translation>Wi-Fi kapalı</translation>
     </message>
     <message>
-        <location line="+90"/>
+        <location line="+101"/>
         <source>Security: %1%2</source>
         <translation>Güvenlik: %1%2</translation>
     </message>
@@ -4717,8 +5551,36 @@
         <source> • Saved</source>
         <translation> • Kayıtlı</translation>
     </message>
+</context>
+<context>
+    <name>NetworkPage</name>
     <message>
-        <location line="+50"/>
+        <location filename="../modules/nexus/pages/NetworkPage.qml" line="+15"/>
+        <source>Network</source>
+        <translation>Ağ</translation>
+    </message>
+    <message>
+        <location line="+47"/>
+        <source>Wi-Fi</source>
+        <translation>Wi-Fi</translation>
+    </message>
+    <message>
+        <location line="+51"/>
+        <source>Show all networks (%1)</source>
+        <translation>Tüm ağları göster (%1)</translation>
+    </message>
+    <message>
+        <location line="+40"/>
+        <source>Saved networks</source>
+        <translation>Kayıtlı ağlar</translation>
+    </message>
+    <message>
+        <location line="+39"/>
+        <source>Add network</source>
+        <translation>Ağ ekle</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>VPN</source>
         <translation>VPN</translation>
     </message>
@@ -4815,6 +5677,24 @@
         <location line="+0"/>
         <source>Temperature (%1K)</source>
         <translation>Sıcaklık (%1K)</translation>
+    </message>
+</context>
+<context>
+    <name>Nmcli</name>
+    <message>
+        <location filename="../services/Nmcli.qml" line="+372"/>
+        <source>Open</source>
+        <translation>Açık</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Enterprise</source>
+        <translation>Kurumsal</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Enhanced Open</source>
+        <translation>Gelişmiş Açık</translation>
     </message>
 </context>
 <context>
@@ -5007,6 +5887,51 @@
     </message>
     <message>
         <location line="+9"/>
+        <source>Interaction</source>
+        <translation>Etkileşim</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Click to activate</source>
+        <translation>Tıklayınca etkinleştir</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Activate the notification action on click</source>
+        <translation>Tıklandığında bildirim eylemini çalıştırır</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Expand threshold</source>
+        <translation>Genişletme eşiği</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Hover pixels before a docked notification expands</source>
+        <translation>Yerleşik bildirim genişlemeden önce üzerinde gezinilecek piksel</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Fullscreen timeout</source>
+        <translation>Tam ekran zaman aşımı</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Milliseconds a notification stays over a fullscreen app</source>
+        <translation>Bildirimin tam ekran uygulamanın üzerinde kalacağı milisaniye</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Clear threshold</source>
+        <translation>Temizleme eşiği</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Swipe distance before a notification is dismissed</source>
+        <translation>Bildirim kapatılmadan önce kaydırılacak uzaklık</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Taskbar</source>
         <translation>Görev çubuğu</translation>
     </message>
@@ -5184,6 +6109,16 @@
     </message>
     <message>
         <location line="+5"/>
+        <source>Enabled</source>
+        <translation>Etkin</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show the on-screen sliders</source>
+        <translation>Ekran üstü kaydırıcıları gösterir</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Volume</source>
         <translation>Ses düzeyi</translation>
     </message>
@@ -5236,6 +6171,21 @@
         <location line="+1"/>
         <source>Portion of the edge that responds</source>
         <translation>Kenarın yanıt veren bölümü</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Behavior</source>
+        <translation>Davranış</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Hide delay</source>
+        <translation>Gizlenme gecikmesi</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Seconds before the slider hides</source>
+        <translation>Kaydırıcı gizlenmeden önceki saniye</translation>
     </message>
 </context>
 <context>
@@ -5389,7 +6339,7 @@
     </message>
     <message>
         <location line="+5"/>
-        <source>Behaviour</source>
+        <source>Behavior</source>
         <translation>Davranış</translation>
     </message>
     <message>
@@ -5481,7 +6431,7 @@
 <context>
     <name>PageCompRegistry</name>
     <message>
-        <location filename="../modules/nexus/PageCompRegistry.qml" line="+321"/>
+        <location filename="../modules/nexus/PageCompRegistry.qml" line="+351"/>
         <source>Page under construction</source>
         <translation>Sayfa yapım aşamasında</translation>
     </message>
@@ -5499,22 +6449,12 @@
         <translation>Görünüm</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Wallpapers, fonts, colours</source>
-        <translation>Duvar kâğıtları, yazı tipleri, renkler</translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Theme &amp; Effects</source>
         <translation>Tema ve Efektler</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Accent Colors</source>
-        <translation>Vurgu Renkleri</translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Blur &amp; Opacity</source>
         <translation>Bulanıklık ve Saydamlık</translation>
     </message>
@@ -5529,12 +6469,17 @@
         <translation>Duvar kâğıtları</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Animations</source>
-        <translation>Animasyonlar</translation>
+        <location line="-7"/>
+        <source>Wallpapers, fonts, colors</source>
+        <translation>Duvar kâğıtları, yazı tipleri, renkler</translation>
     </message>
     <message>
         <location line="+4"/>
+        <source>Colors</source>
+        <translation>Renkler</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Desktop &amp; Tiling</source>
         <translation>Masaüstü ve Döşeme</translation>
     </message>
@@ -5770,6 +6715,31 @@
     </message>
     <message>
         <location line="+4"/>
+        <source>Session</source>
+        <translation>Oturum</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Shutdown, logout, and reboot menu</source>
+        <translation>Kapatma, oturum kapatma ve yeniden başlatma menüsü</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Session Menu</source>
+        <translation>Oturum Menüsü</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Session Icons</source>
+        <translation>Oturum Simgeleri</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Session Commands</source>
+        <translation>Oturum Komutları</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Shortcuts</source>
         <translation>Kısayollar</translation>
     </message>
@@ -5895,18 +6865,14 @@
     </message>
     <message>
         <location line="+3"/>
-        <source>Plugin support is not available yet</source>
-        <translation>Eklenti desteği henüz kullanılabilir değil</translation>
-    </message>
-    <message>
         <location line="+3"/>
-        <source>Plugin support</source>
-        <translation>Eklenti desteği</translation>
+        <source>Personalized desktop experience</source>
+        <translation>Kişiselleştirilmiş masaüstü deneyimi</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>Not available yet</source>
-        <translation>Henüz kullanılabilir değil</translation>
+        <source>Plugin system</source>
+        <translation>Eklenti sistemi</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -6078,21 +7044,85 @@
     </message>
 </context>
 <context>
+    <name>PluginSettingsPopup</name>
+    <message>
+        <location filename="../modules/nexus/pages/PluginSettingsPopup.qml" line="+44"/>
+        <source>Settings</source>
+        <translation>Ayarlar</translation>
+    </message>
+    <message>
+        <location line="+52"/>
+        <source>Done</source>
+        <translation>Bitti</translation>
+    </message>
+</context>
+<context>
     <name>PluginsPage</name>
     <message>
-        <location filename="../modules/nexus/pages/PluginsPage.qml" line="+12"/>
+        <location filename="../modules/nexus/pages/PluginsPage.qml" line="+66"/>
         <source>Plugins</source>
         <translation>Eklentiler</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>Plugin support</source>
-        <translation>Eklenti desteği</translation>
+        <location line="+4"/>
+        <source>Refresh</source>
+        <translation>Yenile</translation>
     </message>
     <message>
-        <location line="+28"/>
-        <source>Plugins are not available yet</source>
-        <translation>Eklentiler henüz kullanılabilir değil</translation>
+        <location line="+14"/>
+        <source>Restart Shell</source>
+        <translation>Kabuğu Yeniden Başlat</translation>
+    </message>
+    <message>
+        <location line="+38"/>
+        <location line="+327"/>
+        <source>Installed</source>
+        <translation>Kurulu</translation>
+    </message>
+    <message>
+        <location line="-318"/>
+        <source>Store</source>
+        <translation>Mağaza</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>A shell restart is required for changes to take effect</source>
+        <translation>Değişikliklerin uygulanması için kabuğun yeniden başlatılması gerekir</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Shell Plugins</source>
+        <translation>Kabuk Eklentileri</translation>
+    </message>
+    <message>
+        <location line="+67"/>
+        <source>User Installed</source>
+        <translation>Kullanıcı Kurulumu</translation>
+    </message>
+    <message>
+        <location line="+100"/>
+        <source>No plugins installed</source>
+        <translation>Kurulu eklenti yok</translation>
+    </message>
+    <message>
+        <location line="+39"/>
+        <source>Loading store...</source>
+        <translation>Mağaza yükleniyor...</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Available Plugins</source>
+        <translation>Kullanılabilir Eklentiler</translation>
+    </message>
+    <message>
+        <location line="+54"/>
+        <source>Update</source>
+        <translation>Güncelle</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Install</source>
+        <translation>Kur</translation>
     </message>
 </context>
 <context>
@@ -6159,7 +7189,7 @@
         <translation>Hareketsizlik sonrası sistemi askıya alır</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+7"/>
         <source>Idle suspend timer</source>
         <translation>Boşta askıya alma süresi</translation>
     </message>
@@ -6172,6 +7202,41 @@
         <location line="+1"/>
         <source>Enable idle suspend to apply a timer</source>
         <translation>Süre belirlemek için boşta askıya almayı etkinleştirin</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Lock before sleep</source>
+        <translation>Uykudan önce kilitle</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Lock the session before suspending</source>
+        <translation>Askıya almadan önce oturumu kilitler</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Inhibit while audio</source>
+        <translation>Ses çalarken engelle</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Prevent idle actions while audio is playing</source>
+        <translation>Ses çalarken boşta eylemlerini engeller</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Battery warnings</source>
+        <translation>Pil uyarıları</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Critical battery level</source>
+        <translation>Kritik pil düzeyi</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Percentage at which the critical warning fires</source>
+        <translation>Kritik uyarının verileceği yüzde</translation>
     </message>
 </context>
 <context>
@@ -6211,7 +7276,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Colour Picker</source>
+        <source>Color Picker</source>
         <translation>Renk Seçici</translation>
     </message>
     <message>
@@ -6434,6 +7499,34 @@
     </message>
 </context>
 <context>
+    <name>SavedNetworksPage</name>
+    <message>
+        <location filename="../modules/nexus/pages/network/SavedNetworksPage.qml" line="+15"/>
+        <source>Saved networks</source>
+        <translation>Kayıtlı ağlar</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>No saved networks</source>
+        <translation>Kayıtlı ağ yok</translation>
+    </message>
+    <message>
+        <location line="+61"/>
+        <source>Open</source>
+        <translation>Açık</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Unknown</source>
+        <translation>Bilinmiyor</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Connected • %1</source>
+        <translation>Bağlı • %1</translation>
+    </message>
+</context>
+<context>
     <name>SearchBar</name>
     <message>
         <location filename="../modules/nexus/navpane/SearchBar.qml" line="+56"/>
@@ -6605,7 +7698,7 @@
     </message>
     <message>
         <location line="+9"/>
-        <source>Smart colour scheme</source>
+        <source>Smart color scheme</source>
         <translation>Akıllı renk şeması</translation>
     </message>
     <message>
@@ -6675,6 +7768,83 @@
     </message>
 </context>
 <context>
+    <name>SessionPage</name>
+    <message>
+        <location filename="../modules/nexus/pages/SessionPage.qml" line="+22"/>
+        <source>Session</source>
+        <translation>Oturum</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>General</source>
+        <translation>Genel</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Enabled</source>
+        <translation>Etkin</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show the session (power) menu</source>
+        <translation>Oturum (güç) menüsünü gösterir</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Vim keybinds</source>
+        <translation>Vim tuş atamaları</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Navigate the session menu with hjkl</source>
+        <translation>Oturum menüsünde hjkl ile gezinin</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Drag threshold</source>
+        <translation>Sürükleme eşiği</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pixels to drag before the menu moves</source>
+        <translation>Menü hareket etmeden önce sürüklenecek piksel</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Icons</source>
+        <translation>Simgeler</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <location line="+31"/>
+        <source>Logout</source>
+        <translation>Oturumu kapat</translation>
+    </message>
+    <message>
+        <location line="-25"/>
+        <location line="+31"/>
+        <source>Shutdown</source>
+        <translation>Kapat</translation>
+    </message>
+    <message>
+        <location line="-25"/>
+        <location line="+31"/>
+        <source>Hibernate</source>
+        <translation>Hazırda beklet</translation>
+    </message>
+    <message>
+        <location line="-24"/>
+        <location line="+31"/>
+        <source>Reboot</source>
+        <translation>Yeniden başlat</translation>
+    </message>
+    <message>
+        <location line="-24"/>
+        <source>Commands</source>
+        <translation>Komutlar</translation>
+    </message>
+</context>
+<context>
     <name>ShortcutManagerPage</name>
     <message>
         <location filename="../modules/nexus/pages/ShortcutManagerPage.qml" line="+15"/>
@@ -6682,7 +7852,7 @@
         <translation>Kısayollar</translation>
     </message>
     <message>
-        <location line="+128"/>
+        <location line="+129"/>
         <source>Search shortcuts</source>
         <translation>Kısayollarda ara</translation>
     </message>
@@ -6729,7 +7899,7 @@
     </message>
     <message>
         <location line="+2"/>
-        <source>Minimise all windows to show the desktop</source>
+        <source>Minimize all windows to show the desktop</source>
         <translation>Masaüstünü göstermek için tüm pencereleri küçültür</translation>
     </message>
 </context>
@@ -6759,7 +7929,7 @@
         <translation>Etkin</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+8"/>
         <source>Drag threshold</source>
         <translation>Sürükleme eşiği</translation>
     </message>
@@ -6767,6 +7937,16 @@
         <location line="+1"/>
         <source>Pixels dragged before the sidebar opens</source>
         <translation>Kenar çubuğu açılmadan önce sürüklenecek piksel miktarı</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Grab width</source>
+        <translation>Yakalama genişliği</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pixels of screen edge reserved for grabbing the sidebar</source>
+        <translation>Kenar çubuğunu yakalamak için ayrılan ekran kenarı pikseli</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -6944,40 +8124,40 @@
     </message>
     <message>
         <location line="+8"/>
-        <source>Caps lock and Num lock are ON.
+        <source>Caps Lock and Num Lock are ON.
 Keyboard layout: %1</source>
         <translation>Caps Lock ve Num Lock AÇIK.
 Klavye düzeni: %1</translation>
     </message>
     <message>
         <location line="+2"/>
-        <source>Caps lock is ON. Kb layout: %1</source>
+        <source>Caps Lock is ON. Keyboard layout: %1</source>
         <translation>Caps Lock AÇIK. Klavye düzeni: %1</translation>
     </message>
     <message>
         <location line="+2"/>
-        <source>Num lock is ON. Kb layout: %1</source>
+        <source>Num Lock is ON. Keyboard layout: %1</source>
         <translation>Num Lock AÇIK. Klavye düzeni: %1</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Keyboard layout: %1</source>
-        <translation>Klavye düzeni: %1</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Caps lock and Num lock are ON.</source>
+        <location line="+5"/>
+        <source>Caps Lock and Num Lock are ON.</source>
         <translation>Caps Lock ve Num Lock AÇIK.</translation>
     </message>
     <message>
         <location line="+2"/>
-        <source>Caps lock is ON.</source>
+        <source>Caps Lock is ON.</source>
         <translation>Caps Lock AÇIK.</translation>
     </message>
     <message>
         <location line="+2"/>
-        <source>Num lock is ON.</source>
+        <source>Num Lock is ON.</source>
         <translation>Num Lock AÇIK.</translation>
+    </message>
+    <message>
+        <location line="-8"/>
+        <source>Keyboard layout: %1</source>
+        <translation>Klavye düzeni: %1</translation>
     </message>
 </context>
 <context>
@@ -7072,7 +8252,7 @@ Klavye düzeni: %1</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Positioning, recolouring</source>
+        <source>Positioning, recoloring</source>
         <translation>Konumlandırma, yeniden renklendirme</translation>
     </message>
     <message>
@@ -7125,7 +8305,7 @@ Klavye düzeni: %1</translation>
     </message>
     <message>
         <location line="+12"/>
-        <source>Behaviour</source>
+        <source>Behavior</source>
         <translation>Davranış</translation>
     </message>
     <message>
@@ -7521,7 +8701,7 @@ Klavye düzeni: %1</translation>
     <message>
         <location line="+15"/>
         <location line="+397"/>
-        <source>Cancelled</source>
+        <source>Canceled</source>
         <translation>İptal edildi</translation>
     </message>
     <message>
@@ -8254,43 +9434,85 @@ Klavye düzeni: %1</translation>
 <context>
     <name>WallpaperAndStyle</name>
     <message>
-        <location filename="../modules/nexus/pages/WallpaperAndStyle.qml" line="+18"/>
+        <location filename="../modules/nexus/pages/WallpaperAndStyle.qml" line="+13"/>
         <source>Appearance</source>
         <translation>Görünüm</translation>
     </message>
     <message>
-        <location line="+42"/>
-        <source>Wallpaper disabled</source>
-        <translation>Duvar kâğıdı kapalı</translation>
-    </message>
-    <message>
-        <location line="+91"/>
+        <location line="+20"/>
         <source>Wallpapers</source>
         <translation>Duvar kâğıtları</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+7"/>
         <source>Wallhaven</source>
         <translation>Wallhaven</translation>
     </message>
     <message>
-        <location line="+13"/>
-        <source>Colours</source>
-        <translation>Renkler</translation>
-    </message>
-    <message>
-        <location line="+12"/>
-        <source>Settings</source>
-        <translation>Ayarlar</translation>
-    </message>
-    <message>
-        <location line="+10"/>
+        <location line="+68"/>
         <source>Wallpaper Settings</source>
         <translation>Duvar Kâğıdı Ayarları</translation>
     </message>
     <message>
+        <location line="-85"/>
+        <source>Wallpaper</source>
+        <translation>Duvar kâğıdı</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Browse and select wallpapers</source>
+        <translation>Duvar kâğıtlarına göz atın ve seçin</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Download wallpapers from Wallhaven</source>
+        <translation>Wallhaven&apos;dan duvar kâğıdı indirin</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Open wallpaper folder</source>
+        <translation>Duvar kâğıdı klasörünü aç</translation>
+    </message>
+    <message>
         <location line="+1"/>
-        <source>Display, Recolour, Desktop Icons</source>
+        <source>Add your own wallpapers</source>
+        <translation>Kendi duvar kâğıtlarınızı ekleyin</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+11"/>
+        <source>Lock screen</source>
+        <translation>Kilit ekranı</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Wallpaper sync and lock screen settings</source>
+        <translation>Duvar kâğıdı eşitleme ve kilit ekranı ayarları</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+10"/>
+        <source>Colors</source>
+        <translation>Renkler</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Dynamic, light and dark palettes</source>
+        <translation>Dinamik, açık ve koyu paletler</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Islands, Pitch Black, Transparency</source>
+        <translation>Adacıklar, Zifiri Siyah, Şeffaflık</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Wallpaper options</source>
+        <translation>Duvar kâğıdı seçenekleri</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Display, Recolor, Desktop Icons</source>
         <translation>Görünüm, Yeniden Renklendirme, Masaüstü Simgeleri</translation>
     </message>
     <message>
@@ -8304,7 +9526,7 @@ Klavye düzeni: %1</translation>
         <translation>Slayt gösterisi aralığı ve rastgeleleştirme</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Video Wallpapers</source>
         <translation>Video Duvar Kâğıtları</translation>
     </message>
@@ -8314,14 +9536,9 @@ Klavye düzeni: %1</translation>
         <translation>Ses ve duraklatma davranışı</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-33"/>
         <source>Theme &amp; Effects</source>
         <translation>Tema ve Efektler</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Islands, Pitch Black, Transparency, Dark Theme</source>
-        <translation>Adacıklar, Zifiri Siyah, Şeffaflık, Koyu Tema</translation>
     </message>
 </context>
 <context>
@@ -8332,7 +9549,7 @@ Klavye düzeni: %1</translation>
         <translation>Duvar kâğıdı seç</translation>
     </message>
     <message>
-        <location line="+69"/>
+        <location line="+70"/>
         <source>Browse</source>
         <translation>Gözat</translation>
     </message>
@@ -8352,12 +9569,12 @@ Klavye düzeni: %1</translation>
         <translation>Rastgele</translation>
     </message>
     <message>
-        <location line="+16"/>
-        <source>Featured wallpapers</source>
-        <translation>Öne çıkan duvar kâğıtları</translation>
+        <location line="+15"/>
+        <source>Open folder</source>
+        <translation>Klasörü aç</translation>
     </message>
     <message>
-        <location line="+223"/>
+        <location line="+172"/>
         <location line="+7"/>
         <source>All</source>
         <translation>Tümü</translation>
@@ -8383,7 +9600,7 @@ Klavye düzeni: %1</translation>
         <translation>Yerel duvar kâğıtları</translation>
     </message>
     <message>
-        <location line="+152"/>
+        <location line="+160"/>
         <source>No local wallpapers found</source>
         <translation>Yerel duvar kâğıdı bulunamadı</translation>
     </message>
@@ -8422,17 +9639,17 @@ Klavye düzeni: %1</translation>
     </message>
     <message>
         <location line="+17"/>
-        <source>Recolour wallpaper</source>
+        <source>Recolor wallpaper</source>
         <translation>Duvar kâğıdını yeniden renklendir</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Tint the wallpaper to match static colour schemes</source>
+        <source>Tint the wallpaper to match static color schemes</source>
         <translation>Duvar kâğıdını sabit renk şemalarına uyacak şekilde renklendirir</translation>
     </message>
     <message>
         <location line="+18"/>
-        <source>Recolour strength</source>
+        <source>Recolor strength</source>
         <translation>Yeniden renklendirme gücü</translation>
     </message>
 </context>
@@ -8500,7 +9717,7 @@ Klavye düzeni: %1</translation>
 <context>
     <name>WelcomeWidget</name>
     <message>
-        <location filename="../modules/welcome/WelcomeWidget.qml" line="+36"/>
+        <location filename="../modules/welcome/WelcomeWidget.qml" line="+52"/>
         <source>What&apos;s New in Caelestia</source>
         <translation>Caelestia&apos;da Neler Yeni</translation>
     </message>

@@ -324,7 +324,7 @@ ColumnLayout {
             values: [...Nmcli.ethernetDevices].sort((a, b) => {
                 if (a.connected !== b.connected)
                     return b.connected - a.connected;
-                return (a.interface || "").localeCompare(b.interface || "");
+                return (a.iface || "").localeCompare(b.iface || "");
             }).slice(0, 8)
         }
 

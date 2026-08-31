@@ -10,6 +10,7 @@ class NexusConfig : public ConfigObject {
 
     CONFIG_PROPERTY(int, wallpapersPerRow, 4)
     CONFIG_GLOBAL_PROPERTY(int, networkRescanInterval, 15000)
+    CONFIG_PROPERTY(int, maxNetworksShown, 5)
 
 public:
     explicit NexusConfig(QObject* parent = nullptr)

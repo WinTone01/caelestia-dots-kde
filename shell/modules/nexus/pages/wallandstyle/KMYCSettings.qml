@@ -13,9 +13,11 @@ import qs.modules.nexus.common
 
 PageBase {
     id: root
-    
+
     title: qsTr("Advanced Colors")
     isSubPage: true
+
+    property bool showAdvanced: false
 
     property bool pywal: false
 
@@ -78,7 +80,7 @@ PageBase {
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
             if (line.startsWith('#') || line === '' || line.startsWith('[')) continue;
-            
+
             const parts = line.split('=');
             if (parts.length >= 2) {
                 const key = parts[0].trim();
@@ -86,7 +88,7 @@ PageBase {
                 const bVal = value.toLowerCase() === "true";
                 const fVal = parseFloat(value);
                 const iVal = parseInt(value, 10);
-                
+
                 switch (key) {
                     case "pywal": root.pywal = bVal; break;
                     case "pywal_light": root.pywalLight = bVal; break;
@@ -207,11 +209,21 @@ PageBase {
 
         }
 
+        ToggleRow {
+            first: true
+            last: true
+            text: qsTr("Show advanced options")
+            subtext: qsTr("Engine behavior, color tuning and window decoration settings")
+            checked: root.showAdvanced
+            onToggled: root.showAdvanced = checked
+        }
+
         SectionHeader {
             text: qsTr("Engine & Behavior")
-            first: true
+            visible: root.showAdvanced
         }
         ColumnLayout {
+            visible: root.showAdvanced
             Layout.fillWidth: true
             spacing: 0
 
@@ -241,8 +253,10 @@ PageBase {
 
         SectionHeader {
             text: qsTr("Color Attributes")
+            visible: root.showAdvanced
         }
         ColumnLayout {
+            visible: root.showAdvanced
             Layout.fillWidth: true
             spacing: 0
 
@@ -318,11 +332,13 @@ PageBase {
                 onMoved: v => root.setOption("dark_blend_multiplier", v.toFixed(2))
             }
         }
-        
+
         SectionHeader {
             text: "Window Decorations (Requires Plugins)"
+            visible: root.showAdvanced
         }
         ColumnLayout {
+            visible: root.showAdvanced
             Layout.fillWidth: true
             spacing: 0
 

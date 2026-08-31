@@ -10,15 +10,14 @@ QtObject {
             label: qsTr("Appearance"),
             key: "appearance",
             icon: "palette",
-            description: Strings.localizeEnglishSpelling(qsTr("Wallpapers, fonts, colours")),
+            description: qsTr("Wallpapers, fonts, colors"),
             category: "personalization",
             settings: [
                 { label: qsTr("Theme & Effects"), pagePath: "wallandstyle/AppearancePage.qml", subPageIdx: 8 },
-                { label: qsTr("Accent Colors"), pagePath: "wallandstyle/ColourSelect.qml", subPageIdx: 3 },
+                { label: qsTr("Colors"), keywords: ["accent", "palette", "scheme", "theme", "color"], pagePath: "wallandstyle/ColourSelect.qml", subPageIdx: 3 },
                 { label: qsTr("Blur & Opacity"), pagePath: "wallandstyle/AppearancePage.qml", subPageIdx: 8 },
-                { label: qsTr("Corner Radius"), pagePath: "wallandstyle/AppearancePage.qml", subPageIdx: 8 },
-                { label: qsTr("Wallpapers"), pagePath: "wallandstyle/WallpaperSelect.qml", subPageIdx: 1 },
-                { label: qsTr("Animations"), pagePath: "wallandstyle/AppearancePage.qml", subPageIdx: 8 }
+                { label: qsTr("Corner Radius"), keywords: ["rounding", "radius"], pagePath: "wallandstyle/AppearancePage.qml", subPageIdx: 8 },
+                { label: qsTr("Wallpapers"), pagePath: "wallandstyle/WallpaperSelect.qml", subPageIdx: 1 }
             ]
         },
         {
@@ -127,6 +126,18 @@ QtObject {
             ]
         },
         {
+            label: qsTr("Session"),
+            key: "session",
+            icon: "power_settings_new",
+            description: qsTr("Shutdown, logout, and reboot menu"),
+            category: "controls",
+            settings: [
+                { label: qsTr("Session Menu"), keywords: ["power", "shutdown", "logout", "reboot", "hibernate"] },
+                { label: qsTr("Session Icons"), keywords: ["icon", "logout", "shutdown"] },
+                { label: qsTr("Session Commands"), keywords: ["command", "logout", "shutdown"] }
+            ]
+        },
+        {
             label: qsTr("Shortcuts"),
             key: "shortcuts",
             icon: "keyboard",
@@ -191,10 +202,10 @@ QtObject {
             label: qsTr("Plugins"),
             key: "plugins",
             icon: "extension",
-            description: qsTr("Plugin support is not available yet"),
+            description: qsTr("Personalized desktop experience"),
             category: "system",
             settings: [
-                { label: qsTr("Plugin support"), description: qsTr("Not available yet"), keywords: ["extensions", "addons", "plugins"] }
+                { label: qsTr("Plugin system"), description: qsTr("Personalized desktop experience"), keywords: ["extensions", "addons", "plugins"] }
             ]
         },
         {
