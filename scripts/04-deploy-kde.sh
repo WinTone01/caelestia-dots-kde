@@ -116,13 +116,22 @@ if [[ -f "$WALLPAPER_PATH" ]]; then
             d.writeConfig('Image', 'file://' + '$WALLPAPER_PATH');
         }
     " 2>/dev/null || true
-    # Keep the KDE lock screen wallpaper on the same image so it matches the
-    # shell out of the box, even before the lockscreen proxy takes over.
-    if command -v kwriteconfig6 >/dev/null 2>&1; then
-        kwriteconfig6 --file kscreenlockerrc --group Greeter --group Wallpaper --group org.kde.image --group General --key Image "file://$WALLPAPER_PATH" 2>/dev/null || true
-    fi
-    # Also save it for Caelestia, in the state dir the shell actually reads.
+    # Save it for Caelestia, in the state dir the shell actually reads.
     STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/caelestia"
     mkdir -p "$STATE_DIR/wallpaper"
     echo "$WALLPAPER_PATH" > "$STATE_DIR/wallpaper/path.txt"
+
+    # Now that the new wallpaper is set (desktop + shell state), mirror it onto
+    # the KDE lock screen so both match out of the box, even before the
+    # lockscreen proxy takes over.
+    if command -v kwriteconfig6 >/dev/null 2>&1; then
+        kwriteconfig6 --file kscreenlockerrc --group Greeter --group Wallpaper --group org.kde.image --group General --key Image "file://$WALLPAPER_PATH" 2>/dev/null || true
+    fi
+
+    # Mirror it onto the SDDM login screen too, so the logout screen matches.
+    # The breeze theme reads its background from its package-owned theme.conf,
+    # so patch that in place; a package update may revert it until the next run.
+    if [[ -f /usr/share/sddm/themes/breeze/theme.conf ]] && command -v sudo >/dev/null 2>&1; then
+        sudo sed -i "s|^background=.*|background=$WALLPAPER_PATH|" /usr/share/sddm/themes/breeze/theme.conf 2>/dev/null || true
+    fi
 fi
