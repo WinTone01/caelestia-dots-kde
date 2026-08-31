@@ -1,6 +1,7 @@
 #pragma once
 
-#include "configobject.hpp"
+#include "settings/objectnode.hpp"
+#include "common.hpp"
 
 #include <qstring.h>
 #include <qstringlist.h>
@@ -9,36 +10,28 @@
 namespace caelestia::config {
 
 using Qt::StringLiterals::operator""_s;
+using settings::vmap;
 
-class BarScrollActions : public ConfigObject {
-    Q_OBJECT
-    QML_ANONYMOUS
+class BarScrollActions : public settings::ObjectNode {
+    CONFIG_NODE(BarScrollActions, settings::ObjectNode)
 
     CONFIG_PROPERTY(bool, workspaces, true)
     CONFIG_PROPERTY(bool, volume, true)
     CONFIG_PROPERTY(bool, brightness, true)
 
-public:
-    explicit BarScrollActions(QObject* parent = nullptr)
-        : ConfigObject(parent) {}
 };
 
-class BarPopouts : public ConfigObject {
-    Q_OBJECT
-    QML_ANONYMOUS
+class BarPopouts : public settings::ObjectNode {
+    CONFIG_NODE(BarPopouts, settings::ObjectNode)
 
     CONFIG_PROPERTY(bool, activeWindow, true)
     CONFIG_PROPERTY(bool, tray, true)
     CONFIG_PROPERTY(bool, statusIcons, true)
 
-public:
-    explicit BarPopouts(QObject* parent = nullptr)
-        : ConfigObject(parent) {}
 };
 
-class BarWorkspaces : public ConfigObject {
-    Q_OBJECT
-    QML_ANONYMOUS
+class BarWorkspaces : public settings::ObjectNode {
+    CONFIG_NODE(BarWorkspaces, settings::ObjectNode)
 
     CONFIG_PROPERTY(int, shown, 5)
     CONFIG_PROPERTY(bool, activeIndicator, true)
@@ -62,27 +55,19 @@ class BarWorkspaces : public ConfigObject {
         }) })
     CONFIG_GLOBAL_PROPERTY(QVariantList, wsIcons)
 
-public:
-    explicit BarWorkspaces(QObject* parent = nullptr)
-        : ConfigObject(parent) {}
 };
 
-class BarActiveWindow : public ConfigObject {
-    Q_OBJECT
-    QML_ANONYMOUS
+class BarActiveWindow : public settings::ObjectNode {
+    CONFIG_NODE(BarActiveWindow, settings::ObjectNode)
 
     CONFIG_PROPERTY(bool, compact, false)
     CONFIG_PROPERTY(bool, inverted, false)
     CONFIG_PROPERTY(bool, showOnHover, true)
 
-public:
-    explicit BarActiveWindow(QObject* parent = nullptr)
-        : ConfigObject(parent) {}
 };
 
-class BarTray : public ConfigObject {
-    Q_OBJECT
-    QML_ANONYMOUS
+class BarTray : public settings::ObjectNode {
+    CONFIG_NODE(BarTray, settings::ObjectNode)
 
     CONFIG_PROPERTY(bool, background, false)
     CONFIG_PROPERTY(bool, recolour, false)
@@ -90,14 +75,10 @@ class BarTray : public ConfigObject {
     CONFIG_GLOBAL_PROPERTY(QVariantList, iconSubs)
     CONFIG_GLOBAL_PROPERTY(QStringList, hiddenIcons)
 
-public:
-    explicit BarTray(QObject* parent = nullptr)
-        : ConfigObject(parent) {}
 };
 
-class BarStatus : public ConfigObject {
-    Q_OBJECT
-    QML_ANONYMOUS
+class BarStatus : public settings::ObjectNode {
+    CONFIG_NODE(BarStatus, settings::ObjectNode)
 
     CONFIG_PROPERTY(bool, showAudio, true)
     CONFIG_PROPERTY(bool, showMicrophone, false)
@@ -112,63 +93,43 @@ class BarStatus : public ConfigObject {
     CONFIG_PROPERTY(bool, showNotifications, true)
     CONFIG_PROPERTY(bool, showNightLight, true)
 
-public:
-    explicit BarStatus(QObject* parent = nullptr)
-        : ConfigObject(parent) {}
 };
 
-class BarClock : public ConfigObject {
-    Q_OBJECT
-    QML_ANONYMOUS
+class BarClock : public settings::ObjectNode {
+    CONFIG_NODE(BarClock, settings::ObjectNode)
 
     CONFIG_PROPERTY(bool, background, false)
     CONFIG_PROPERTY(bool, showDate, false)
     CONFIG_PROPERTY(bool, showIcon, true)
     CONFIG_PROPERTY(bool, centerClock, false)
 
-public:
-    explicit BarClock(QObject* parent = nullptr)
-        : ConfigObject(parent) {}
 };
 
-class BarDock : public ConfigObject {
-    Q_OBJECT
-    QML_ANONYMOUS
+class BarDock : public settings::ObjectNode {
+    CONFIG_NODE(BarDock, settings::ObjectNode)
 
     CONFIG_PROPERTY(bool, monitorCenter, true)
     CONFIG_PROPERTY(bool, recolourIcons, false)
     CONFIG_PROPERTY(int, iconSize, 32)
 
-public:
-    explicit BarDock(QObject* parent = nullptr)
-        : ConfigObject(parent) {}
 };
 
-class BarGithub : public ConfigObject {
-    Q_OBJECT
-    QML_ANONYMOUS
+class BarGithub : public settings::ObjectNode {
+    CONFIG_NODE(BarGithub, settings::ObjectNode)
 
     CONFIG_PROPERTY(bool, background, false)
 
-public:
-    explicit BarGithub(QObject* parent = nullptr)
-        : ConfigObject(parent) {}
 };
 
-class BarPerformance : public ConfigObject {
-    Q_OBJECT
-    QML_ANONYMOUS
+class BarPerformance : public settings::ObjectNode {
+    CONFIG_NODE(BarPerformance, settings::ObjectNode)
 
     CONFIG_PROPERTY(bool, showText, true)
 
-public:
-    explicit BarPerformance(QObject* parent = nullptr)
-        : ConfigObject(parent) {}
 };
 
-class BarPreviewScales : public ConfigObject {
-    Q_OBJECT
-    QML_ANONYMOUS
+class BarPreviewScales : public settings::ObjectNode {
+    CONFIG_NODE(BarPreviewScales, settings::ObjectNode)
 
     CONFIG_PROPERTY(qreal, activeWindow, 0.0)
     CONFIG_PROPERTY(qreal, audio, 0.0)
@@ -184,14 +145,10 @@ class BarPreviewScales : public ConfigObject {
     CONFIG_PROPERTY(qreal, trayMenu, 0.0)
     CONFIG_PROPERTY(qreal, wirelessPassword, 0.0)
 
-public:
-    explicit BarPreviewScales(QObject* parent = nullptr)
-        : ConfigObject(parent) {}
 };
 
-class BarPreviewFontScales : public ConfigObject {
-    Q_OBJECT
-    QML_ANONYMOUS
+class BarPreviewFontScales : public settings::ObjectNode {
+    CONFIG_NODE(BarPreviewFontScales, settings::ObjectNode)
 
     CONFIG_PROPERTY(qreal, activeWindow, 0.0)
     CONFIG_PROPERTY(qreal, audio, 0.0)
@@ -207,14 +164,10 @@ class BarPreviewFontScales : public ConfigObject {
     CONFIG_PROPERTY(qreal, trayMenu, 0.0)
     CONFIG_PROPERTY(qreal, wirelessPassword, 0.0)
 
-public:
-    explicit BarPreviewFontScales(QObject* parent = nullptr)
-        : ConfigObject(parent) {}
 };
 
-class BarConfig : public ConfigObject {
-    Q_OBJECT
-    QML_ANONYMOUS
+class BarConfig : public settings::ObjectNode {
+    CONFIG_NODE(BarConfig, settings::ObjectNode)
 
     CONFIG_PROPERTY(qreal, scale, 1.0)
     CONFIG_PROPERTY(qreal, previewScale, 1.0)
@@ -280,21 +233,6 @@ class BarConfig : public ConfigObject {
         })
     CONFIG_PROPERTY(QStringList, excludedScreens)
 
-public:
-    explicit BarConfig(QObject* parent = nullptr)
-        : ConfigObject(parent)
-        , m_previewScales(new BarPreviewScales(this))
-        , m_previewFontScales(new BarPreviewFontScales(this))
-        , m_scrollActions(new BarScrollActions(this))
-        , m_popouts(new BarPopouts(this))
-        , m_workspaces(new BarWorkspaces(this))
-        , m_activeWindow(new BarActiveWindow(this))
-        , m_tray(new BarTray(this))
-        , m_status(new BarStatus(this))
-        , m_clock(new BarClock(this))
-        , m_dock(new BarDock(this))
-        , m_github(new BarGithub(this))
-        , m_performance(new BarPerformance(this)) {}
 };
 
 } // namespace caelestia::config

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "configobject.hpp"
+#include "settings/objectnode.hpp"
+#include "common.hpp"
 
 #include <qstring.h>
 #include <qstringlist.h>
@@ -9,10 +10,10 @@
 namespace caelestia::config {
 
 using Qt::StringLiterals::operator""_s;
+using settings::vmap;
 
-class LauncherUseFuzzy : public ConfigObject {
-    Q_OBJECT
-    QML_ANONYMOUS
+class LauncherUseFuzzy : public settings::ObjectNode {
+    CONFIG_NODE(LauncherUseFuzzy, settings::ObjectNode)
 
     CONFIG_GLOBAL_PROPERTY(bool, apps, false)
     CONFIG_GLOBAL_PROPERTY(bool, actions, false)
@@ -22,14 +23,10 @@ class LauncherUseFuzzy : public ConfigObject {
     CONFIG_GLOBAL_PROPERTY(bool, emoji, false)
     CONFIG_GLOBAL_PROPERTY(bool, clipboard, false)
 
-public:
-    explicit LauncherUseFuzzy(QObject* parent = nullptr)
-        : ConfigObject(parent) {}
 };
 
-class LauncherConfig : public ConfigObject {
-    Q_OBJECT
-    QML_ANONYMOUS
+class LauncherConfig : public settings::ObjectNode {
+    CONFIG_NODE(LauncherConfig, settings::ObjectNode)
 
     CONFIG_PROPERTY(bool, enabled, true)
     CONFIG_PROPERTY(bool, showOnHover, false)
@@ -166,10 +163,6 @@ class LauncherConfig : public ConfigObject {
             }),
         })
 
-public:
-    explicit LauncherConfig(QObject* parent = nullptr)
-        : ConfigObject(parent)
-        , m_useFuzzy(new LauncherUseFuzzy(this)) {}
 };
 
 } // namespace caelestia::config

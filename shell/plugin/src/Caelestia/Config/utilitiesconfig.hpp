@@ -1,6 +1,7 @@
 #pragma once
 
-#include "configobject.hpp"
+#include "settings/objectnode.hpp"
+#include "common.hpp"
 
 #include <qstring.h>
 #include <qvariant.h>
@@ -8,10 +9,10 @@
 namespace caelestia::config {
 
 using Qt::StringLiterals::operator""_s;
+using settings::vmap;
 
-class UtilitiesToasts : public ConfigObject {
-    Q_OBJECT
-    QML_ANONYMOUS
+class UtilitiesToasts : public settings::ObjectNode {
+    CONFIG_NODE(UtilitiesToasts, settings::ObjectNode)
 
     CONFIG_PROPERTY(QString, fullscreen, u"off"_s)
     CONFIG_GLOBAL_PROPERTY(bool, configLoaded, false)
@@ -31,26 +32,18 @@ class UtilitiesToasts : public ConfigObject {
     CONFIG_GLOBAL_PROPERTY(bool, transparency, false)
     CONFIG_GLOBAL_PROPERTY(qreal, transparencyBase, 0.85)
 
-public:
-    explicit UtilitiesToasts(QObject* parent = nullptr)
-        : ConfigObject(parent) {}
 };
 
-class UtilitiesVpn : public ConfigObject {
-    Q_OBJECT
-    QML_ANONYMOUS
+class UtilitiesVpn : public settings::ObjectNode {
+    CONFIG_NODE(UtilitiesVpn, settings::ObjectNode)
 
     CONFIG_GLOBAL_PROPERTY(bool, enabled, false)
     CONFIG_GLOBAL_PROPERTY(QVariantList, provider)
 
-public:
-    explicit UtilitiesVpn(QObject* parent = nullptr)
-        : ConfigObject(parent) {}
 };
 
-class UtilitiesGameMode : public ConfigObject {
-    Q_OBJECT
-    QML_ANONYMOUS
+class UtilitiesGameMode : public settings::ObjectNode {
+    CONFIG_NODE(UtilitiesGameMode, settings::ObjectNode)
 
     CONFIG_GLOBAL_PROPERTY(bool, disableHyprlandAnimations, true)
     CONFIG_GLOBAL_PROPERTY(bool, disableHyprlandBlur, true)
@@ -65,14 +58,10 @@ class UtilitiesGameMode : public ConfigObject {
     CONFIG_GLOBAL_PROPERTY(bool, autoEnable, true)
     CONFIG_GLOBAL_PROPERTY(QStringList, autoEnableRegexes)
 
-public:
-    explicit UtilitiesGameMode(QObject* parent = nullptr)
-        : ConfigObject(parent) {}
 };
 
-class UtilitiesConfig : public ConfigObject {
-    Q_OBJECT
-    QML_ANONYMOUS
+class UtilitiesConfig : public settings::ObjectNode {
+    CONFIG_NODE(UtilitiesConfig, settings::ObjectNode)
 
     CONFIG_PROPERTY(bool, enabled, true)
     CONFIG_PROPERTY(bool, showOnHover, true)
@@ -99,12 +88,6 @@ class UtilitiesConfig : public ConfigObject {
             vmap({ { u"id"_s, u"badapple"_s }, { u"enabled"_s, true } }),
         })
 
-public:
-    explicit UtilitiesConfig(QObject* parent = nullptr)
-        : ConfigObject(parent)
-        , m_toasts(new UtilitiesToasts(this))
-        , m_vpn(new UtilitiesVpn(this))
-        , m_gameMode(new UtilitiesGameMode(this)) {}
 };
 
 } // namespace caelestia::config

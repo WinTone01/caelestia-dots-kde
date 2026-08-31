@@ -1,6 +1,7 @@
 #pragma once
 
-#include "configobject.hpp"
+#include "settings/objectnode.hpp"
+#include "common.hpp"
 
 #include <qstring.h>
 #include <qstringlist.h>
@@ -9,10 +10,10 @@
 namespace caelestia::config {
 
 using Qt::StringLiterals::operator""_s;
+using settings::vmap;
 
-class ServiceConfig : public ConfigObject {
-    Q_OBJECT
-    QML_ANONYMOUS
+class ServiceConfig : public settings::ObjectNode {
+    CONFIG_NODE(ServiceConfig, settings::ObjectNode)
 
     CONFIG_GLOBAL_PROPERTY(QString, weatherLocation)
     // Guess based on locale
@@ -70,9 +71,6 @@ class ServiceConfig : public ConfigObject {
     // which keeps the existing always-on behaviour for anyone already using ARPC.
     CONFIG_GLOBAL_PROPERTY(int, arpcIdleTimeout, 0)
 
-public:
-    explicit ServiceConfig(QObject* parent = nullptr)
-        : ConfigObject(parent) {}
 };
 
 } // namespace caelestia::config

@@ -10,6 +10,7 @@
 namespace caelestia::config {
 
 using Qt::StringLiterals::operator""_s;
+using settings::vmap;
 
 class UserPaths : public settings::ObjectNode {
     CONFIG_NODE(UserPaths, settings::ObjectNode)
