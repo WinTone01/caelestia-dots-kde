@@ -20,6 +20,7 @@ GridLayout {
         Layout.columnSpan: 3
         Layout.preferredWidth: Tokens.sizes.dashboard.userWidth
         Layout.fillHeight: true
+        Layout.minimumHeight: 120
 
         radius: Tokens.rounding.extraLarge
 

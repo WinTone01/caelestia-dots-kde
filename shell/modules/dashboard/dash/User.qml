@@ -208,8 +208,6 @@ Item {
     }
 
     StyledText {
-        z: 1 // Render above the speech bubble so the uptime text is never hidden
-
         anchors.left: uptimeShape.right
         anchors.verticalCenter: uptimeShape.verticalCenter
         anchors.leftMargin: Tokens.spacing.small
