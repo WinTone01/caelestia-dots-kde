@@ -23,11 +23,15 @@ Singleton {
     readonly property var wirelessDeviceDetails: NmQt.wirelessDeviceDetails
     readonly property var ethernetDeviceDetails: NmQt.ethernetDeviceDetails
 
-    // NmQt always returns a QVariantMap, which QML sees as a truthy object even
-    // when empty. Collapse the "no active Ethernet connection" case back to
-    // null so truthiness checks (e.g. StatusIcons.qml) behave as before.
-    readonly property var activeEthernet: (NmQt.activeEthernet && Object.keys(NmQt.activeEthernet).length > 0) ? NmQt.activeEthernet : null
-    readonly property var ethernetDevices: NmQt.ethernetDevices
+    // Ethernet devices are rebuilt as typed EthernetDevice objects so both the
+    // legacy bar popout (`.interface`) and the Nexus pages (`.iface`) resolve.
+    property list<EthernetDevice> __ethernetDevices: []
+    readonly property list<EthernetDevice> ethernetDevices: __ethernetDevices
+    readonly property EthernetDevice activeEthernet: __ethernetDevices.find(d => d.connected) ?? null
+    readonly property bool hasAvailableEthernet: __ethernetDevices.some(d => d.state !== "unavailable")
+    property string ethernetSpeed: ""
+    property string ethernetDataUsage: ""
+    readonly property var savedConnectionSecurity: NmQt.savedConnectionSecurity
 
     readonly property var vpnConnections: NmQt.vpnConnections
     readonly property var activeVpn: NmQt.activeVpn
@@ -353,14 +357,105 @@ Singleton {
         emit: monitorEvent();
     }
 
+    // =========================================================================
+    //  Upstream-sync parity surface (network page rewrite)
+    // =========================================================================
+
+    function findNetwork(ssid: string): var {
+        return networks.find(n => n.ssid === ssid) ?? null;
+    }
+
+    function securityLabel(keyMgmt: string): string {
+        switch ((keyMgmt || "").trim().toLowerCase()) {
+        case "":
+        case "none":
+            return qsTr("Open");
+        case "sae":
+            return "WPA3";
+        case "wpa-psk":
+            return "WPA2";
+        case "wpa-eap":
+        case "wpa-eap-suite-b-192":
+            return qsTr("Enterprise");
+        case "owe":
+            return qsTr("Enhanced Open");
+        case "ieee8021x":
+            return "802.1X";
+        default:
+            return keyMgmt.trim();
+        }
+    }
+
+    function savedSecurityFor(ssid: string): string {
+        if (!ssid || ssid.length === 0) return "";
+        return (root.savedConnectionSecurity || {})[ssid.toLowerCase().trim()] || "";
+    }
+
+    function getEthernetInterfaces(callback: var): void {
+        const names = root.__ethernetDevices.map(d => d.iface);
+        if (callback && typeof callback === "function") callback(names);
+    }
+
+    function getEthernetSpeed(interfaceName: string): void {
+        root.ethernetSpeed = NmQt.ethernetSpeed(interfaceName);
+    }
+
+    function getEthernetDataUsage(interfaceName: string, callback: var): void {
+        root.ethernetDataUsage = NmQt.ethernetDataUsage(interfaceName);
+        if (callback && typeof callback === "function") callback(root.ethernetDataUsage);
+    }
+
+    function getIpv4Config(connectionName: string, callback: var): void {
+        NmQt.getIpv4Config(connectionName, callback);
+    }
+
+    function setIpv4Config(connectionName: string, config: var, callback: var): void {
+        NmQt.setIpv4Config(connectionName, config, callback);
+    }
+
+    function setAutoconnect(connectionName: string, enabled: bool, callback: var): void {
+        NmQt.setAutoconnect(connectionName, enabled, callback);
+    }
+
+    function addHiddenNetwork(ssid: string, password: string, security: string, hidden: bool, callback: var): void {
+        NmQt.addHiddenNetwork(ssid, password, security, hidden, callback);
+    }
+
+    function rebuildEthernetDevices(): void {
+        const rawList = NmQt.ethernetDevices;
+        const newList = [];
+
+        for (let i = 0; i < rawList.length; i++) {
+            const existing = __ethernetDevices[i];
+            if (existing) {
+                existing.lastIpcObject = rawList[i];
+                newList.push(existing);
+            } else {
+                newList.push(ethDevComp.createObject(root, { lastIpcObject: rawList[i] }));
+            }
+        }
+
+        for (let j = newList.length; j < __ethernetDevices.length; j++) {
+            __ethernetDevices[j].destroy();
+        }
+
+        root.__ethernetDevices = newList;
+    }
+
     // NmQt populates its own network cache in its C++ constructor, before this
     // Connections block exists to observe networksChanged — without this, the
     // adapter's list stays empty until NetworkManager emits another change.
-    Component.onCompleted: rebuildNetworkList()
+    Component.onCompleted: {
+        rebuildNetworkList();
+        rebuildEthernetDevices();
+    }
 
     Connections {
         function onNetworksChanged(): void {
             rebuildNetworkList();
+        }
+        function onEthernetDevicesChanged(): void {
+            rebuildEthernetDevices();
         }
         function onWifiEnabledChanged(): void {
             root.wifiEnabled = NmQt.wifiEnabled;
@@ -460,6 +555,12 @@ Singleton {
         AccessPoint {}
     }
 
+    Component {
+        id: ethDevComp
+
+        EthernetDevice {}
+    }
+
     component AccessPoint: QtObject {
         required property var lastIpcObject
 
@@ -470,5 +571,28 @@ Singleton {
         readonly property bool active: lastIpcObject.active ?? false
         readonly property string security: lastIpcObject.security ?? ""
         readonly property bool isSecure: (lastIpcObject.security ?? "").length > 0
+    }
+
+    component EthernetDevice: QtObject {
+        required property var lastIpcObject
+
+        readonly property string iface: lastIpcObject.interface ?? ""
+        readonly property string type: lastIpcObject.type ?? ""
+        readonly property string state: deviceStateName(lastIpcObject.state)
+        readonly property string connection: lastIpcObject.connection ?? ""
+        readonly property bool connected: lastIpcObject.connected ?? false
+        readonly property string ipAddress: lastIpcObject.ipAddress ?? ""
+        readonly property string gateway: lastIpcObject.gateway ?? ""
+        readonly property var dns: lastIpcObject.dns ?? []
+        readonly property string subnet: lastIpcObject.subnet ?? ""
+        readonly property string macAddress: lastIpcObject.macAddress ?? ""
+        readonly property string speed: lastIpcObject.speed ?? ""
+
+        function deviceStateName(state: var): string {
+            const names = ["unknown", "unmanaged", "unavailable", "disconnected", "prepare", "config", "need-auth", "ip-config", "ip-check", "secondaries", "activated", "deactivating", "failed"];
+            if (typeof state === "number" && state >= 0 && state < names.length)
+                return names[state];
+            return state ?? "unknown";
+        }
     }
 }
