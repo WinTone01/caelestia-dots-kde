@@ -101,7 +101,7 @@ PageBase {
                     StyledText {
                         Layout.fillWidth: true
                         text: qsTr("Follows your system locale (%1)").arg(Qt.locale().name)
-                        color: Colours.palette.m3onSurfaceVariant
+                        color: Colours.palette.m3outline
                         font: Tokens.font.label.small
                         elide: Text.ElideRight
                     }

@@ -1,10 +1,9 @@
 import QtQuick
 import QtQuick.Layouts
-import Caelestia.Config
 import Caelestia.Components
+import Caelestia.Config
 import Caelestia.Services
 import qs.components
-import qs.components.misc
 import qs.services
 
 StyledRect {
@@ -96,7 +95,7 @@ StyledRect {
                 anchors.centerIn: parent
                 text: qsTr("Collecting data...")
                 font: Tokens.font.body.small
-                color: Colours.palette.m3onSurfaceVariant
+                color: Colours.palette.m3outline
                 visible: NetworkUsage.downloadBuffer.count < 2
             }
         }

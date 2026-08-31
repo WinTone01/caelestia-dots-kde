@@ -66,7 +66,7 @@ PageBase {
                     Layout.fillWidth: true
                     visible: text
                     text: (root.app?.comment || root.app?.genericName) ?? ""
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Colours.palette.m3outline
                     font: Tokens.font.body.small
                     wrapMode: Text.WordWrap
                 }

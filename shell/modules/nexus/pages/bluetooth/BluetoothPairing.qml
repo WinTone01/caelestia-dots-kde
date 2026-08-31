@@ -147,7 +147,7 @@ PageBase {
                         StyledText {
                             Layout.fillWidth: true
                             text: newDevice.modelData?.pairing ? qsTr("Pairing...") : (newDevice.modelData?.address ?? "")
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Colours.palette.m3outline
                             font: Tokens.font.label.small
                             elide: Text.ElideRight
                             animate: true

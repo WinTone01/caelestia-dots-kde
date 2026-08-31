@@ -502,14 +502,14 @@ PageBase {
                     MaterialIcon {
                         Layout.alignment: Qt.AlignHCenter
                         text: "hide_image"
-                        color: Colours.palette.m3onSurfaceVariant
+                        color: Colours.palette.m3outline
                         fontStyle: Tokens.font.icon.extraLarge
                     }
 
                     StyledText {
                         Layout.alignment: Qt.AlignHCenter
                         text: qsTr("No local wallpapers found")
-                        color: Colours.palette.m3onSurfaceVariant
+                        color: Colours.palette.m3outline
                         font: Tokens.font.title.small
                     }
                 }
