@@ -177,13 +177,6 @@ Searcher {
         return path;
     }
 
-    // Video wallpapers have no still to show, so the pickers had nothing to draw
-    // and sat on a loading spinner forever. Extract a frame once and cache it
-    // beside the wallpaper caches, keyed the same way getThumbnailPath already
-    // described — that path was being computed but never produced by anything.
-    // What a picker should actually display for a wallpaper: the image itself, or
-    // a video's extracted frame once there is one. Returns "" for a video whose
-    // frame is still being made, so callers can show a placeholder meanwhile.
     function thumbFor(path: string): string {
         const p = String(path || "").replace(/^file:\/\//, "");
         if (p === "" || !Images.isVideo(p))
