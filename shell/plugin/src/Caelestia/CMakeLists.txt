@@ -21,6 +21,7 @@ target_compile_definitions(caelestia-core PRIVATE CAELESTIA_VERSION="${DISPLAY_V
 
 add_subdirectory(Components)
 add_subdirectory(Config)
+add_subdirectory(Settings)
 add_subdirectory(Models)
 add_subdirectory(Services)
 add_subdirectory(Blobs)
