@@ -359,7 +359,7 @@ QML_MODULES=(
     Caelestia
     Caelestia/Components
     Caelestia/Config
-    Caelestia/Internal
+    Caelestia/Settings
     Caelestia/Models
     Caelestia/Services
     Caelestia/Blobs
