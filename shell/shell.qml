@@ -50,6 +50,8 @@ ShellRoot {
     })()
 
     Fonts {}
+    GSFLoader {}
+    ServiceLoader {}
 
     Background {}
     BadAppleOverlay {}
