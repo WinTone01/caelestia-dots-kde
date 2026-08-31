@@ -1,5 +1,6 @@
 qml_module(caelestia-settings
     URI Caelestia.Settings
+    INCLUDE_PREFIX settings
     SOURCES
         common.cpp
         schema.cpp
