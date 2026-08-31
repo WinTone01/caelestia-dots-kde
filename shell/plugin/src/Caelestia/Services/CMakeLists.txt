@@ -26,6 +26,8 @@ qml_module(caelestia-services
         tickingservice.cpp
         sensorslib.cpp
         usagefmt.cpp
+        networkusage.cpp
+        networkusage.hpp
         cpu.cpp
         gpu.cpp
         memory.cpp
