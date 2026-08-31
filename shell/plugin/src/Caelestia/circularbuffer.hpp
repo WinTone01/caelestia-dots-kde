@@ -4,7 +4,7 @@
 #include <qqmlintegration.h>
 #include <qvector.h>
 
-namespace caelestia::internal {
+namespace caelestia {
 
 class CircularBuffer : public QObject {
     Q_OBJECT
@@ -45,4 +45,4 @@ private:
     bool m_maxDirty = false;
 };
 
-} // namespace caelestia::internal
+} // namespace caelestia

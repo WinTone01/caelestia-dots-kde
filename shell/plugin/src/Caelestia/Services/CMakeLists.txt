@@ -39,6 +39,10 @@ qml_module(caelestia-services
         discordipc.hpp
         hyprlandstate.cpp
         hyprlandstate.hpp
+        hyprdevices.cpp
+        hyprdevices.hpp
+        hyprextras.cpp
+        hyprextras.hpp
         keybindsmodel.cpp
         keybindsmodel.hpp
         emojidb.cpp
@@ -81,6 +85,7 @@ qml_module(caelestia-services
         NmQt.hpp
     LIBRARIES
         Qt::DBus
+        Qt::Network
         Qt::Gui
         Qt::Quick
         Qt::GuiPrivate
@@ -95,7 +100,6 @@ qml_module(caelestia-services
         KF6::NetworkManagerQt
         caelestia-core
         caelestia-config
-        caelestia-internal
 )
 
 

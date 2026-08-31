@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-namespace caelestia::internal {
+namespace caelestia {
 
 CircularBuffer::CircularBuffer(QObject* parent)
     : QObject(parent) {}
@@ -141,4 +141,4 @@ void CircularBuffer::recomputeMaximum() {
     m_maxDirty = false;
 }
 
-} // namespace caelestia::internal
+} // namespace caelestia

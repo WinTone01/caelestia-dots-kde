@@ -7,6 +7,7 @@ import Caelestia
 import Caelestia.Components
 import Caelestia.Config
 import Caelestia.Models
+import Caelestia.Images
 import qs.components
 import qs.components.controls
 import qs.components.filedialog

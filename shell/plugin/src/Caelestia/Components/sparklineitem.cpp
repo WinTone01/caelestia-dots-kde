@@ -1,11 +1,11 @@
 #include "sparklineitem.hpp"
-#include "circularbuffer.hpp"
+#include "../circularbuffer.hpp"
 
 #include <qpainter.h>
 #include <qpainterpath.h>
 #include <qpen.h>
 
-namespace caelestia::internal {
+namespace caelestia::components {
 
 SparklineItem::SparklineItem(QQuickItem* parent)
     : QQuickPaintedItem(parent) {
@@ -227,4 +227,4 @@ void SparklineItem::setLineWidth(qreal width) {
     scheduleUpdate();
 }
 
-} // namespace caelestia::internal
+} // namespace caelestia::components
