@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 #include "clipboardmanager.hpp"
 
-#include "../Config/config.hpp"
+#include "../Config/rootnodes.hpp"
 #include "../Config/launcherconfig.hpp"
 
 #include <qdir.h>
@@ -313,7 +313,7 @@ void ClipboardManager::reload() {
         const auto lines = output.split('\n');
         result.reserve(lines.size());
 
-        const int maxEntries = caelestia::config::GlobalConfig::instance()->launcher()->clipboardMaxEntries();
+        const int maxEntries = caelestia::config::ConfigSingleton::instance()->launcher()->clipboardMaxEntries();
         int count = 0;
 
         for (const auto& rawLine : lines) {

@@ -1,6 +1,6 @@
 #include "globalshortcut.hpp"
 
-#include "../Config/config.hpp"
+#include "../Config/rootnodes.hpp"
 #include "../Config/generalconfig.hpp"
 #include <KGlobalAccel>
 #include <QCoreApplication>

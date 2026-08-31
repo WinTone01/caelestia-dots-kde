@@ -6,6 +6,8 @@
 #include "settings/layerregistry.hpp"
 #include "settings/rootnode.hpp"
 #include "appearanceconfig.hpp"
+#include "aiconfig.hpp"
+#include "audioconfig.hpp"
 #include "backgroundconfig.hpp"
 #include "barconfig.hpp"
 #include "borderconfig.hpp"
@@ -17,12 +19,14 @@
 #include "nexusconfig.hpp"
 #include "notifsconfig.hpp"
 #include "osdconfig.hpp"
+#include "overviewconfig.hpp"
 #include "serviceconfig.hpp"
 #include "sessionconfig.hpp"
 #include "sidebarconfig.hpp"
 #include "tokens.hpp"
 #include "userpaths.hpp"
 #include "utilitiesconfig.hpp"
+#include "winfoconfig.hpp"
 
 namespace caelestia::config {
 
@@ -42,11 +46,15 @@ class ConfigRoot : public settings::RootNode {
     CONFIG_SUBOBJECT(NexusConfig, nexus)
     CONFIG_SUBOBJECT(NotifsConfig, notifs)
     CONFIG_SUBOBJECT(OsdConfig, osd)
+    CONFIG_SUBOBJECT(OverviewConfig, overview)
     CONFIG_SUBOBJECT(ServiceConfig, services)
     CONFIG_SUBOBJECT(SessionConfig, session)
     CONFIG_SUBOBJECT(SidebarConfig, sidebar)
     CONFIG_SUBOBJECT(UtilitiesConfig, utilities)
+    CONFIG_SUBOBJECT(WInfoConfig, winfo)
     CONFIG_SUBOBJECT(UserPaths, paths)
+    CONFIG_SUBOBJECT(AudioConfig, audio)
+    CONFIG_SUBOBJECT(AiConfig, ai)
 
 public:
     explicit ConfigRoot(const QString& path, ConfigRoot* fallback = nullptr, QObject* parent = nullptr);
@@ -54,6 +62,7 @@ public:
 private:
     // Binds the computed appearance values to the global token base values
     void bindTokens();
+    void bindFont();
 };
 
 class TokensRoot : public settings::RootNode {
