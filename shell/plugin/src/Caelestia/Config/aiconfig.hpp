@@ -14,7 +14,7 @@ class AiConfig : public settings::ObjectNode {
 
     CONFIG_PROPERTY(QString, ollamaUrl, u"http://localhost:11434"_s)
     CONFIG_PROPERTY(QString, ollamaModel, u"llama3"_s)
-    
+
     CONFIG_PROPERTY(bool, saveChatHistory, true)
     CONFIG_PROPERTY(QString, ollamaHistoryJson, u"[]"_s)
 

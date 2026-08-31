@@ -1,7 +1,7 @@
 import QtQuick
+import Caelestia.Services
 import qs.components
 import qs.services
-import Caelestia.Services
 
 PerfStat {
     readonly property real totalSpeed: (NetworkUsage.downloadSpeed ?? 0) + (NetworkUsage.uploadSpeed ?? 0)
