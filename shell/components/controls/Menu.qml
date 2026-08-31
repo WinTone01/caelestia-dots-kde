@@ -196,7 +196,7 @@ MouseArea {
                         bottomLeftRadius: index === repeater?.count - 1 ? Tokens.rounding.medium : radius
                         bottomRightRadius: index === repeater?.count - 1 ? Tokens.rounding.medium : radius
 
-                        color: Qt.alpha(Colours.palette.m3tertiaryContainer, active ? 1 : 0)
+                        color: "transparent"
 
                         Behavior on radius {
                             Anim {}
@@ -208,7 +208,7 @@ MouseArea {
                             bottomLeftRadius: parent.bottomLeftRadius
                             bottomRightRadius: parent.bottomRightRadius
 
-                            color: item.active ? Colours.palette.m3onTertiaryContainer : Colours.palette.m3onSurface
+                            color: Colours.palette.m3onSurface
                             disabled: !root.expanded
                             onClicked: {
                                 root.itemSelected(item.modelData);
@@ -228,14 +228,14 @@ MouseArea {
                             MaterialIcon {
                                 Layout.alignment: Qt.AlignVCenter
                                 text: item.modelData?.icon ?? ""
-                                color: item.active ? Colours.palette.m3onTertiaryContainer : Colours.palette.m3onSurfaceVariant
+                                color: Colours.palette.m3onSurfaceVariant
                             }
 
                             StyledText {
                                 Layout.alignment: Qt.AlignVCenter
                                 Layout.fillWidth: true
                                 text: item.modelData?.text ?? ""
-                                color: item.active ? Colours.palette.m3onTertiaryContainer : Colours.palette.m3onSurface
+                                color: Colours.palette.m3onSurface
                             }
 
                             Loader {
@@ -246,7 +246,7 @@ MouseArea {
 
                                 sourceComponent: MaterialIcon {
                                     text: item.modelData.trailingIcon
-                                    color: item.active ? Colours.palette.m3onTertiaryContainer : Colours.palette.m3onSurfaceVariant
+                                    color: Colours.palette.m3onSurfaceVariant
                                 }
                             }
                         }
