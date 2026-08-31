@@ -17,6 +17,13 @@ Singleton {
             authUrl: ""
         })
 
+    // Live connection stats, refreshed on demand by the UI via refreshStats().
+    property double connectedSince: 0
+    property string bytesIn: ""
+    property string bytesOut: ""
+    property int pingMs: -1
+    property string serverLocation: ""
+
     readonly property bool connecting: connectProc.running || disconnectProc.running
     readonly property bool enabled: GlobalConfig.utilities.vpn.provider.some(p => typeof p === "object" ? (p.enabled === true) : false)
     readonly property var providerInput: {
@@ -103,6 +110,35 @@ Singleton {
     function checkStatus(): void {
         if (root.enabled) {
             statusProc.running = true;
+        }
+    }
+
+    function formatBytes(bytes: var): string {
+        if (!bytes || bytes <= 0)
+            return "0 B";
+        const units = ["B", "KB", "MB", "GB", "TB"];
+        let i = 0;
+        let v = bytes;
+        while (v >= 1024 && i < units.length - 1) {
+            v /= 1024;
+            i++;
+        }
+        return `${v.toFixed(v < 10 && i > 0 ? 1 : 0)} ${units[i]}`;
+    }
+
+    // Refresh live In/Out byte counters and tunnel latency for the active
+    // interface. Called on demand by the VPN UI.
+    function refreshStats(): void {
+        if (!connected)
+            return;
+        const iface = currentConfig ? currentConfig.interface : "";
+        if (iface.length > 0) {
+            statsProc.command = ["sh", "-c", `cat /sys/class/net/${iface}/statistics/rx_bytes /sys/class/net/${iface}/statistics/tx_bytes 2>/dev/null`];
+            statsProc.running = true;
+            if (!pingProc.running) {
+                pingProc.command = ["sh", "-c", `ping -c1 -W2 -I ${iface} 1.1.1.1 2>/dev/null || ping -c1 -W2 1.1.1.1 2>/dev/null`];
+                pingProc.running = true;
+            }
         }
     }
 
@@ -321,6 +357,20 @@ Singleton {
         }
     }
 
+    onConnectedChanged: {
+        // Stamp / clear the connection start time and the per-connection stats.
+        if (connected) {
+            if (connectedSince === 0)
+                connectedSince = Date.now();
+        } else {
+            connectedSince = 0;
+            bytesIn = "";
+            bytesOut = "";
+            serverLocation = "";
+            pingMs = -1;
+        }
+    }
+
     onProviderNameChanged: {
         status = {
             connected: false,
@@ -473,6 +523,36 @@ Singleton {
         onExited: exitCode => { // qmllint disable signal-handler-parameters
             if (exitCode === 0) {
                 statusCheckTimer.start();
+            }
+        }
+    }
+
+    // Reads cumulative rx/tx bytes for the active VPN interface from sysfs.
+    Process {
+        id: statsProc
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const nums = text.trim().split("\n").map(n => parseInt(n.trim(), 10)).filter(n => !isNaN(n));
+                if (nums.length >= 2) {
+                    root.bytesIn = root.formatBytes(nums[0]);
+                    root.bytesOut = root.formatBytes(nums[1]);
+                }
+            }
+        }
+    }
+
+    Process {
+        id: pingProc
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const m = text.match(/time[=<]\s*([\d.]+)\s*ms/i);
+                if (m) {
+                    root.pingMs = Math.round(parseFloat(m[1]));
+                } else if (root.connected) {
+                    root.pingMs = -1;
+                }
             }
         }
     }

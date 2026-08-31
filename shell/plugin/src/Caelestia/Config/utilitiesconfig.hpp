@@ -39,6 +39,7 @@ class UtilitiesVpn : public settings::ObjectNode {
 
     CONFIG_GLOBAL_PROPERTY(bool, enabled, false)
     CONFIG_GLOBAL_PROPERTY(QVariantList, provider, QVariantList())
+    CONFIG_GLOBAL_PROPERTY(QString, selectedProvider, QString())
 
 };
 
