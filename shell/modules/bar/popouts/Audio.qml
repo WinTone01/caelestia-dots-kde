@@ -185,7 +185,6 @@ ColumnLayout {
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: root._outputsOpen ? (outputColumn.implicitHeight + Tokens.spacing.extraSmall * root.scaleOffset) : 0
-                visible: root.hasOutputChoice
                 clip: true
 
                 Behavior on Layout.preferredHeight {
