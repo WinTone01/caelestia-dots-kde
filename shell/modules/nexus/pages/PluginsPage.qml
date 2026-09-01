@@ -95,7 +95,7 @@ PageBase {
             Process {
                 id: restartProcess
 
-                command: ["bash", "-c", "nohup bash -c 'bash \"${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/caelestia/scripts/restart_shell.sh\"; sleep 1; caelestia shell nexus openPage 14 0' >/dev/null 2>&1 & disown"]
+                command: ["bash", "-c", "nohup bash -c 'bash \"${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/caelestia/scripts/restart_shell.sh\"; sleep 1; caelestia shell nexus openPage 15 0' >/dev/null 2>&1 & disown"]
             }
         }
     ]
@@ -199,6 +199,7 @@ PageBase {
                     required property string mediaurl
                     required property string authorName
                     required property string icon
+                    required property bool restart
 
                     Layout.fillWidth: true
                     visible: bundledDelegate.source === "bundled"
@@ -267,6 +268,7 @@ PageBase {
                     required property string mediaurl
                     required property string authorName
                     required property string icon
+                    required property bool restart
 
                     Layout.fillWidth: true
                     visible: userDelegate.source === "user"
@@ -290,8 +292,8 @@ PageBase {
 
                             StyledSwitch {
                                 checked: userDelegate.enabled
-                                onCheckedChanged: {
-                                    PluginLoader.setPluginEnabled(userDelegate.id || userDelegate.name, checked);
+                                onToggled: {
+                                    PluginLoader.setPluginEnabled(userDelegate.id || userDelegate.name, !userDelegate.enabled);
                                 }
                             }
 
@@ -411,6 +413,7 @@ PageBase {
                     required property string authorName
                     required property string icon
                     required property string type
+                    required property bool restart
                     property string path: "plugins/" + pluginId
                     property string mediaurl: ""
 
@@ -449,7 +452,7 @@ PageBase {
                             text: storeDelegate.isUpdateAvailable ? qsTr("Update") : (storeDelegate.isInstalled ? qsTr("Installed") : qsTr("Install"))
                             enabled: (!storeDelegate.isInstalled || storeDelegate.isUpdateAvailable) && !PluginStore.installing
                             onClicked: {
-                                PluginStore.installPlugin(storeDelegate.pluginId, storeDelegate.path, root.storeBranch, storeDelegate.type);
+                                PluginStore.installPlugin(storeDelegate.pluginId, storeDelegate.path, root.storeBranch, storeDelegate.restart);
                             }
                         }
                     }
