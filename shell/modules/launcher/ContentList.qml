@@ -53,8 +53,8 @@ Item {
 
             PropertyChanges {
                 target: root
-                implicitWidth: root.showAppsBrowser ? root.Tokens.sizes.launcher.browseWidth : root.Tokens.sizes.launcher.itemWidth
-                implicitHeight: root.showAppsBrowser ? Math.min(root.maxHeight, root.Tokens.sizes.launcher.browseHeight) : (appList.implicitHeight > 0 ? appList.implicitHeight : empty.implicitHeight)
+                implicitWidth: root.showAppsBrowser ? browser.implicitWidth : root.Tokens.sizes.launcher.itemWidth
+                implicitHeight: root.showAppsBrowser ? Math.min(root.maxHeight, browser.implicitHeight) : (appList.implicitHeight > 0 ? appList.implicitHeight : empty.implicitHeight)
             }
         },
         State {

@@ -27,6 +27,13 @@ Item {
     readonly property int tileCellWidth: Tokens.sizes.launcher.browseTileWidth + Tokens.spacing.medium
     readonly property int tileCellHeight: Tokens.sizes.launcher.browseTileHeight + Tokens.spacing.medium
 
+    // Size the browser to its content so the drawer doesn't leave big empty areas.
+    readonly property int columns: Math.max(1, Math.floor((Tokens.sizes.launcher.browseWidth - root.sidebarWidth - root.padding * 2 - Tokens.spacing.medium) / root.tileCellWidth))
+    readonly property int rows: Math.ceil(root.count / root.columns)
+
+    implicitWidth: Tokens.sizes.launcher.browseWidth
+    implicitHeight: root.padding * 2 + (root.count === 0 ? root.tileCellHeight * 2 : root.rows * root.tileCellHeight)
+
     function refresh(): void {
         const all = Apps.allApps();
         root.visibleCategories = Categories.visibleCategories(all);
