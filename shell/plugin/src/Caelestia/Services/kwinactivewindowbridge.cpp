@@ -226,20 +226,13 @@ void KWinActiveWindowBridge::minimizeWindow(const QString &address) {
 
 void KWinActiveWindowBridge::maximizeWindow(const QString &address, bool horz, bool vert) {
     if (auto* handle = PlasmaWindows::instance()->handleFor(address)) {
-        const auto max  = QtWayland::org_kde_plasma_window_management::state_maximized;
-        const auto maxH = QtWayland::org_kde_plasma_window_management::state_maximized_horz;
-        const auto maxV = QtWayland::org_kde_plasma_window_management::state_maximized_vert;
-        // set_state(state, mask): state is which bits to turn on, mask is the
-        // set of bits to change. Fully maximized is the combined flag; per-axis
-        // maximizes set only that axis and clear the others.
-        uint32_t state = 0;
-        if (horz && vert) {
-            state = max;
-        } else {
-            if (horz) state |= maxH;
-            if (vert) state |= maxV;
-        }
-        handle->set_state(state, max | maxH | maxV);
+        const auto max = QtWayland::org_kde_plasma_window_management::state_maximized;
+        // The plasma-window-management protocol exposes only a combined maximized
+        // state — there are no per-axis (horz/vert) flags in the state enum — so
+        // any maximize request maps onto the combined flag. The only caller
+        // (windowinfo/Buttons.qml) passes both axes equal, so this preserves the
+        // maximize/restore behaviour.
+        handle->set_state((horz || vert) ? max : 0, max);
     }
 }
 
