@@ -54,6 +54,7 @@ private:
     void detectTypeOnce();
     void detectNameOnce();
     void readGenericUsage();
+    void startNvtopUsage();
     void startNvidiaUsage();
     void readGpuTemperature();
 
@@ -73,6 +74,8 @@ private:
     QProcess* m_typeProc = nullptr;
     QProcess* m_nameProc = nullptr;
     QProcess* m_nvidiaProc = nullptr;
+    QProcess* m_nvtopProc = nullptr;
+    bool m_hasNvtop = false;
 };
 
 } // namespace caelestia::services
