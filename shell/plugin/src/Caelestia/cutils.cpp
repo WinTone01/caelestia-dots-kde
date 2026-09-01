@@ -14,6 +14,7 @@
 #include <QStandardPaths>
 #include <KWindowEffects>
 #include <KModifierKeyInfo>
+#include <QCursor>
 
 Q_LOGGING_CATEGORY(lcCUtils, "caelestia.cutils", QtInfoMsg)
 
@@ -184,6 +185,10 @@ void CUtils::enableBlurBehind(QQuickWindow* window, bool enable) {
 
 qreal CUtils::clamp(qreal value, qreal min, qreal max) {
     return qBound(min, value, max);
+}
+
+void CUtils::setCursorPos(int x, int y) {
+    QCursor::setPos(x, y);
 }
 
 #ifndef CAELESTIA_VERSION
