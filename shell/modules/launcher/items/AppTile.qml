@@ -15,11 +15,11 @@ Item {
     required property bool selected
     required property var browser
 
-    implicitWidth: Tokens.sizes.launcher.browseTileWidth
-    implicitHeight: Tokens.sizes.launcher.browseTileHeight
-
     readonly property bool isFavourite: root.modelData && Strings.testRegexList(GlobalConfig.launcher.favouriteApps, root.modelData.id)
     readonly property bool favouriteByRegex: root.modelData && !((GlobalConfig.launcher.favouriteApps ?? []).includes(root.modelData.id)) && root.isFavourite
+
+    implicitWidth: Tokens.sizes.launcher.browseTileWidth
+    implicitHeight: Tokens.sizes.launcher.browseTileHeight
 
     // Selected highlight
     StyledRect {

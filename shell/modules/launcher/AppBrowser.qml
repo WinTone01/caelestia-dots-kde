@@ -32,9 +32,6 @@ Item {
     readonly property int columns: Math.max(1, Math.floor((root.implicitWidth - root.sidebarWidth - root.padding * 2 - Tokens.spacing.medium) / root.tileCellWidth))
     readonly property int rows: Math.ceil(root.count / root.columns)
 
-    implicitWidth: Math.min(Tokens.sizes.launcher.browseWidth, root.maxWidth)
-    implicitHeight: root.padding * 2 + (root.count === 0 ? root.tileCellHeight * 2 : root.rows * root.tileCellHeight)
-
     function refresh(): void {
         const all = Apps.allApps();
         root.visibleCategories = Categories.visibleCategories(all);
@@ -104,6 +101,9 @@ Item {
             root.launch(grid.currentItem.modelData);
     }
 
+    implicitWidth: Math.min(Tokens.sizes.launcher.browseWidth, root.maxWidth)
+    implicitHeight: root.padding * 2 + (root.count === 0 ? root.tileCellHeight * 2 : root.rows * root.tileCellHeight)
+
     Component.onCompleted: {
         root.refresh();
         grid.currentIndex = grid.count > 0 ? 0 : -1;
@@ -111,11 +111,11 @@ Item {
     }
 
     Connections {
-        target: Apps
-
         function onListChanged(): void {
             root.refresh();
         }
+
+        target: Apps
     }
 
     RowLayout {

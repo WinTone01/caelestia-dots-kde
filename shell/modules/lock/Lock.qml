@@ -58,8 +58,6 @@ Scope {
     }
 
     Connections {
-        target: SessionManager
-
         function onLockRequested(): void {
             if (!root.isHyprland)
                 root.kdeLocked = true;
@@ -69,6 +67,8 @@ Scope {
             if (!root.isHyprland)
                 root.kdeLocked = false;
         }
+
+        target: SessionManager
     }
 
     // qmllint disable unresolved-type

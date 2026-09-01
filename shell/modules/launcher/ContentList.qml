@@ -187,17 +187,17 @@ Item {
 
         anchors.fill: parent
 
+        sourceComponent: AppBrowser {
+            visibilities: root.visibilities
+            maxWidth: root.maxWidth
+        }
+
         Behavior on opacity {
             enabled: root.visibilities.launcher && !root.visibilities.skipLauncherAnim
 
             Anim {
                 type: Anim.DefaultEffects
             }
-        }
-
-        sourceComponent: AppBrowser {
-            visibilities: root.visibilities
-            maxWidth: root.maxWidth
         }
     }
 
