@@ -11,13 +11,6 @@ import qs.modules.nexus.common
 PageBase {
     id: root
 
-    title: {
-        const c = nState.selectedWallpaperCategory;
-        return c.slice(0, 1).toUpperCase() + c.slice(1);
-    }
-    isSubPage: true
-    scrollable: false
-
     property var wallsList: {
         const category = root.nState ? root.nState.selectedWallpaperCategory : "";
         let walls = Wallpapers.list.filter(w => Wallpapers.getCategoryFor(w) === category);
@@ -41,8 +34,16 @@ PageBase {
         return walls;
     }
 
+    title: {
+        const c = nState.selectedWallpaperCategory;
+        return c.slice(0, 1).toUpperCase() + c.slice(1);
+    }
+    isSubPage: true
+    scrollable: false
+
     ListView {
         id: gridList
+
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
         anchors.bottom: parent.bottom
@@ -54,7 +55,9 @@ PageBase {
 
         delegate: RowLayout {
             id: rowDel
+
             required property int index
+
             width: gridList.width
             spacing: Tokens.spacing.large
 

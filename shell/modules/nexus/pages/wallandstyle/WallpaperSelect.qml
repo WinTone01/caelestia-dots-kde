@@ -6,8 +6,8 @@ import Quickshell
 import Caelestia
 import Caelestia.Components
 import Caelestia.Config
-import Caelestia.Models
 import Caelestia.Images
+import Caelestia.Models
 import qs.components
 import qs.components.controls
 import qs.components.filedialog
@@ -17,10 +17,6 @@ import qs.modules.nexus.common
 
 PageBase {
     id: root
-
-    title: qsTr("Select wallpaper")
-    isSubPage: true
-    scrollable: false
 
     property color sortColor: "transparent"
 
@@ -37,44 +33,6 @@ PageBase {
         , "#8e24aa" // Purple
         , "#fb8c00"  // Orange
     ]
-
-    function colorDistance(c1: color, c2: color): real {
-        const dr = c1.r - c2.r;
-        const dg = c1.g - c2.g;
-        const db = c1.b - c2.b;
-        return Math.sqrt(dr * dr + dg * dg + db * db);
-    }
-
-    function toggleSortColor(color: color) {
-        if (root.sortColor === color) {
-            root.sortColor = "transparent";
-        } else {
-            root.sortColor = color;
-            root.analyzeColors();
-        }
-    }
-
-    function analyzeColors() {
-        const walls = Wallpapers.list;
-        const baseDir = Paths.wallsdir;
-        const newDistances = {};
-
-        for (const w of walls) {
-            if (w.parentDir === baseDir) {
-                newDistances[w.path] = colorDistance(root.wallpaperColors[w.path] ?? "black", root.sortColor);
-            }
-        }
-
-        root.colorDistances = newDistances;
-        root.sortVersion++;
-    }
-
-    onSortColorChanged: {
-        if (sortColor === "transparent") {
-            wallpaperColors = ({});
-            colorDistances = ({});
-        }
-    }
 
     property var wallsList: {
         const walls = Wallpapers.list;
@@ -124,8 +82,51 @@ PageBase {
         return list;
     }
 
+    function colorDistance(c1: color, c2: color): real {
+        const dr = c1.r - c2.r;
+        const dg = c1.g - c2.g;
+        const db = c1.b - c2.b;
+        return Math.sqrt(dr * dr + dg * dg + db * db);
+    }
+
+    function toggleSortColor(color: color) {
+        if (root.sortColor === color) {
+            root.sortColor = "transparent";
+        } else {
+            root.sortColor = color;
+            root.analyzeColors();
+        }
+    }
+
+    function analyzeColors() {
+        const walls = Wallpapers.list;
+        const baseDir = Paths.wallsdir;
+        const newDistances = {};
+
+        for (const w of walls) {
+            if (w.parentDir === baseDir) {
+                newDistances[w.path] = colorDistance(root.wallpaperColors[w.path] ?? "black", root.sortColor);
+            }
+        }
+
+        root.colorDistances = newDistances;
+        root.sortVersion++;
+    }
+
+    title: qsTr("Select wallpaper")
+    isSubPage: true
+    scrollable: false
+
+    onSortColorChanged: {
+        if (sortColor === "transparent") {
+            wallpaperColors = ({});
+            colorDistances = ({});
+        }
+    }
+
     ListView {
         id: gridList
+
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
         anchors.bottom: parent.bottom
@@ -139,291 +140,292 @@ PageBase {
             width: gridList.width
             spacing: Tokens.spacing.small
 
-        Timer {
-            id: sortDebouncer
+            Timer {
+                id: sortDebouncer
 
-            interval: 250
-            onTriggered: {
-                root.analyzeColors();
+                interval: 250
+                onTriggered: {
+                    root.analyzeColors();
+                }
             }
-        }
 
-        ButtonRow {
-            Layout.bottomMargin: Tokens.spacing.medium
-            Layout.alignment: Qt.AlignHCenter
-            spacing: Tokens.spacing.small
+            ButtonRow {
+                Layout.bottomMargin: Tokens.spacing.medium
+                Layout.alignment: Qt.AlignHCenter
+                spacing: Tokens.spacing.small
 
-            IconTextButton {
-                icon: "photo_library"
-                text: qsTr("Browse")
-                font: Tokens.font.body.large
-                isRound: true
-                shapeMorph: true
-                horizontalPadding: Tokens.padding.extraLarge
-                verticalPadding: Tokens.padding.medium
-                onClicked: browseDialog.open()
+                IconTextButton {
+                    icon: "photo_library"
+                    text: qsTr("Browse")
+                    font: Tokens.font.body.large
+                    isRound: true
+                    shapeMorph: true
+                    horizontalPadding: Tokens.padding.extraLarge
+                    verticalPadding: Tokens.padding.medium
+                    onClicked: browseDialog.open()
 
-                FileDialog {
-                    id: browseDialog
+                    FileDialog {
+                        id: browseDialog
 
-                    title: qsTr("Select an image")
-                    filterLabel: qsTr("Image files")
-                    filters: Images.validImageExtensions
-                    onAccepted: path => {
-                        Wallpapers.setWallpaper(path);
+                        title: qsTr("Select an image")
+                        filterLabel: qsTr("Image files")
+                        filters: Images.validImageExtensions
+                        onAccepted: path => {
+                            Wallpapers.setWallpaper(path);
+                        }
                     }
                 }
-            }
 
-            IconTextButton {
-                icon: "shuffle"
-                text: qsTr("Random")
-                font: Tokens.font.body.large
-                isRound: true
-                shapeMorph: true
-                horizontalPadding: Tokens.padding.extraLarge
-                verticalPadding: Tokens.padding.medium
-                type: IconTextButton.Tonal
-                onClicked: {
-                    Wallpapers.setRandom();
-                    root.nState.closeSubPage();
+                IconTextButton {
+                    icon: "shuffle"
+                    text: qsTr("Random")
+                    font: Tokens.font.body.large
+                    isRound: true
+                    shapeMorph: true
+                    horizontalPadding: Tokens.padding.extraLarge
+                    verticalPadding: Tokens.padding.medium
+                    type: IconTextButton.Tonal
+                    onClicked: {
+                        Wallpapers.setRandom();
+                        root.nState.closeSubPage();
+                    }
+                }
+
+                IconTextButton {
+                    icon: "folder_open"
+                    text: qsTr("Open folder")
+                    font: Tokens.font.body.large
+                    isRound: true
+                    shapeMorph: true
+                    horizontalPadding: Tokens.padding.extraLarge
+                    verticalPadding: Tokens.padding.medium
+                    type: IconTextButton.Tonal
+                    onClicked: Quickshell.execDetached(["xdg-open", Paths.wallsdir])
                 }
             }
 
-            IconTextButton {
-                icon: "folder_open"
-                text: qsTr("Open folder")
-                font: Tokens.font.body.large
-                isRound: true
-                shapeMorph: true
-                horizontalPadding: Tokens.padding.extraLarge
-                verticalPadding: Tokens.padding.medium
-                type: IconTextButton.Tonal
-                onClicked: Quickshell.execDetached(["xdg-open", Paths.wallsdir])
-            }
-        }
-
-        // Color sorting and type filtering
-        RowLayout {
-            Layout.topMargin: Tokens.spacing.medium
-            Layout.fillWidth: true
-            z: typeFilterBtn.expanded ? 1 : 0
-
-            Item {
+            // Color sorting and type filtering
+            RowLayout {
+                Layout.topMargin: Tokens.spacing.medium
                 Layout.fillWidth: true
-            }
+                z: typeFilterBtn.expanded ? 1 : 0
 
-            Row {
-                spacing: Tokens.spacing.medium
-
-                // Red button
-                Rectangle {
-                    width: 36
-                    height: 36
-                    radius: Tokens.rounding.full
-                    color: "#e53935"
-
-                    Rectangle {
-                        anchors.centerIn: parent
-                        width: 36
-                        height: 36
-                        radius: parent.radius
-                        color: "transparent"
-                        border.width: root.sortColor === "#e53935" ? 3 : 0
-                        border.color: Colours.palette.m3onSurface
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: root.toggleSortColor("#e53935")
-                    }
+                Item {
+                    Layout.fillWidth: true
                 }
 
-                // Blue button
-                Rectangle {
-                    width: 36
-                    height: 36
-                    radius: Tokens.rounding.full
-                    color: "#1e88e5"
+                Row {
+                    spacing: Tokens.spacing.medium
 
+                    // Red button
                     Rectangle {
-                        anchors.centerIn: parent
                         width: 36
                         height: 36
-                        radius: parent.radius
-                        color: "transparent"
-                        border.width: root.sortColor === "#1e88e5" ? 3 : 0
-                        border.color: Colours.palette.m3onSurface
-                    }
+                        radius: Tokens.rounding.full
+                        color: "#e53935"
 
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: root.toggleSortColor("#1e88e5")
-                    }
-                }
-
-                // Green button
-                Rectangle {
-                    width: 36
-                    height: 36
-                    radius: Tokens.rounding.full
-                    color: "#43a047"
-
-                    Rectangle {
-                        anchors.centerIn: parent
-                        width: 36
-                        height: 36
-                        radius: parent.radius
-                        color: "transparent"
-                        border.width: root.sortColor === "#43a047" ? 3 : 0
-                        border.color: Colours.palette.m3onSurface
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: root.toggleSortColor("#43a047")
-                    }
-                }
-
-                // Yellow button
-                Rectangle {
-                    width: 36
-                    height: 36
-                    radius: Tokens.rounding.full
-                    color: "#fdd835"
-
-                    Rectangle {
-                        anchors.centerIn: parent
-                        width: 36
-                        height: 36
-                        radius: parent.radius
-                        color: "transparent"
-                        border.width: root.sortColor === "#fdd835" ? 3 : 0
-                        border.color: Colours.palette.m3onSurface
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: root.toggleSortColor("#fdd835")
-                    }
-                }
-
-                // Purple button
-                Rectangle {
-                    width: 36
-                    height: 36
-                    radius: Tokens.rounding.full
-                    color: "#8e24aa"
-
-                    Rectangle {
-                        anchors.centerIn: parent
-                        width: 36
-                        height: 36
-                        radius: parent.radius
-                        color: "transparent"
-                        border.width: root.sortColor === "#8e24aa" ? 3 : 0
-                        border.color: Colours.palette.m3onSurface
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: root.toggleSortColor("#8e24aa")
-                    }
-                }
-
-                // Orange button
-                Rectangle {
-                    width: 36
-                    height: 36
-                    radius: Tokens.rounding.full
-                    color: "#fb8c00"
-
-                    Rectangle {
-                        anchors.centerIn: parent
-                        width: 36
-                        height: 36
-                        radius: parent.radius
-                        color: "transparent"
-                        border.width: root.sortColor === "#fb8c00" ? 3 : 0
-                        border.color: Colours.palette.m3onSurface
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: root.toggleSortColor("#fb8c00")
-                    }
-                }
-            }
-
-            Item {
-                Layout.fillWidth: true
-            }
-
-            SplitButton {
-                id: typeFilterBtn
-
-                type: SplitButton.Tonal
-                fallbackIcon: "collections"
-                fallbackText: qsTr("All")
-                minLeftWidth: 100
-
-                menuItems: [
-                    MenuItem {
-                        property string filterValue: "all"
-
-                        text: qsTr("All")
-                        icon: "collections"
-                        onClicked: {
-                            if (root.nState) root.nState.wallpaperFilterType = "all"
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: 36
+                            height: 36
+                            radius: parent.radius
+                            color: "transparent"
+                            border.width: root.sortColor === "#e53935" ? 3 : 0
+                            border.color: Colours.palette.m3onSurface
                         }
-                    },
-                    MenuItem {
-                        property string filterValue: "image"
 
-                        text: qsTr("Images")
-                        icon: "image"
-                        onClicked: {
-                            if (root.nState) root.nState.wallpaperFilterType = "image"
-                        }
-                    },
-                    MenuItem {
-                        property string filterValue: "gif"
-
-                        text: qsTr("GIFs")
-                        icon: "gif"
-                        onClicked: {
-                            if (root.nState) root.nState.wallpaperFilterType = "gif"
-                        }
-                    },
-                    MenuItem {
-                        property string filterValue: "video"
-
-                        text: qsTr("Videos")
-                        icon: "movie"
-                        onClicked: {
-                            if (root.nState) root.nState.wallpaperFilterType = "video"
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: root.toggleSortColor("#e53935")
                         }
                     }
-                ]
 
-                active: {
-                    const f = root.nState ? root.nState.wallpaperFilterType : "all";
-                    return menuItems.find(m => m.filterValue === f) ?? menuItems[0];
+                    // Blue button
+                    Rectangle {
+                        width: 36
+                        height: 36
+                        radius: Tokens.rounding.full
+                        color: "#1e88e5"
+
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: 36
+                            height: 36
+                            radius: parent.radius
+                            color: "transparent"
+                            border.width: root.sortColor === "#1e88e5" ? 3 : 0
+                            border.color: Colours.palette.m3onSurface
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: root.toggleSortColor("#1e88e5")
+                        }
+                    }
+
+                    // Green button
+                    Rectangle {
+                        width: 36
+                        height: 36
+                        radius: Tokens.rounding.full
+                        color: "#43a047"
+
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: 36
+                            height: 36
+                            radius: parent.radius
+                            color: "transparent"
+                            border.width: root.sortColor === "#43a047" ? 3 : 0
+                            border.color: Colours.palette.m3onSurface
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: root.toggleSortColor("#43a047")
+                        }
+                    }
+
+                    // Yellow button
+                    Rectangle {
+                        width: 36
+                        height: 36
+                        radius: Tokens.rounding.full
+                        color: "#fdd835"
+
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: 36
+                            height: 36
+                            radius: parent.radius
+                            color: "transparent"
+                            border.width: root.sortColor === "#fdd835" ? 3 : 0
+                            border.color: Colours.palette.m3onSurface
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: root.toggleSortColor("#fdd835")
+                        }
+                    }
+
+                    // Purple button
+                    Rectangle {
+                        width: 36
+                        height: 36
+                        radius: Tokens.rounding.full
+                        color: "#8e24aa"
+
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: 36
+                            height: 36
+                            radius: parent.radius
+                            color: "transparent"
+                            border.width: root.sortColor === "#8e24aa" ? 3 : 0
+                            border.color: Colours.palette.m3onSurface
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: root.toggleSortColor("#8e24aa")
+                        }
+                    }
+
+                    // Orange button
+                    Rectangle {
+                        width: 36
+                        height: 36
+                        radius: Tokens.rounding.full
+                        color: "#fb8c00"
+
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: 36
+                            height: 36
+                            radius: parent.radius
+                            color: "transparent"
+                            border.width: root.sortColor === "#fb8c00" ? 3 : 0
+                            border.color: Colours.palette.m3onSurface
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: root.toggleSortColor("#fb8c00")
+                        }
+                    }
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                }
+
+                SplitButton {
+                    id: typeFilterBtn
+
+                    type: SplitButton.Tonal
+                    fallbackIcon: "collections"
+                    fallbackText: qsTr("All")
+                    minLeftWidth: 100
+
+                    menuItems: [
+                        MenuItem {
+                            property string filterValue: "all"
+
+                            text: qsTr("All")
+                            icon: "collections"
+                            onClicked: {
+                                if (root.nState) root.nState.wallpaperFilterType = "all"
+                            }
+                        },
+                        MenuItem {
+                            property string filterValue: "image"
+
+                            text: qsTr("Images")
+                            icon: "image"
+                            onClicked: {
+                                if (root.nState) root.nState.wallpaperFilterType = "image"
+                            }
+                        },
+                        MenuItem {
+                            property string filterValue: "gif"
+
+                            text: qsTr("GIFs")
+                            icon: "gif"
+                            onClicked: {
+                                if (root.nState) root.nState.wallpaperFilterType = "gif"
+                            }
+                        },
+                        MenuItem {
+                            property string filterValue: "video"
+
+                            text: qsTr("Videos")
+                            icon: "movie"
+                            onClicked: {
+                                if (root.nState) root.nState.wallpaperFilterType = "video"
+                            }
+                        }
+                    ]
+
+                    active: {
+                        const f = root.nState ? root.nState.wallpaperFilterType : "all";
+                        return menuItems.find(m => m.filterValue === f) ?? menuItems[0];
+                    }
                 }
             }
-        }
 
-        StyledText {
-            Layout.topMargin: Tokens.spacing.large
-            text: qsTr("Local wallpapers")
-            font: Tokens.font.title.small
-        }
-
+            StyledText {
+                Layout.topMargin: Tokens.spacing.large
+                text: qsTr("Local wallpapers")
+                font: Tokens.font.title.small
+            }
         }
 
         delegate: RowLayout {
             id: rowDel
+
             required property int index
+
             width: gridList.width
             spacing: Tokens.spacing.large
 
