@@ -198,15 +198,18 @@ ColumnLayout {
                     width: parent.width
                     y: Tokens.spacing.extraSmall * root.scaleOffset
                     spacing: Tokens.spacing.extraSmall * root.scaleOffset
+                    opacity: root._outputsOpen ? 1.0 : 0.0
+
+                    Behavior on opacity {
+                        Anim {
+                            type: Anim.DefaultEffects
+                        }
+                    }
 
                     Repeater {
-                        model: ScriptModel {
-                            values: [...Audio.sinks]
-                        }
+                        model: Audio.sinks
 
                         AudioDevice {
-                            required property PwNode modelData
-
                             active: Audio.sink?.id === modelData.id
                             onSelected: {
                                 Audio.setAudioSink(modelData);
@@ -222,7 +225,7 @@ ColumnLayout {
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: 28 * root.scaleOffset
-                visible: !!Audio.cava && root.hasStreams
+                visible: !!Audio.cava && root.hasStreams && (Audio.cava.values?.some(v => v > 0.01) ?? false)
                 radius: Tokens.rounding.small * root.scaleOffset
                 color: Colours.tPalette.m3surfaceContainerHigh
 
@@ -240,6 +243,8 @@ ColumnLayout {
                         model: 24
 
                         Item {
+                            required property int index
+
                             width: (barsRow.width - 23 * barsRow.spacing) / 24
                             height: barsRow.height
 
@@ -328,13 +333,9 @@ ColumnLayout {
         }
 
         Repeater {
-            model: ScriptModel {
-                values: [...Audio.sources]
-            }
+            model: Audio.sources
 
             AudioDevice {
-                required property PwNode modelData
-
                 isInput: true
                 active: Audio.source?.id === modelData.id
                 onSelected: Audio.setAudioSource(modelData)
@@ -505,7 +506,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 0
                 elide: Text.ElideRight
-                text: device.modelData.description
+                text: device.modelData?.description || device.modelData?.name || qsTr("Unknown")
                 color: device.active ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
                 font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
             }
