@@ -120,9 +120,6 @@ Item {
                 highlight: Item {}
 
                 delegate: CategoryButton {
-                    required property var modelData
-                    required property int index
-
                     width: parent?.width ?? 0
                     selected: sidebar.currentIndex === index
                     onClicked: root.selectCategory(modelData.id)
@@ -160,9 +157,6 @@ Item {
                 }
 
                 delegate: AppTile {
-                    required property var modelData
-                    required property int index
-
                     browser: root
                     selected: grid.currentIndex === index
                 }

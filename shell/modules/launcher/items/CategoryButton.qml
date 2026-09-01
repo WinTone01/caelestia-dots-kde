@@ -7,6 +7,7 @@ Item {
     id: catRoot
 
     required property var modelData
+    required property int index
     required property bool selected
 
     signal clicked()
