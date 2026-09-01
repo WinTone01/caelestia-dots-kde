@@ -61,7 +61,7 @@ ColumnLayout {
                 StyledText {
                     Layout.alignment: Qt.AlignRight
                     text: Nmcli.activeEthernet ? qsTr("Connected") : qsTr("Not connected")
-                    color: Nmcli.activeEthernet ? Colours.palette.m3primary : Colours.palette.m3outline
+                    color: Nmcli.activeEthernet ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
                     font: Tokens.font.label.small
                 }
 
@@ -69,7 +69,7 @@ ColumnLayout {
                     Layout.alignment: Qt.AlignRight
                     visible: Nmcli.activeEthernet && Nmcli.ethernetDataUsage.length > 0
                     text: qsTr("Data usage: %1").arg(Nmcli.ethernetDataUsage)
-                    color: Colours.palette.m3outline
+                    color: Colours.palette.m3onSurfaceVariant
                     font: Tokens.font.label.small
                 }
             }
@@ -248,7 +248,7 @@ ColumnLayout {
         StyledText {
             Layout.alignment: Qt.AlignRight
             text: ethDetail.value
-            color: Colours.palette.m3outline
+            color: Colours.palette.m3onSurfaceVariant
             font: Tokens.font.label.small
             elide: Text.ElideRight
             horizontalAlignment: Text.AlignRight

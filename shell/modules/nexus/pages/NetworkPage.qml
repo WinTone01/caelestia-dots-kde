@@ -493,7 +493,7 @@ PageBase {
                                 StyledText {
                                     Layout.alignment: Qt.AlignRight
                                     text: provider.modelData.iface
-                                    color: Colours.palette.m3outline
+                                    color: Colours.palette.m3onSurfaceVariant
                                     font: Tokens.font.label.small
                                     elide: Text.ElideRight
                                     horizontalAlignment: Text.AlignRight
@@ -526,7 +526,7 @@ PageBase {
 
                                     StyledText {
                                         text: qsTr("%1 ms").arg(VPN.pingMs)
-                                        color: Colours.palette.m3outline
+                                        color: Colours.palette.m3onSurfaceVariant
                                         font: Tokens.font.label.small
                                         elide: Text.ElideRight
                                         horizontalAlignment: Text.AlignRight
