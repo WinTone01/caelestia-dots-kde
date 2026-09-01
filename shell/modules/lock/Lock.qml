@@ -9,7 +9,16 @@ import qs.components.misc
 import qs.services
 
 Scope {
+    id: root
+
     property alias lock: lock
+
+    function requestLock(): void {
+        if (Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE"))
+            lock.locked = true;
+        else
+            Quickshell.execDetached(["loginctl", "lock-session"]);
+    }
 
     WlSessionLock {
         id: lock
@@ -49,7 +58,7 @@ Scope {
     IpcHandler {
         function lock(): void {
             console.log("Lock IPC trigger received");
-            lock.locked = true;
+            root.requestLock();
             Audio.playLock();
         }
 
@@ -70,7 +79,7 @@ Scope {
         interval: 750
         onTriggered: {
             if (GlobalConfig.lock.lockOnStartup) {
-                lock.locked = true;
+                root.requestLock();
             }
         }
     }
