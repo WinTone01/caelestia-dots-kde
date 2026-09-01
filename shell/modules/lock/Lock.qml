@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import Caelestia.Config
+import Caelestia.Services
 import qs.components.misc
 import qs.services
 
@@ -12,12 +13,25 @@ Scope {
     id: root
 
     property alias lock: lock
+    readonly property bool isHyprland: !!Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE")
+    property bool kdeLocked: false
 
     function requestLock(): void {
-        if (Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE"))
+        if (root.isHyprland)
             lock.locked = true;
-        else
+        else {
+            root.kdeLocked = true;
             Quickshell.execDetached(["loginctl", "lock-session"]);
+        }
+    }
+
+    function requestUnlock(): void {
+        if (root.isHyprland)
+            lock.unlock();
+        else {
+            root.kdeLocked = false;
+            Quickshell.execDetached(["loginctl", "unlock-session"]);
+        }
     }
 
     WlSessionLock {
@@ -43,16 +57,26 @@ Scope {
         lock: lock
     }
 
+    Connections {
+        target: SessionManager
 
+        function onLockRequested(): void {
+            if (!root.isHyprland)
+                root.kdeLocked = true;
+        }
 
-
+        function onUnlockRequested(): void {
+            if (!root.isHyprland)
+                root.kdeLocked = false;
+        }
+    }
 
     // qmllint disable unresolved-type
     CustomShortcut {
         // qmllint enable unresolved-type
         name: "unlock"
         description: "Unlock the current session"
-        onPressed: lock.unlock()
+        onPressed: root.requestUnlock()
     }
 
     IpcHandler {
@@ -63,11 +87,11 @@ Scope {
         }
 
         function unlock(): void {
-            lock.unlock();
+            root.requestUnlock();
         }
 
         function isLocked(): bool {
-            return lock.locked;
+            return root.isHyprland ? lock.locked : root.kdeLocked;
         }
 
         target: "lock"
@@ -105,4 +129,3 @@ Scope {
         }
     }
 }
-

@@ -17,6 +17,7 @@ Item {
 
     required property DrawerVisibilities visibilities
     required property var panels
+    required property real maxWidth
     required property real maxHeight
 
     readonly property int padding: Tokens.padding.large
@@ -66,6 +67,7 @@ Item {
             content: root
             visibilities: root.visibilities
             panels: root.panels
+            maxWidth: root.maxWidth - root.padding * 2
             maxHeight: root.maxHeight - searchWrapper.implicitHeight - sessionFooter.implicitHeight - root.padding * 2 - (sessionFooter.visible ? root.footerSpacing * 2 : root.footerSpacing)
             search: search
             padding: root.padding

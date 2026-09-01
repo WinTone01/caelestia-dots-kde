@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import Quickshell
 import Quickshell.Widgets
 import Caelestia.Config
@@ -18,6 +19,7 @@ Item {
     implicitHeight: Tokens.sizes.launcher.browseTileHeight
 
     readonly property bool isFavourite: root.modelData && Strings.testRegexList(GlobalConfig.launcher.favouriteApps, root.modelData.id)
+    readonly property bool favouriteByRegex: root.modelData && !((GlobalConfig.launcher.favouriteApps ?? []).includes(root.modelData.id)) && root.isFavourite
 
     // Selected highlight
     StyledRect {
@@ -92,7 +94,7 @@ Item {
         opacity: (root.isFavourite || favArea.containsMouse) ? 1 : 0
         text: root.isFavourite ? "favorite" : "favorite_border"
         fill: root.isFavourite ? 1 : 0
-        color: root.isFavourite ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+        color: root.favouriteByRegex ? Colours.palette.m3outline : (root.isFavourite ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant)
 
         Behavior on opacity {
             Anim {
@@ -105,8 +107,10 @@ Item {
 
             anchors.fill: parent
             hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
+            cursorShape: root.favouriteByRegex ? Qt.ArrowCursor : Qt.PointingHandCursor
             onClicked: {
+                if (root.favouriteByRegex)
+                    return;
                 const appId = root.modelData?.id;
                 if (!appId)
                     return;
@@ -121,6 +125,9 @@ Item {
                 GlobalConfig.launcher.favouriteApps = favApps;
                 root.browser.refresh();
             }
+
+            ToolTip.visible: favArea.containsMouse && root.favouriteByRegex
+            ToolTip.text: qsTr("Matched by a regex in favouriteApps - edit the config file to change")
         }
     }
 }

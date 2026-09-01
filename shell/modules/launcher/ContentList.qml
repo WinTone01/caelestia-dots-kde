@@ -16,6 +16,7 @@ Item {
     required property var content
     required property DrawerVisibilities visibilities
     required property var panels
+    required property real maxWidth
     required property real maxHeight
     required property StyledTextField search
     required property int padding
@@ -54,7 +55,7 @@ Item {
             PropertyChanges {
                 target: root
                 implicitWidth: root.showAppsBrowser ? browser.implicitWidth : root.Tokens.sizes.launcher.itemWidth
-                implicitHeight: root.showAppsBrowser ? Math.max(root.Tokens.sizes.launcher.browseMinHeight, Math.min(browser.implicitHeight, Math.min(root.maxHeight, root.Tokens.sizes.launcher.browseHeight))) : (appList.implicitHeight > 0 ? appList.implicitHeight : empty.implicitHeight)
+                implicitHeight: root.showAppsBrowser ? Math.min(root.maxHeight, Math.max(root.Tokens.sizes.launcher.browseMinHeight, Math.min(browser.implicitHeight, root.Tokens.sizes.launcher.browseHeight))) : Math.min(root.maxHeight, appList.implicitHeight > 0 ? appList.implicitHeight : empty.implicitHeight)
             }
         },
         State {
@@ -196,6 +197,7 @@ Item {
 
         sourceComponent: AppBrowser {
             visibilities: root.visibilities
+            maxWidth: root.maxWidth
         }
     }
 

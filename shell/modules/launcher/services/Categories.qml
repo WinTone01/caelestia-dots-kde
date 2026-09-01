@@ -26,7 +26,8 @@ QtObject {
         { id: "science", name: qsTr("Science"), icon: "science", xdg: ["Science"] },
         { id: "settings", name: qsTr("Settings"), icon: "settings", xdg: ["Settings"] },
         { id: "system", name: qsTr("System"), icon: "computer", xdg: ["System"] },
-        { id: "utility", name: qsTr("Utilities"), icon: "build", xdg: ["Utility"] }
+        { id: "utility", name: qsTr("Utilities"), icon: "build", xdg: ["Utility"] },
+        { id: "other", name: qsTr("Other"), icon: "category" }
     ]
 
     /// The curated category a desktop entry belongs to, or "other".

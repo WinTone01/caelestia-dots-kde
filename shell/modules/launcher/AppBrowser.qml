@@ -14,6 +14,7 @@ Item {
     id: root
 
     required property DrawerVisibilities visibilities
+    required property real maxWidth
 
     property string currentCategory: "favorites"
     property bool sidebarFocused: false
@@ -28,10 +29,10 @@ Item {
     readonly property int tileCellHeight: Tokens.sizes.launcher.browseTileHeight + Tokens.spacing.medium
 
     // Size the browser to its content so the drawer doesn't leave big empty areas.
-    readonly property int columns: Math.max(1, Math.floor((Tokens.sizes.launcher.browseWidth - root.sidebarWidth - root.padding * 2 - Tokens.spacing.medium) / root.tileCellWidth))
+    readonly property int columns: Math.max(1, Math.floor((root.implicitWidth - root.sidebarWidth - root.padding * 2 - Tokens.spacing.medium) / root.tileCellWidth))
     readonly property int rows: Math.ceil(root.count / root.columns)
 
-    implicitWidth: Tokens.sizes.launcher.browseWidth
+    implicitWidth: Math.min(Tokens.sizes.launcher.browseWidth, root.maxWidth)
     implicitHeight: root.padding * 2 + (root.count === 0 ? root.tileCellHeight * 2 : root.rows * root.tileCellHeight)
 
     function refresh(): void {
@@ -90,7 +91,10 @@ Item {
     }
 
     function toggleFocus(): void {
-        root.sidebarFocused = !root.sidebarFocused;
+        if (root.sidebarFocused)
+            root.selectCategory(sidebar.currentItem?.modelData?.id ?? "favorites");
+        else
+            root.sidebarFocused = true;
     }
 
     function activateCurrent(): void {
@@ -104,6 +108,14 @@ Item {
         root.refresh();
         grid.currentIndex = grid.count > 0 ? 0 : -1;
         sidebar.currentIndex = 0;
+    }
+
+    Connections {
+        target: Apps
+
+        function onListChanged(): void {
+            root.refresh();
+        }
     }
 
     RowLayout {
