@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import Quickshell.Services.Pipewire
 import Caelestia.Config
 import qs.components
@@ -197,7 +198,9 @@ ColumnLayout {
                     spacing: Tokens.spacing.extraSmall * root.scaleOffset
 
                     Repeater {
-                        model: Audio.sinks
+                        model: ScriptModel {
+                            values: [...Audio.sinks]
+                        }
 
                         AudioDevice {
                             required property PwNode modelData
@@ -323,7 +326,9 @@ ColumnLayout {
         }
 
         Repeater {
-            model: Audio.sources
+            model: ScriptModel {
+                values: [...Audio.sources]
+            }
 
             AudioDevice {
                 required property PwNode modelData
@@ -366,7 +371,9 @@ ColumnLayout {
         }
 
         Repeater {
-            model: Audio.appStreams
+            model: ScriptModel {
+                values: [...Audio.appStreams]
+            }
 
             AppStreamRow {
                 required property PwNode modelData

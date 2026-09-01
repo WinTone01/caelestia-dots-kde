@@ -43,7 +43,7 @@ ColumnLayout {
     property real fontScale: 1.0
 
     spacing: Tokens.spacing.medium * scaleOffset
-    width: Math.max(300 * scaleOffset, _isSidebarOpen ? (Tokens.sizes.sidebar.width * scaleOffset) - Tokens.padding.extraLargeIncreased : 0)
+    width: Math.max(400 * scaleOffset, _isSidebarOpen ? (Tokens.sizes.sidebar.width * scaleOffset) - Tokens.padding.extraLargeIncreased : 0)
 
     StyledText {
         Layout.topMargin: Tokens.padding.medium * root.scaleOffset
