@@ -38,6 +38,7 @@ class LauncherConfig : public settings::ObjectNode {
     CONFIG_GLOBAL_PROPERTY(bool, enableDangerousActions, false)
     CONFIG_PROPERTY(int, dragThreshold, 50)
     CONFIG_PROPERTY(bool, showPowerMenu, true)
+    CONFIG_PROPERTY(bool, showBrowseOnEmpty, true)
     CONFIG_PROPERTY(int, hoverThickness, 10)
     CONFIG_PROPERTY(int, hoverWidth, 50)
     CONFIG_GLOBAL_PROPERTY(bool, vimKeybinds, false)
