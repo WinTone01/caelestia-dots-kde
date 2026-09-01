@@ -75,7 +75,7 @@ PageBase {
                             Layout.fillWidth: true
                             visible: text
                             text: (appItem.modelData.comment || appItem.modelData.genericName) ?? ""
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Colours.palette.m3outline
                             font: Tokens.font.label.small
                             elide: Text.ElideRight
                         }

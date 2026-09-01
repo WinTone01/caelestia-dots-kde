@@ -49,7 +49,7 @@ ConnectedRect {
                 Layout.fillWidth: true
                 visible: root.subtext
                 text: root.subtext
-                color: Colours.palette.m3onSurfaceVariant
+                color: Colours.palette.m3outline
                 font: Tokens.font.label.small
                 elide: Text.ElideRight
             }
@@ -60,7 +60,7 @@ ConnectedRect {
 
             type: SplitButton.Tonal
             stateLayer.onClicked: splitButton.expanded = !splitButton.expanded
-            menu.onItemSelected: function(item) { root.selected(item); }
+            menu.onItemSelected: item => root.selected(item)
         }
     }
 }

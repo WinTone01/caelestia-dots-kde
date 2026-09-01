@@ -28,7 +28,7 @@ PageBase {
             Layout.leftMargin: Tokens.padding.small
             Layout.bottomMargin: Tokens.spacing.medium
             text: qsTr("Adjust the volume of individual apps currently playing audio.")
-            color: Colours.palette.m3onSurfaceVariant
+            color: Colours.palette.m3outline
             font: Tokens.font.body.small
             wrapMode: Text.WordWrap
         }

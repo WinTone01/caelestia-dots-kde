@@ -6,7 +6,7 @@ import Quickshell.Io
 import Quickshell.Wayland
 import Caelestia
 import Caelestia.Config
-import Caelestia.Internal
+import Caelestia.Services
 import Caelestia.Services
 import qs.components.misc
 import qs.services

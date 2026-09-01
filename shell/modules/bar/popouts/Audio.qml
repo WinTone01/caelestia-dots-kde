@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import Quickshell.Services.Pipewire
 import Caelestia.Config
 import qs.components
@@ -185,7 +186,6 @@ ColumnLayout {
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: root._outputsOpen ? (outputColumn.implicitHeight + Tokens.spacing.extraSmall * root.scaleOffset) : 0
-                visible: root.hasOutputChoice
                 clip: true
 
                 Behavior on Layout.preferredHeight {
@@ -200,7 +200,9 @@ ColumnLayout {
                     spacing: Tokens.spacing.extraSmall * root.scaleOffset
 
                     Repeater {
-                        model: Audio.sinks
+                        model: ScriptModel {
+                            values: [...Audio.sinks]
+                        }
 
                         AudioDevice {
                             required property PwNode modelData
@@ -326,7 +328,9 @@ ColumnLayout {
         }
 
         Repeater {
-            model: Audio.sources
+            model: ScriptModel {
+                values: [...Audio.sources]
+            }
 
             AudioDevice {
                 required property PwNode modelData
@@ -369,7 +373,9 @@ ColumnLayout {
         }
 
         Repeater {
-            model: Audio.appStreams
+            model: ScriptModel {
+                values: [...Audio.appStreams]
+            }
 
             AppStreamRow {
                 required property PwNode modelData
