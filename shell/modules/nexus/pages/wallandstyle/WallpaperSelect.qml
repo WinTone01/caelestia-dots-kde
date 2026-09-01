@@ -20,6 +20,7 @@ PageBase {
 
     title: qsTr("Select wallpaper")
     isSubPage: true
+    scrollable: false
 
     property color sortColor: "transparent"
 
@@ -75,11 +76,77 @@ PageBase {
         }
     }
 
-    ColumnLayout {
+    property var wallsList: {
+        const walls = Wallpapers.list;
+        const baseDir = Paths.wallsdir;
+        const categories = {};
+        const list = [];
+        const filter = root.nState ? root.nState.wallpaperFilterType : "all";
+
+        for (const w of walls) {
+            const isVid = Images.isVideo(w.name);
+            const isGif = w.name.toLowerCase().endsWith(".gif");
+            const isImg = Images.isValidImageByName(w.name) && !isGif;
+
+            let matches = false;
+            if (filter === "all") matches = true;
+            else if (filter === "video" && isVid) matches = true;
+            else if (filter === "gif" && isGif) matches = true;
+            else if (filter === "image" && isImg) matches = true;
+
+            if (!matches) continue;
+
+            if (w.parentDir !== baseDir) {
+                const category = Wallpapers.getCategoryFor(w);
+                if (category && (!(category in categories) || categories[category].name.localeCompare(w.name) > 0))
+                    categories[category] = w;
+            } else {
+                list.push(w);
+            }
+        }
+
+        for (const cat in categories) {
+            list.push(categories[cat]);
+        }
+
+        if (root.sortColor !== "transparent") {
+            list.sort((a, b) => {
+                const distA = root.colorDistances[a.path] ?? 999999;
+                const distB = root.colorDistances[b.path] ?? 999999;
+                return distA - distB;
+            });
+        } else {
+            list.sort((a, b) => a.name.localeCompare(b.name));
+        }
+
+        while (list.length % Config.nexus.wallpapersPerRow !== 0)
+            list.push(null);
+        return list;
+    }
+
+    ListView {
+        id: gridList
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
+        anchors.bottom: parent.bottom
         width: root.cappedWidth
-        spacing: Tokens.spacing.small
+        clip: true
+        spacing: Tokens.spacing.medium
+
+        model: root.wallsList.length > 0 ? Math.ceil(root.wallsList.length / Config.nexus.wallpapersPerRow) : 0
+
+        header: ColumnLayout {
+            width: gridList.width
+            spacing: Tokens.spacing.small
+
+        Timer {
+            id: sortDebouncer
+
+            interval: 250
+            onTriggered: {
+                root.analyzeColors();
+            }
+        }
 
         ButtonRow {
             Layout.bottomMargin: Tokens.spacing.medium
@@ -352,80 +419,28 @@ PageBase {
             font: Tokens.font.title.small
         }
 
-        GridLayout {
-            Layout.fillWidth: true
-            visible: localWalls.count > 0
+        }
 
-            columns: Config.nexus.wallpapersPerRow
-            rowSpacing: Tokens.spacing.medium
-            columnSpacing: Tokens.spacing.large
+        delegate: RowLayout {
+            id: rowDel
+            required property int index
+            width: gridList.width
+            spacing: Tokens.spacing.large
 
             Repeater {
-                id: localWalls
-
-                model: {
-                    const walls = Wallpapers.list;
-                    const baseDir = Paths.wallsdir;
-                    const categories = {};
-                    const list = [];
-                    const filter = root.nState ? root.nState.wallpaperFilterType : "all";
-
-                    for (const w of walls) {
-                        const isVid = Images.isVideo(w.name);
-                        const isGif = w.name.toLowerCase().endsWith(".gif");
-                        const isImg = Images.isValidImageByName(w.name) && !isGif;
-
-                        let matches = false;
-                        if (filter === "all") {
-                            matches = true;
-                        } else if (filter === "video" && isVid) {
-                            matches = true;
-                        } else if (filter === "gif" && isGif) {
-                            matches = true;
-                        } else if (filter === "image" && isImg) {
-                            matches = true;
-                        }
-
-                        if (!matches)
-                            continue;
-
-                        if (w.parentDir !== baseDir) {
-                            const category = Wallpapers.getCategoryFor(w);
-                            if (category && (!(category in categories) || categories[category].name.localeCompare(w.name) > 0))
-                                categories[category] = w;
-                        } else {
-                            list.push(w);
-                        }
-                    }
-
-                    for (const cat in categories) {
-                        list.push(categories[cat]);
-                    }
-
-                    // Sort by color distance if sortColor is set
-                    if (root.sortColor !== "transparent") {
-                        list.sort((a, b) => {
-                            const distA = root.colorDistances[a.path] ?? 999999;
-                            const distB = root.colorDistances[b.path] ?? 999999;
-                            return distA - distB;
-                        });
-                    } else {
-                        list.sort((a, b) => a.name.localeCompare(b.name));
-                    }
-
-                    while (list.length < Config.nexus.wallpapersPerRow)
-                        list.push(null);
-                    return list;
-                }
+                model: Config.nexus.wallpapersPerRow
 
                 WallItem {
                     id: wallItem
 
-                    required property FileSystemEntry modelData
+                    required property int index
+                    readonly property int globalIndex: rowDel.index * Config.nexus.wallpapersPerRow + index
+                    readonly property var modelData: root.wallsList[globalIndex]
 
                     // Empty placeholders for sizing
                     opacity: modelData ? 1 : 0
-                    enabled: modelData
+                    enabled: !!modelData
+                    Layout.fillWidth: true
 
                     isFolder: modelData && modelData.parentDir !== Paths.wallsdir
                     folderCount: {
@@ -455,24 +470,16 @@ PageBase {
                         }
                     }
 
-                    // Analyze color when image loads and sorting is active
-                    onSourceChanged: {
-                        if (root.sortColor !== "transparent" && modelData && modelData.parentDir === Paths.wallsdir) {
-                            colorAnalyzer.source = modelData.path;
-                        }
-                    }
-
                     ImageAnalyser {
                         id: colorAnalyzer
 
+                        source: (root.sortColor !== "transparent" && wallItem.modelData && wallItem.modelData.parentDir === Paths.wallsdir) ? wallItem.modelData.path : ""
                         rescaleSize: 64
                         onDominantColourChanged: {
-                            if (modelData) {
-                                root.wallpaperColors[modelData.path] = dominantColour;
-                                // Update distance for this wallpaper
+                            if (wallItem.modelData && dominantColour.a > 0) {
+                                root.wallpaperColors[wallItem.modelData.path] = dominantColour;
                                 if (root.sortColor !== "transparent") {
-                                    root.colorDistances[modelData.path] = root.colorDistance(dominantColour, root.sortColor);
-                                    root.sortVersion++;
+                                    sortDebouncer.restart();
                                 }
                             }
                         }
@@ -485,7 +492,7 @@ PageBase {
             Layout.fillWidth: true
 
             asynchronous: true
-            active: localWalls.count === 0
+            active: root.wallsList.length === 0
             visible: active
 
             sourceComponent: StyledRect {
