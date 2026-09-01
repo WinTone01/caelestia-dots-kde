@@ -143,6 +143,7 @@ echo "DONE"`;
                         // Rename 'id' to 'pluginId' to avoid clash with QML's reserved 'id' keyword
                         // in ComponentBehavior:Bound delegates
                         p.pluginId = p.id;
+                        p.path = p.path || ("plugins/" + p.id);
                         p.mediaurl = p.mediaurl || "";
                         p.authorName = p.author ? (p.author.name || "") : "";
                         let aUrl = p.author ? (p.author.url || "") : "";

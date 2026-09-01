@@ -414,8 +414,8 @@ PageBase {
                     required property string icon
                     required property string type
                     required property bool restart
-                    property string path: "plugins/" + pluginId
-                    property string mediaurl: ""
+                    required property string path
+                    required property string mediaurl
 
                     readonly property bool isInstalled: PluginStore.installedPluginIds.indexOf(storeDelegate.pluginId) !== -1
                     readonly property bool isUpdateAvailable: {
@@ -445,7 +445,12 @@ PageBase {
                     authorNameText: storeDelegate.authorName
                     iconText: root.resolveIconText(storeDelegate.icon)
                     iconImageUrl: root.resolveIconUrl(storeDelegate.icon, storeDelegate.path, true)
-                    mediaUrl: storeDelegate.mediaurl ? ("https://raw.githubusercontent.com/ladybug-me/caelestia-kde-plugins/" + root.storeBranch + "/" + storeDelegate.path + "/" + storeDelegate.mediaurl) : ""
+                    mediaUrl: {
+                        if (!storeDelegate.mediaurl) return "";
+                        if (storeDelegate.mediaurl.indexOf("http://") === 0 || storeDelegate.mediaurl.indexOf("https://") === 0 || storeDelegate.mediaurl.indexOf("file://") === 0) return storeDelegate.mediaurl;
+                        if (storeDelegate.mediaurl.indexOf("/") === 0) return "https://raw.githubusercontent.com/ladybug-me/caelestia-kde-plugins/" + root.storeBranch + storeDelegate.mediaurl;
+                        return "https://raw.githubusercontent.com/ladybug-me/caelestia-kde-plugins/" + root.storeBranch + "/" + storeDelegate.path + "/" + storeDelegate.mediaurl;
+                    }
 
                     actionComponent: Component {
                         TextButton {
