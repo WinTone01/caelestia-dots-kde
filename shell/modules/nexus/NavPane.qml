@@ -30,16 +30,6 @@ ColumnLayout {
         clearIcon.font: Tokens.font.icon.medium
         clearIcon.padding: Tokens.padding.extraSmall
 
-        Behavior on bg.border.color {
-            CAnim {}
-        }
-
-        Binding {
-            target: root.nState
-            property: "searchOpen"
-            value: searchField.text.length > 0
-        }
-
         Keys.onReturnPressed: {
             if (root.nState.searchOpen) {
                 searchResults.executeSelected();
@@ -56,6 +46,16 @@ ColumnLayout {
             if (root.nState.searchOpen) {
                 searchResults.moveDown();
             }
+        }
+
+        Behavior on bg.border.color {
+            CAnim {}
+        }
+
+        Binding {
+            target: root.nState
+            property: "searchOpen"
+            value: searchField.text.length > 0
         }
     }
 
