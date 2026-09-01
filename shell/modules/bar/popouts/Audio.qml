@@ -159,6 +159,7 @@ ColumnLayout {
                     }
 
                     MaterialIcon {
+                        visible: root.hasOutputChoice
                         text: "expand_more"
                         rotation: root._outputsOpen ? 180 : 0
                         color: Colours.palette.m3onSurfaceVariant
@@ -175,6 +176,7 @@ ColumnLayout {
                 StateLayer {
                     anchors.fill: parent
                     radius: Tokens.rounding.medium * root.scaleOffset
+                    disabled: !root.hasOutputChoice
                     onClicked: root._outputsOpen = !root._outputsOpen
                 }
             }

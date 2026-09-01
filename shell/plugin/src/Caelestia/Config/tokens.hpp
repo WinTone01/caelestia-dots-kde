@@ -130,7 +130,7 @@ class DashboardTokens : public settings::ObjectNode {
 
     CONFIG_PROPERTY(int, tabIndicatorHeight, 3)
     CONFIG_PROPERTY(int, tabIndicatorSpacing, 5)
-    CONFIG_PROPERTY(int, userWidth, 340)
+    CONFIG_PROPERTY(int, userWidth, 400)
     CONFIG_PROPERTY(int, logoSize, 30)
     CONFIG_PROPERTY(int, uptimeSize, 30)
     CONFIG_PROPERTY(int, dateTimeWidth, 110)
