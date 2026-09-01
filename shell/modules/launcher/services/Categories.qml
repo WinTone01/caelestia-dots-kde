@@ -29,7 +29,19 @@ QtObject {
 
     /// The curated category a desktop entry belongs to, or "other".
     function categoryForApp(app): string {
-        const cats = (app.categories || "").split(";").map(c => c.trim()).filter(c => c.length > 0);
+        let cats = [];
+        const raw = app.categories;
+        if (raw) {
+            if (typeof raw === "string") {
+                cats = raw.split(";").map(c => c.trim()).filter(c => c.length > 0);
+            } else {
+                // DesktopEntry.categories is a list (QStringList), not a semicolon string.
+                for (let i = 0; i < raw.length; i++) {
+                    const c = String(raw[i]).trim();
+                    if (c.length > 0) cats.push(c);
+                }
+            }
+        }
         for (const def of root.definitions) {
             if (!def.xdg) continue;
             for (const x of def.xdg)
