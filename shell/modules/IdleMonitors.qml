@@ -23,14 +23,30 @@ Scope {
         return true;
     }
 
+    readonly property bool isHyprland: !!Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE")
+
+    function requestLock(): void {
+        if (root.isHyprland)
+            lock.lock.locked = true;
+        else
+            Quickshell.execDetached(["loginctl", "lock-session"]);
+    }
+
+    function requestUnlock(): void {
+        // On KDE, unlocking is handled by kscreenlocker; only Hyprland uses
+        // the shell's own session lock.
+        if (root.isHyprland)
+            lock.lock.unlock();
+    }
+
     function handleIdleAction(action: var): void {
         if (!action)
             return;
 
         if (action === "lock")
-            lock.lock.locked = true;
+            root.requestLock();
         else if (action === "unlock")
-            lock.lock.locked = false;
+            root.requestUnlock();
         else if (typeof action === "string")
             Hypr.dispatch(action);
         else if (!SessionManager.exec(action))
@@ -40,15 +56,19 @@ Scope {
     Connections {
         function onAboutToSleep(): void {
             if (GlobalConfig.general.idle.lockBeforeSleep)
-                root.lock.lock.locked = true;
+                root.requestLock();
         }
 
         function onLockRequested(): void {
-            root.lock.lock.locked = true;
+            // On KDE, the login1 Lock signal is already handled by KDE's
+            // kscreenlocker; only Hyprland uses the shell's own session lock.
+            if (root.isHyprland)
+                root.lock.lock.locked = true;
         }
 
         function onUnlockRequested(): void {
-            root.lock.lock.unlock();
+            if (root.isHyprland)
+                root.lock.lock.unlock();
         }
 
         target: SessionManager

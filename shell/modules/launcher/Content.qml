@@ -17,6 +17,7 @@ Item {
 
     required property DrawerVisibilities visibilities
     required property var panels
+    required property real maxWidth
     required property real maxHeight
 
     readonly property int padding: Tokens.padding.large
@@ -66,6 +67,7 @@ Item {
             content: root
             visibilities: root.visibilities
             panels: root.panels
+            maxWidth: root.maxWidth - root.padding * 2
             maxHeight: root.maxHeight - searchWrapper.implicitHeight - sessionFooter.implicitHeight - root.padding * 2 - (sessionFooter.visible ? root.footerSpacing * 2 : root.footerSpacing)
             search: search
             padding: root.padding
@@ -186,6 +188,11 @@ Item {
             placeholderText: qsTr("Type \"%1\" for commands").arg(GlobalConfig.launcher.actionPrefix)
 
             onAccepted: {
+                if (list.showAppsBrowser) {
+                    list.currentList?.activateCurrent();
+                    return;
+                }
+
                 const currentItem = list.currentList?.currentItem;
                 if (currentItem) {
                     if (list.showWallpapers) {
@@ -219,6 +226,9 @@ Item {
                 if (list.showWallpapers) {
                     list.currentList?.decrementCurrentIndex();
                     event.accepted = true;
+                } else if (list.showAppsBrowser) {
+                    list.currentList?.moveLeft();
+                    event.accepted = true;
                 } else {
                     event.accepted = false;
                 }
@@ -226,6 +236,9 @@ Item {
             Keys.onRightPressed: event => {
                 if (list.showWallpapers) {
                     list.currentList?.incrementCurrentIndex();
+                    event.accepted = true;
+                } else if (list.showAppsBrowser) {
+                    list.currentList?.moveRight();
                     event.accepted = true;
                 } else {
                     event.accepted = false;
@@ -243,6 +256,12 @@ Item {
             }
 
             Keys.onPressed: event => {
+                if (list.showAppsBrowser && event.key === Qt.Key_Tab) {
+                    list.currentList?.toggleFocus();
+                    event.accepted = true;
+                    return;
+                }
+
                 if (!GlobalConfig.launcher.vimKeybinds)
                     return;
 
