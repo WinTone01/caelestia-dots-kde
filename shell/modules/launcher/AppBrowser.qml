@@ -17,6 +17,7 @@ Item {
 
     property string currentCategory: "favorites"
     property bool sidebarFocused: false
+    property var visibleCategories: []
 
     readonly property var currentItem: grid.currentItem
     readonly property int count: grid.count
@@ -27,7 +28,9 @@ Item {
     readonly property int tileCellHeight: Tokens.sizes.launcher.browseTileHeight + Tokens.spacing.medium
 
     function refresh(): void {
-        gridModel.values = Categories.appsFor(root.currentCategory, Apps.allApps());
+        const all = Apps.allApps();
+        root.visibleCategories = Categories.visibleCategories(all);
+        gridModel.values = Categories.appsFor(root.currentCategory, all);
     }
 
     function launch(app): void {
@@ -42,7 +45,7 @@ Item {
     function selectCategory(id: string): void {
         root.currentCategory = id;
         root.sidebarFocused = false;
-        const idx = Categories.definitions.findIndex(d => d.id === id);
+        const idx = root.visibleCategories.findIndex(d => d.id === id);
         sidebar.currentIndex = Math.max(0, idx);
         root.refresh();
         grid.currentIndex = grid.count > 0 ? 0 : -1;
@@ -111,7 +114,7 @@ Item {
 
                 anchors.fill: parent
 
-                model: Categories.definitions
+                model: root.visibleCategories
                 spacing: Tokens.spacing.extraSmall
                 clip: true
 
