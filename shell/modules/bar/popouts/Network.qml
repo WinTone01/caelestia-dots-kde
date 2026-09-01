@@ -117,6 +117,28 @@ ColumnLayout {
             rowScale: root.scaleOffset
             visible: root.view === "wireless"
 
+            StateLayer {
+                anchors.fill: parent
+                radius: Tokens.rounding.medium * root.scaleOffset
+                disabled: networkItem.loading || !Nmcli.wifiEnabled
+
+                onClicked: {
+                    if (networkItem.modelData.active) {
+                        Nmcli.disconnectFromNetwork();
+                    } else {
+                        NetworkConnection.handleConnect(networkItem.modelData, null, network => {
+                            // Password is required - show password dialog
+                            root.passwordNetwork = network;
+                            root.showPasswordDialog = true;
+                            root.popouts.currentName = "wirelesspassword";
+                        });
+
+                        // Connecting state is tracked by NmQt.connectingSsid and
+                        // cleared by the backend on success, failure, or cancel.
+                    }
+                }
+            }
+
             MaterialIcon {
                 text: Icons.getNetworkIcon(networkItem.modelData.strength)
                 color: networkItem.modelData.active ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
@@ -139,26 +161,23 @@ ColumnLayout {
                 color: networkItem.modelData.active ? Colours.palette.m3primary : Colours.palette.m3onSurface
             }
 
-            ConnectButton {
-                iconScale: root.scaleOffset
-                active: networkItem.modelData.active
-                loading: networkItem.loading
-                interactive: Nmcli.wifiEnabled
+            Item {
+                Layout.preferredWidth: Tokens.font.icon.medium.pointSize * root.scaleOffset
+                Layout.preferredHeight: width
+                visible: networkItem.modelData.active || networkItem.loading
 
-                onClicked: {
-                    if (networkItem.modelData.active) {
-                        Nmcli.disconnectFromNetwork();
-                    } else {
-                        NetworkConnection.handleConnect(networkItem.modelData, null, network => {
-                            // Password is required - show password dialog
-                            root.passwordNetwork = network;
-                            root.showPasswordDialog = true;
-                            root.popouts.currentName = "wirelesspassword";
-                        });
+                CircularIndicator {
+                    anchors.fill: parent
+                    running: networkItem.loading
+                }
 
-                        // Connecting state is tracked by NmQt.connectingSsid and
-                        // cleared by the backend on success, failure, or cancel.
-                    }
+                MaterialIcon {
+                    anchors.centerIn: parent
+                    animate: true
+                    text: networkItem.modelData.active ? "link_off" : "link"
+                    color: networkItem.modelData.active ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
+                    fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
+                    opacity: networkItem.loading ? 0 : 1
                 }
             }
         }
@@ -255,6 +274,20 @@ ColumnLayout {
             rowScale: root.scaleOffset
             visible: root.view === "wireless"
 
+            StateLayer {
+                anchors.fill: parent
+                radius: Tokens.rounding.medium * root.scaleOffset
+                disabled: vpnItem.loading
+
+                onClicked: {
+                    if (vpnItem.modelData.connected) {
+                        Nmcli.disconnectVpn(vpnItem.modelData.name, () => {});
+                    } else {
+                        Nmcli.connectVpn(vpnItem.modelData.name, () => {});
+                    }
+                }
+            }
+
             MaterialIcon {
                 text: "vpn_key"
                 color: vpnItem.modelData.connected ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
@@ -271,17 +304,23 @@ ColumnLayout {
                 color: vpnItem.modelData.connected ? Colours.palette.m3primary : Colours.palette.m3onSurface
             }
 
-            ConnectButton {
-                iconScale: root.fontScale
-                active: vpnItem.modelData.connected
-                loading: vpnItem.loading
+            Item {
+                Layout.preferredWidth: Tokens.font.icon.medium.pointSize * root.scaleOffset
+                Layout.preferredHeight: width
+                visible: vpnItem.modelData.connected || vpnItem.loading
 
-                onClicked: {
-                    if (vpnItem.modelData.connected) {
-                        Nmcli.disconnectVpn(vpnItem.modelData.name, () => {});
-                    } else {
-                        Nmcli.connectVpn(vpnItem.modelData.name, () => {});
-                    }
+                CircularIndicator {
+                    anchors.fill: parent
+                    running: vpnItem.loading
+                }
+
+                MaterialIcon {
+                    anchors.centerIn: parent
+                    animate: true
+                    text: vpnItem.modelData.connected ? "link_off" : "link"
+                    color: vpnItem.modelData.connected ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
+                    fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
+                    opacity: vpnItem.loading ? 0 : 1
                 }
             }
         }
@@ -335,6 +374,20 @@ ColumnLayout {
             rowScale: root.scaleOffset
             visible: root.view === "ethernet"
 
+            StateLayer {
+                anchors.fill: parent
+                radius: Tokens.rounding.medium * root.scaleOffset
+                disabled: ethernetItem.loading
+
+                onClicked: {
+                    if (ethernetItem.modelData.connected && ethernetItem.modelData.connection) {
+                        Nmcli.disconnectEthernet(ethernetItem.modelData.connection, () => {});
+                    } else {
+                        Nmcli.connectEthernet(ethernetItem.modelData.connection || "", ethernetItem.modelData.interface || "", () => {});
+                    }
+                }
+            }
+
             MaterialIcon {
                 text: "cable"
                 color: ethernetItem.modelData.connected ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
@@ -351,17 +404,23 @@ ColumnLayout {
                 color: ethernetItem.modelData.connected ? Colours.palette.m3primary : Colours.palette.m3onSurface
             }
 
-            ConnectButton {
-                iconScale: root.fontScale
-                active: ethernetItem.modelData.connected
-                loading: ethernetItem.loading
+            Item {
+                Layout.preferredWidth: Tokens.font.icon.medium.pointSize * root.scaleOffset
+                Layout.preferredHeight: width
+                visible: ethernetItem.modelData.connected || ethernetItem.loading
 
-                onClicked: {
-                    if (ethernetItem.modelData.connected && ethernetItem.modelData.connection) {
-                        Nmcli.disconnectEthernet(ethernetItem.modelData.connection, () => {});
-                    } else {
-                        Nmcli.connectEthernet(ethernetItem.modelData.connection || "", ethernetItem.modelData.interface || "", () => {});
-                    }
+                CircularIndicator {
+                    anchors.fill: parent
+                    running: ethernetItem.loading
+                }
+
+                MaterialIcon {
+                    anchors.centerIn: parent
+                    animate: true
+                    text: ethernetItem.modelData.connected ? "link_off" : "link"
+                    color: ethernetItem.modelData.connected ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
+                    fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
+                    opacity: ethernetItem.loading ? 0 : 1
                 }
             }
         }

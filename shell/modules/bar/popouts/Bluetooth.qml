@@ -95,6 +95,14 @@ ColumnLayout {
 
             rowScale: root.scaleOffset
 
+            StateLayer {
+                anchors.fill: parent
+                radius: Tokens.rounding.medium * root.scaleOffset
+                disabled: device.loading
+
+                onClicked: device.modelData.connected = !device.modelData.connected
+            }
+
             MaterialIcon {
                 text: Icons.getBluetoothIcon(device.modelData.icon)
                 fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
@@ -127,14 +135,26 @@ ColumnLayout {
                 }
             }
 
-            ConnectButton {
+            Item {
                 id: connectBtn
 
-                iconScale: root.fontScale
-                active: device.modelData.state === BluetoothDeviceState.Connected // qmllint disable unresolved-type
-                loading: device.loading
+                Layout.preferredWidth: Tokens.font.icon.medium.pointSize * root.scaleOffset
+                Layout.preferredHeight: width
+                visible: device.modelData.state === BluetoothDeviceState.Connected || device.loading
 
-                onClicked: device.modelData.connected = !device.modelData.connected
+                CircularIndicator {
+                    anchors.fill: parent
+                    running: device.loading
+                }
+
+                MaterialIcon {
+                    anchors.centerIn: parent
+                    animate: true
+                    text: device.modelData.state === BluetoothDeviceState.Connected ? "link_off" : "link"
+                    color: device.modelData.state === BluetoothDeviceState.Connected ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
+                    fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
+                    opacity: device.loading ? 0 : 1
+                }
             }
 
             Loader {
