@@ -6,6 +6,7 @@ import Quickshell
 import Caelestia.Config
 import qs.components
 import qs.components.controls
+import qs.components.images
 import qs.services
 import qs.utils
 
@@ -73,17 +74,11 @@ Item {
                 }
             }
 
-            Image {
+            CachingImage {
                 id: img
 
-                source: root.displaySource
+                path: root.displaySource
                 anchors.fill: parent
-                asynchronous: true
-                fillMode: Image.PreserveAspectCrop
-                sourceSize: {
-                    const dpr = (QsWindow.window as QsWindow)?.devicePixelRatio ?? 1;
-                    return Qt.size(width * dpr, height * dpr);
-                }
                 retainWhileLoading: true
                 opacity: status === Image.Ready ? 1 : 0
 

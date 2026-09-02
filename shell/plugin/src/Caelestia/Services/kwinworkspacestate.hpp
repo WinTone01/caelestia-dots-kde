@@ -99,6 +99,9 @@ private:
     void updateActiveId();
     void setupTrackerServer();
     void updateShowingDesktop(bool showing);
+    // Resolve a desktop id (uuid, numeric position, or name) to a uuid.
+    // Numeric positions take precedence over names.
+    QString resolveDesktopUuid(const QString& id) const;
 
     QList<KWinDesktopData> m_desktops;
     QString m_currentUuid;

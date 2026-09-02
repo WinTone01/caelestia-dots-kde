@@ -398,6 +398,16 @@ kwriteconfig6 --file kwinrc --group "Plugins" --key "krohnkiteEnabled"          
 kwriteconfig6 --file kwinrc --group "Plugins" --key "kwin_workspace_trackerEnabled" "false" 2>/dev/null || true
 ok "Disabled KWin plugins: quickshell-kde-bridge, krohnkite, kwin_workspace_tracker"
 
+# Restore the stock KDE lock screen: the custom wallpaper plugin still points
+# at a config dir that uninstall just deleted, leaving a blank lock screen
+# until KDE's fallback kicks in.
+kwriteconfig6 --file kscreenlockerrc --group Greeter --key WallpaperPlugin "org.kde.image" 2>/dev/null || true
+kwriteconfig6 --file kscreenlockerrc --group Greeter --group Wallpaper --group net.dosowisko.PlasmaApplicationWallpaper --group General --key command --delete 2>/dev/null || true
+kwriteconfig6 --file kscreenlockerrc --group Greeter --group Wallpaper --group net.dosowisko.PlasmaApplicationWallpaper --group General --key fps --delete 2>/dev/null || true
+kwriteconfig6 --file kscreenlockerrc --group Greeter --group LnF --group General --key alwaysShowClock --delete 2>/dev/null || true
+kwriteconfig6 --file kscreenlockerrc --group Greeter --group LnF --group General --key showMediaControls --delete 2>/dev/null || true
+ok "Restored stock KDE lock screen configuration."
+
 # Restore desktop count to 1 (KDE default)
 kwriteconfig6 --file kwinrc --group "Desktops" --key "Number" "1" 2>/dev/null || true
 kwriteconfig6 --file kwinrc --group "Desktops" --key "Rows"   "1" 2>/dev/null || true

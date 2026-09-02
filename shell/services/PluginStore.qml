@@ -52,7 +52,7 @@ Item {
         fetchProc.running = true;
     }
 
-    function installPlugin(id, repoPath, branch, type) {
+    function installPlugin(id, repoPath, branch, restart) {
         if (!id) return;
 
         let installBranch = branch || "main";
@@ -81,7 +81,7 @@ echo "DONE"`;
 
         installProc.pendingId = id;
         installProc.pendingTargetDir = targetDir;
-        installProc.pendingType = type || "quickshell";
+        installProc.pendingRestart = (restart === "true" || restart === true);
         installProc.command = ["bash", "-c", script];
         installProc.running = true;
     }
@@ -89,17 +89,16 @@ echo "DONE"`;
     function removePlugin(id) {
         let targetDir = (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/caelestia/plugins/" + id;
         removeProc.pendingId = id;
-        // Determine whether this type actually requires a restart before it's
-        // removed from the available list.
-        let type = "quickshell";
+        // Determine whether this plugin requires a restart when removed.
+        let requiresRestart = false;
         for (let i = 0; i < CaelestiaApi.plugins.available.count; i++) {
             let p = CaelestiaApi.plugins.available.get(i);
             if ((p.id || p.name) === id) {
-                type = p.type || "quickshell";
+                requiresRestart = (p.restart === "true" || p.restart === true);
                 break;
             }
         }
-        removeProc.pendingType = type;
+        removeProc.pendingRestart = requiresRestart;
         removeProc.command = ["rm", "-rf", targetDir];
         removeProc.running = true;
     }
@@ -144,10 +143,12 @@ echo "DONE"`;
                         // Rename 'id' to 'pluginId' to avoid clash with QML's reserved 'id' keyword
                         // in ComponentBehavior:Bound delegates
                         p.pluginId = p.id;
+                        p.path = p.path || ("plugins/" + p.id);
                         p.mediaurl = p.mediaurl || "";
                         p.authorName = p.author ? (p.author.name || "") : "";
                         let aUrl = p.author ? (p.author.url || "") : "";
                         p.icon = p.icon || "extension";
+                        p.restart = (p.restart === "true" || p.restart === true);
                         storeRoot.storePlugins.append(p);
                     }
                     storeRoot.indexFetched();
@@ -166,7 +167,7 @@ echo "DONE"`;
 
         property string pendingId: ""
         property string pendingTargetDir: ""
-        property string pendingType: "quickshell"
+        property bool pendingRestart: false
 
         stdout: StdioCollector { id: installOut }
         stderr: StdioCollector { id: installErr }
@@ -177,7 +178,7 @@ echo "DONE"`;
                 console.log("PluginStore: install error for", installProc.pendingId, ":", installErr.text, installOut.text);
             } else {
                 console.log("PluginStore: install success for", installProc.pendingId);
-                if (installProc.pendingType !== "quickshell")
+                if (installProc.pendingRestart)
                     storeRoot.restartRequired = true;
                 // Track as installed for UI prediction (predicted post-restart state)
                 let ids = storeRoot.installedPluginIds.slice();
@@ -197,10 +198,10 @@ echo "DONE"`;
         id: removeProc
 
         property string pendingId: ""
-        property string pendingType: "quickshell"
+        property bool pendingRestart: false
 
         onExited: (code) => {
-            if (removeProc.pendingType !== "quickshell")
+            if (removeProc.pendingRestart)
                 storeRoot.restartRequired = true;
             // Remove from predicted installed set
             let ids = storeRoot.installedPluginIds.slice();

@@ -1,6 +1,6 @@
 #include "gpu.hpp"
 
-#include "../Config/config.hpp"
+#include "../Config/rootnodes.hpp"
 #include "../Config/serviceconfig.hpp"
 #include "sensorslib.hpp"
 
@@ -8,6 +8,10 @@
 #include <qdir.h>
 #include <qfile.h>
 #include <qregularexpression.h>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QStandardPaths>
 #include <QTimer>
 
 namespace caelestia::services {
@@ -20,15 +24,16 @@ constexpr const char* kTypeDetectScript =
     " elif ls /sys/class/drm/card*/gt/gt0/rps_cur_freq_mhz 2>/dev/null | grep -q .; then echo GENERIC;"
     " else echo NONE; fi";
 
-constexpr const char* kNameDetectScript = "nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null"
-                                          " || glxinfo -B 2>/dev/null | grep 'Device:' | cut -d':' -f2 | cut -d'(' -f1"
-                                          " || lspci 2>/dev/null | grep -i 'vga\\|3d controller\\|display' | head -1";
+constexpr const char* kNvidiaNameScript = "nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null";
+constexpr const char* kGenericNameScript = "glxinfo -B 2>/dev/null | grep 'Device:' | cut -d':' -f2 | cut -d'(' -f1"
+                                           " || lspci 2>/dev/null | grep -i 'vga\\|3d controller\\|display' | head -1";
 
 } // namespace
 
 Gpu::Gpu(QObject* parent)
     : TickingService(parent) {
-    auto* svc = caelestia::config::GlobalConfig::instance()->services();
+    auto* svc = caelestia::config::ConfigSingleton::instance()->services();
+    m_hasNvtop = !QStandardPaths::findExecutable(QStringLiteral("nvtop")).isEmpty();
     m_userType = parseType(svc->gpuType());
     QObject::connect(svc, &caelestia::config::ServiceConfig::gpuTypeChanged, this, [this, svc] {
         setUserType(parseType(svc->gpuType()));
@@ -42,8 +47,9 @@ Gpu::Gpu(QObject* parent)
     QTimer::singleShot(5000, this, [this] {
         if (m_userType == Auto) {
             detectTypeOnce();
+        } else {
+            detectNameOnce();
         }
-        detectNameOnce();
     });
 }
 
@@ -80,6 +86,7 @@ void Gpu::setUserType(Type value) {
     Q_EMIT userTypeChanged();
     if (type() != prevDerived) {
         Q_EMIT typeChanged();
+        detectNameOnce();
     }
 }
 
@@ -106,7 +113,11 @@ void Gpu::setName(QString value) {
 void Gpu::tick() {
     const Type t = type();
     if (t == Generic) {
-        readGenericUsage();
+        if (m_hasNvtop) {
+            startNvtopUsage();
+        } else {
+            readGenericUsage();
+        }
         readGpuTemperature();
     } else if (t == Nvidia) {
         startNvidiaUsage();
@@ -134,22 +145,21 @@ void Gpu::detectTypeOnce() {
         }
         m_typeProc->deleteLater();
         m_typeProc = nullptr;
+
+        detectNameOnce();
     });
     m_typeProc->start(QStringLiteral("sh"), { QStringLiteral("-c"), QString::fromLatin1(kTypeDetectScript) });
 }
 
 void Gpu::detectNameOnce() {
-    if (m_nameProc) {
+    if (m_nameProc || type() == None) {
         return;
     }
     m_nameProc = new QProcess(this);
     QObject::connect(m_nameProc, &QProcess::finished, this, [this](int, QProcess::ExitStatus) {
         const QString output = QString::fromUtf8(m_nameProc->readAllStandardOutput()).trimmed();
         if (!output.isEmpty()) {
-            const QString lower = output.toLower();
-            if (lower.contains(QStringLiteral("nvidia")) || lower.contains(QStringLiteral("geforce")) ||
-                lower.contains(QStringLiteral("rtx")) || lower.contains(QStringLiteral("gtx")) ||
-                lower.contains(QStringLiteral("rx"))) {
+            if (type() == Nvidia) {
                 setName(cleanName(output));
             } else {
                 static const QRegularExpression bracketRe(QStringLiteral("\\[([^\\]]+)\\][^\\[]*$"));
@@ -161,6 +171,8 @@ void Gpu::detectNameOnce() {
                     const auto colon = colonRe.match(output);
                     if (colon.hasMatch()) {
                         setName(cleanName(colon.captured(1)));
+                    } else {
+                        setName(cleanName(output));
                     }
                 }
             }
@@ -168,7 +180,9 @@ void Gpu::detectNameOnce() {
         m_nameProc->deleteLater();
         m_nameProc = nullptr;
     });
-    m_nameProc->start(QStringLiteral("sh"), { QStringLiteral("-c"), QString::fromLatin1(kNameDetectScript) });
+
+    const char* script = (type() == Nvidia) ? kNvidiaNameScript : kGenericNameScript;
+    m_nameProc->start(QStringLiteral("sh"), { QStringLiteral("-c"), QString::fromLatin1(script) });
 }
 
 void Gpu::readGenericUsage() {
@@ -265,6 +279,38 @@ void Gpu::startNvidiaUsage() {
     });
     m_nvidiaProc->start(QStringLiteral("nvidia-smi"), { QStringLiteral("--query-gpu=utilization.gpu,temperature.gpu"),
                                                           QStringLiteral("--format=csv,noheader,nounits") });
+}
+
+void Gpu::startNvtopUsage() {
+    if (m_nvtopProc) {
+        return;
+    }
+    m_nvtopProc = new QProcess(this);
+    QObject::connect(m_nvtopProc, &QProcess::finished, this, [this](int exitCode, QProcess::ExitStatus exitStatus) {
+        if (exitStatus == QProcess::NormalExit && exitCode == 0) {
+            const QByteArray out = m_nvtopProc->readAllStandardOutput().trimmed();
+            QJsonParseError err;
+            const QJsonDocument doc = QJsonDocument::fromJson(out, &err);
+            if (err.error == QJsonParseError::NoError && doc.isArray()) {
+                const QJsonArray arr = doc.array();
+                if (!arr.isEmpty()) {
+                    const QJsonObject obj = arr.first().toObject();
+                    const QString utilStr = obj.value(QStringLiteral("gpu_util")).toString();
+                    if (utilStr.endsWith(QLatin1Char('%'))) {
+                        bool ok = false;
+                        const qreal usage = utilStr.chopped(1).toDouble(&ok) / 100.0;
+                        if (ok && std::abs(usage - m_percentage) > 0.0001) {
+                            m_percentage = usage;
+                            Q_EMIT percentageChanged();
+                        }
+                    }
+                }
+            }
+        }
+        m_nvtopProc->deleteLater();
+        m_nvtopProc = nullptr;
+    });
+    m_nvtopProc->start(QStringLiteral("nvtop"), { QStringLiteral("-s") });
 }
 
 void Gpu::readGpuTemperature() {
