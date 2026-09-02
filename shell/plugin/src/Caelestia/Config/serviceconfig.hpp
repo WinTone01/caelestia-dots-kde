@@ -32,10 +32,12 @@ class ServiceConfig : public settings::ObjectNode {
     CONFIG_GLOBAL_PROPERTY(qreal, maxVolume, 1.0)
     CONFIG_GLOBAL_PROPERTY(bool, smartScheme, true)
 
-    // Launch pinned dock apps through systemd user units (app2unit) instead of
-    // spawning the command directly. Undefined-at-runtime before this existed;
-    // the QML reads it to pick between the two launch paths.
-    CONFIG_GLOBAL_PROPERTY(bool, useSystemd, false)
+    // Launch applications through the systemd user manager (app2unit, or
+    // systemd-run) instead of spawning them as children of the shell. On by
+    // default: a child of the shell inherits its stdio, its environment and
+    // its lifetime, none of which an application should be running with. See
+    // utils/Launch.qml. Setting this to false restores the old behaviour.
+    CONFIG_GLOBAL_PROPERTY(bool, useSystemd, true)
     // Optional Wallhaven API key (NSFW searches require one).
     CONFIG_GLOBAL_PROPERTY(QString, wallhavenApiKey, QString())
 
