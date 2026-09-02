@@ -7,42 +7,46 @@ import Caelestia.Config
 
 // How the shell starts other people's applications.
 //
-// Spawning them as plain children hands them the shell's own process context,
-// and that context is not what an application should run in:
+// Spawning them as plain children hands them the shell's stdio, and the shell
+// may have been started detached (`quickshell -d`, `caelestia shell -d`), which
+// points stdout and stderr at /dev/null. Vesktop deadlocks when a call starts
+// in exactly that state - issue #402, reproducible on its own with
+// `vesktop >/dev/null 2>&1`.
 //
-//   - stdio. The shell may have been started detached (`quickshell -d`,
-//     `caelestia shell -d`), which points stdout and stderr at /dev/null.
-//     Vesktop deadlocks when a call starts in exactly that state - issue #402,
-//     reproducible on its own with `vesktop >/dev/null 2>&1`.
-//   - environment. People deliberately start the shell with things stripped -
-//     `env -u MANGOHUD -u MANGOHUD_CONFIG -u LD_PRELOAD caelestia shell -d` is
-//     the usual MangoHud incantation, so the overlay does not land on the
-//     shell itself. Every application launched from the shell then inherits
-//     that stripped environment and loses the overlay too.
-//   - lifetime. A child of the shell dies with the shell, and shares its
-//     unit's OOMPolicy.
+// So the launch is wrapped in systemd-cat, which execs the application with
+// its output on the journal and changes nothing else about how it runs.
 //
-// Handing the launch to the systemd user manager fixes all three at once: it
-// starts the application from the *session* environment rather than the
-// shell's, with stdio on the journal, in its own unit.
+// Nothing else about it, deliberately. Launching applications as transient
+// systemd *services* also fixes this, and additionally gives them the session
+// environment and their own unit - but a service's lifetime is tied to its
+// main process, and desktop launchers do not survive that. Heroic gets moved
+// into KDE's own app-heroic-<pid>.scope as soon as its window appears, which
+// empties the unit systemd was watching; systemd then tears the unit down and
+// signals whatever is still in the cgroup, which is the game. umu-run dies in
+// its signal handler and the game is left on a blank window.
+//
+// app2unit stays available for anyone who wants the app in its own unit, under
+// services.useSystemd. It uses a scope by default, which does not have the
+// lifetime problem a service does.
 Singleton {
     id: root
 
     // Set once the probe below has run. Until then launches use the plain
     // command, which is the old behaviour rather than a failure.
-    property string launcher: ""
+    property bool hasSystemdCat: false
+    property bool hasApp2Unit: false
 
-    /// Wraps a command so it starts outside the shell's process context.
-    /// Returns the command unchanged when no launcher is available.
+    /// Wraps a command so it does not run on the shell's stdio.
+    /// Returns the command unchanged when nothing is available to wrap it.
     function wrap(command: list<string>): list<string> {
-        if (command.length === 0 || !GlobalConfig.services.useSystemd)
+        if (command.length === 0)
             return command;
 
-        if (root.launcher === "app2unit")
-            return ["app2unit", "-t", "service", "--", ...command];
+        if (GlobalConfig.services.useSystemd && root.hasApp2Unit)
+            return ["app2unit", "--", ...command];
 
-        if (root.launcher === "systemd-run")
-            return ["systemd-run", "--user", "--quiet", "--collect", "--", ...command];
+        if (root.hasSystemdCat)
+            return ["systemd-cat", "--", ...command];
 
         return command;
     }
@@ -68,14 +72,14 @@ Singleton {
             });
     }
 
-    // app2unit knows how to name the unit after the desktop entry, which is
-    // what the rest of the desktop expects to see; systemd-run is the fallback
-    // because it ships with systemd itself.
     Process {
         running: true
-        command: ["sh", "-c", "command -v app2unit >/dev/null 2>&1 && echo app2unit || { command -v systemd-run >/dev/null 2>&1 && echo systemd-run; }"]
+        command: ["sh", "-c", "command -v systemd-cat >/dev/null 2>&1 && echo cat; command -v app2unit >/dev/null 2>&1 && echo unit"]
         stdout: StdioCollector {
-            onStreamFinished: root.launcher = text.trim()
+            onStreamFinished: {
+                root.hasSystemdCat = text.includes("cat");
+                root.hasApp2Unit = text.includes("unit");
+            }
         }
     }
 }

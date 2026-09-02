@@ -32,12 +32,12 @@ class ServiceConfig : public settings::ObjectNode {
     CONFIG_GLOBAL_PROPERTY(qreal, maxVolume, 1.0)
     CONFIG_GLOBAL_PROPERTY(bool, smartScheme, true)
 
-    // Launch applications through the systemd user manager (app2unit, or
-    // systemd-run) instead of spawning them as children of the shell. On by
-    // default: a child of the shell inherits its stdio, its environment and
-    // its lifetime, none of which an application should be running with. See
-    // utils/Launch.qml. Setting this to false restores the old behaviour.
-    CONFIG_GLOBAL_PROPERTY(bool, useSystemd, true)
+    // Put launched applications in their own systemd unit via app2unit,
+    // instead of leaving them as children of the shell. Off by default: it
+    // changes how an application is supervised, which desktop launchers are
+    // sensitive to. Their stdio is redirected either way - see
+    // utils/Launch.qml.
+    CONFIG_GLOBAL_PROPERTY(bool, useSystemd, false)
     // Optional Wallhaven API key (NSFW searches require one).
     CONFIG_GLOBAL_PROPERTY(QString, wallhavenApiKey, QString())
 
