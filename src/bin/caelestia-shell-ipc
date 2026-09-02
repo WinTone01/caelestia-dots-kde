@@ -53,6 +53,8 @@ SHELL_CONFIG="${CAELESTIA_SHELL_CONFIG:-$HOME/.config/quickshell/caelestia/shell
 # there is nothing better than the old behaviour.
 _start_shell() {
     if command -v systemd-run >/dev/null 2>&1; then
+        # A unit left behind by a crashed shell would make --unit fail.
+        systemctl --user reset-failed caelestia-shell.service 2>/dev/null || true
         exec systemd-run --user --quiet --collect \
             --unit="caelestia-shell" \
             --description="Caelestia Shell" \
