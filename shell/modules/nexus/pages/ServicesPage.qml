@@ -218,6 +218,13 @@ PageBase {
             onClicked: root.nState.openSubPage(1)
         }
 
+        ToggleRow {
+            text: qsTr("Audio capture")
+            subtext: qsTr("Needed by the visualisers. Turn off if screen sharing or a camera stalls while the shell is running")
+            checked: GlobalConfig.services.audioCapture
+            onToggled: GlobalConfig.services.audioCapture = checked
+        }
+
         StepperRow {
             label: qsTr("Visualiser bars")
             subtext: qsTr("Number of bars in the audio visualisers")

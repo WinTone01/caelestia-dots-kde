@@ -8,6 +8,8 @@
 #include <spa/param/audio/format-utils.h>
 #include <stop_token>
 #include <thread>
+#include <qelapsedtimer.h>
+#include <qtimer.h>
 #include <vector>
 
 namespace caelestia::services {
@@ -62,6 +64,12 @@ private:
     ~AudioCollector();
 
     std::jthread m_thread;
+    // The worker sets this false on its way out. std::jthread stays joinable
+    // after its function returns, so the thread object alone cannot tell a
+    // running capture from one that died on a PipeWire error.
+    std::atomic<bool> m_workerRunning{ false };
+    int m_restarts = 0;
+    QElapsedTimer m_ran;
     std::vector<float> m_buffer1;
     std::vector<float> m_buffer2;
     std::atomic<std::vector<float>*> m_readBuffer;
@@ -70,6 +78,8 @@ private:
     void reload();
     void start() override;
     void stop() override;
+
+    void onWorkerFinished();
 };
 
 } // namespace caelestia::services

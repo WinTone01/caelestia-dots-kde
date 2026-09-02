@@ -26,6 +26,13 @@ class ServiceConfig : public ConfigObject {
         bool, useTwelveHourClock, QLocale().timeFormat(QLocale::ShortFormat).toLower().contains(u"a"_s))
     CONFIG_GLOBAL_PROPERTY(QString, gpuType)
     CONFIG_GLOBAL_PROPERTY(int, visualiserBars, 60)
+    // The visualisers and the beat tracker feed off a PipeWire capture of the
+    // sink monitor, which the shell otherwise holds open for as long as
+    // something is drawing them. Some setups cannot share that capture: the
+    // screen shares and camera captures in issue #402 stall while the shell
+    // holds one. Turning this off keeps the shell out of the audio graph
+    // entirely, at the cost of the visualisers.
+    CONFIG_GLOBAL_PROPERTY(bool, audioCapture, true)
     CONFIG_GLOBAL_PROPERTY(qreal, audioIncrement, 0.1)
     CONFIG_GLOBAL_PROPERTY(qreal, brightnessIncrement, 0.1)
     CONFIG_GLOBAL_PROPERTY(qreal, maxVolume, 1.0)

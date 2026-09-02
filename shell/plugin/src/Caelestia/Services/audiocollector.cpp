@@ -8,6 +8,8 @@
 #include <spa/param/audio/format-utils.h>
 #include <spa/param/latency-utils.h>
 #include <stop_token>
+#include <qelapsedtimer.h>
+#include <qtimer.h>
 #include <vector>
 
 Q_LOGGING_CATEGORY(lcAc, "caelestia.services.ac", QtInfoMsg)
@@ -240,23 +242,76 @@ AudioCollector::~AudioCollector() {
     AudioCollector::stop();
 }
 
+namespace {
+
+// A capture that dies because the graph moved under it - another client taking
+// over the monitor, the default sink disappearing - should come back. A capture
+// that dies because it cannot work here must not turn into a reconnect loop:
+// hammering the daemon is the failure mode that hurts every other client on it.
+constexpr int maxRestarts = 3;
+constexpr int restartDelayMs = 2000;
+// A capture that held up this long was working; a later failure is a new
+// problem, not a continuation of the one the retry budget is there for.
+constexpr int healthyRunMs = 30000;
+
+} // namespace
+
 void AudioCollector::start() {
-    if (m_thread.joinable()) {
+    if (m_workerRunning.load(std::memory_order_acquire)) {
         return;
     }
 
-    clearBuffer();
-
-    m_thread = std::jthread([this](std::stop_token token) {
-        PipeWireWorker worker(token, this);
-    });
-}
-
-void AudioCollector::stop() {
+    // Reap a worker that already returned; jthread stays joinable until it is
+    // joined, so without this a single stream error would leave the collector
+    // permanently unable to start again.
     if (m_thread.joinable()) {
         m_thread.request_stop();
         m_thread.join();
     }
+
+    clearBuffer();
+
+    m_workerRunning.store(true, std::memory_order_release);
+    m_ran.start();
+    m_thread = std::jthread([this](std::stop_token token) {
+        PipeWireWorker worker(token, this);
+        m_workerRunning.store(false, std::memory_order_release);
+        QMetaObject::invokeMethod(this, [this]() { onWorkerFinished(); }, Qt::QueuedConnection);
+    });
+}
+
+void AudioCollector::stop() {
+    m_restarts = 0;
+    if (m_thread.joinable()) {
+        m_thread.request_stop();
+        m_thread.join();
+    }
+    m_workerRunning.store(false, std::memory_order_release);
+}
+
+void AudioCollector::onWorkerFinished() {
+    // Only an unexpected exit is worth retrying; stop() joins the thread itself
+    // and clears the reference count first.
+    if (!referenced() || m_workerRunning.load(std::memory_order_acquire)) {
+        return;
+    }
+
+    if (m_ran.isValid() && m_ran.elapsed() >= healthyRunMs) {
+        m_restarts = 0;
+    }
+
+    if (m_restarts >= maxRestarts) {
+        qCWarning(lcAc) << "worker exited" << m_restarts << "times, giving up until something references it again";
+        return;
+    }
+
+    m_restarts++;
+    qCInfo(lcAc) << "capture stream ended unexpectedly, restarting in" << restartDelayMs << "ms";
+    QTimer::singleShot(restartDelayMs, this, [this]() {
+        if (referenced()) {
+            start();
+        }
+    });
 }
 
 } // namespace caelestia::services

@@ -30,6 +30,15 @@ Singleton {
     readonly property PwNode sink: Pipewire.defaultAudioSink
     readonly property PwNode source: Pipewire.defaultAudioSource
 
+    // The default node object is replaced whenever the graph moves - another
+    // client adding a stream is enough - and a replacement arrives before its
+    // description does. Reacting to the object meant announcing a device change
+    // that never happened, sometimes as "Now using: Unknown Device", every time
+    // something like OBS started (issue #402). Track the device's own name
+    // instead, and say nothing until it is actually known.
+    readonly property string sinkId: sink?.ready ? (sink.name ?? "") : ""
+    readonly property string sourceId: source?.ready ? (source.name ?? "") : ""
+
     readonly property bool muted: !!sink?.audio?.muted
     readonly property real volume: sink?.audio?.volume ?? 0
 
@@ -260,11 +269,11 @@ Singleton {
         root.streams = newStreams;
     }
 
-    onSinkChanged: {
-        if (!sink?.ready)
+    onSinkIdChanged: {
+        if (!sinkId)
             return;
 
-        const newSinkName = sink.description || sink.name || qsTr("Unknown Device");
+        const newSinkName = sink.description || sink.name;
 
         if (previousSinkName && previousSinkName !== newSinkName && GlobalConfig.utilities.toasts.audioOutputChanged)
             Toaster.toast(qsTr("Audio output changed"), qsTr("Now using: %1").arg(newSinkName), "volume_up");
@@ -272,11 +281,11 @@ Singleton {
         previousSinkName = newSinkName;
     }
 
-    onSourceChanged: {
-        if (!source?.ready)
+    onSourceIdChanged: {
+        if (!sourceId)
             return;
 
-        const newSourceName = source.description || source.name || qsTr("Unknown Device");
+        const newSourceName = source.description || source.name;
 
         if (previousSourceName && previousSourceName !== newSourceName && GlobalConfig.utilities.toasts.audioInputChanged)
             Toaster.toast(qsTr("Audio input changed"), qsTr("Now using: %1").arg(newSourceName), "mic");
@@ -288,8 +297,11 @@ Singleton {
     // lazily-loaded singleton is created, so onValuesChanged would never fire.
     Component.onCompleted: {
         refreshNodes();
-        previousSinkName = sink?.description || sink?.name || qsTr("Unknown Device");
-        previousSourceName = source?.description || source?.name || qsTr("Unknown Device");
+        // Seed only from a device that is actually known. A placeholder here
+        // would read as the previous device and announce a change the moment
+        // the real name arrived.
+        previousSinkName = sinkId ? (sink.description || sink.name) : "";
+        previousSourceName = sourceId ? (source.description || source.name) : "";
 
         // CavaProvider is only registered when the plugin was built with
         // libcava available (see shell/plugin/CMakeLists.txt); create it
@@ -319,6 +331,18 @@ Singleton {
 
     BeatTracker {
         id: beatTracker
+
+        // Both providers feed off the same PipeWire capture of the sink
+        // monitor. Disabling them here is what releases it: consumers keep
+        // their references and their bindings, the capture simply stops.
+        enabled: GlobalConfig.services.audioCapture
+    }
+
+    Binding {
+        when: !!root.cava
+        target: root.cava
+        property: "enabled"
+        value: GlobalConfig.services.audioCapture
     }
 
 
