@@ -15,20 +15,27 @@ Window {
 
     required property var targetScreen
 
+    readonly property real lockHeight: Math.min(root.targetScreen?.width ?? root.width, root.targetScreen?.height ?? root.height)
+    readonly property bool isPortrait: (root.targetScreen?.width ?? root.width) < (root.targetScreen?.height ?? root.height)
+    property bool contentReady: Colours.schemeLoaded
+
     color: "black"
     visible: true
     visibility: Window.FullScreen
     flags: Qt.FramelessWindowHint
-
-    readonly property real lockHeight: Math.min(root.targetScreen?.width ?? root.width, root.targetScreen?.height ?? root.height)
-
-    readonly property bool isPortrait: (root.targetScreen?.width ?? root.width) < (root.targetScreen?.height ?? root.height)
+    width: root.targetScreen?.width ?? 1920
+    height: root.targetScreen?.height ?? 1080
 
     contentItem.Config.screen: targetScreen.name
     contentItem.Tokens.screen: targetScreen.name
 
-    width: root.targetScreen?.width ?? 1920
-    height: root.targetScreen?.height ?? 1080
+    Timer {
+        id: fallbackReadyTimer
+
+        interval: 250
+        running: !root.contentReady
+        onTriggered: root.contentReady = true
+    }
 
     Shortcut {
         sequences: ["Escape"]
@@ -74,31 +81,14 @@ Window {
         active: true
 
         source: "../background/Wallpaper.qml"
-        
+
         onLoaded: {
             item.screen = root.targetScreen;
         }
     }
 
-    property bool contentReady: Colours.schemeLoaded
-
-    Timer {
-        id: fallbackReadyTimer
-        interval: 250
-        running: !root.contentReady
-        onTriggered: root.contentReady = true
-    }
-
     Item {
         id: lockContent
-
-        opacity: root.contentReady ? 1 : 0
-
-        Behavior on opacity {
-            NumberAnimation {
-                duration: 150
-            }
-        }
 
         readonly property int size: lockIcon.implicitHeight + Tokens.padding.large * 4
         readonly property int radius: size / 4 * Tokens.rounding.scale
@@ -109,6 +99,13 @@ Window {
         anchors.centerIn: parent
         implicitWidth: root.isPortrait ? lockShort : lockLong
         implicitHeight: root.isPortrait ? lockLong : lockShort
+        opacity: root.contentReady ? 1 : 0
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 150
+            }
+        }
 
         Elevation {
             anchors.fill: lockBg
@@ -122,7 +119,7 @@ Window {
             anchors.fill: lockBg
             sourceItem: wallpaperLoader
             sourceRect: Qt.rect(lockContent.x, lockContent.y, lockContent.width, lockContent.height)
-            
+
             layer.enabled: true
             layer.effect: MultiEffect {
                 blurEnabled: true
