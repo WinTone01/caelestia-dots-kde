@@ -288,6 +288,11 @@ if old in text:
 # TWEAK: Link KDE user avatar to ~/.face and ~/.face.icon for Caelestia and SDDM
 #
 tweak_user_avatar_symlinks() {
+    if [[ -e "$HOME/.face.icon" || -L "$HOME/.face.icon" ]]; then
+        info "~/.face.icon already exists. Skipping avatar setup."
+        return 0
+    fi
+
     info "Setting up user profile picture symlinks..."
 
     local user_name="${USER:-$(id -un)}"
