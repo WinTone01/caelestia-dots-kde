@@ -52,13 +52,24 @@ SHELL_CONFIG="${CAELESTIA_SHELL_CONFIG:-$HOME/.config/quickshell/caelestia/shell
 # terminal" behaviour from systemd, with stdio on the journal. Without systemd
 # there is nothing better than the old behaviour.
 _start_shell() {
+    AUTOSTART_SCRIPT="$HOME/.local/bin/caelestia-autostart.sh"
     if command -v systemd-run >/dev/null 2>&1; then
         # A unit left behind by a crashed shell would make --unit fail.
         systemctl --user reset-failed caelestia-shell.service 2>/dev/null || true
+        if [ -x "$AUTOSTART_SCRIPT" ]; then
+            exec systemd-run --user --quiet --collect \
+                --unit="caelestia-shell" \
+                --description="Caelestia Shell" \
+                "$AUTOSTART_SCRIPT"
+        fi
         exec systemd-run --user --quiet --collect \
             --unit="caelestia-shell" \
             --description="Caelestia Shell" \
             -- "$QS" -n -p "$SHELL_CONFIG"
+    fi
+
+    if [ -x "$AUTOSTART_SCRIPT" ]; then
+        exec "$AUTOSTART_SCRIPT"
     fi
 
     exec stdbuf -oL -eL "$QS" -d -n -p "$SHELL_CONFIG"
@@ -81,8 +92,8 @@ _qs_direct() {
 
 # ---- status check -------------------------------------------------------------
 _is_running() {
-    # pgrep matches the exact quickshell command line that launched our config
-    pgrep -f "quickshell.*$SHELL_CONFIG" >/dev/null 2>&1
+    # pgrep matches quickshell or qs launching our config
+    pgrep -f "(quickshell|qs).*($SHELL_CONFIG|caelestia)" >/dev/null 2>&1
 }
 
 # ---- commands -----------------------------------------------------------------
