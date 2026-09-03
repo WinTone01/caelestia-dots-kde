@@ -12,6 +12,9 @@ import Caelestia.Services
 Singleton {
     id: root
 
+    property bool showInactiveDevices: false
+    property var cards: AudioBackend.cards
+
     property string previousSinkName: ""
     property string previousSourceName: ""
 
@@ -41,6 +44,8 @@ Singleton {
     // build without Cava doesn't fail this whole singleton's component load.
     property var cava: null
     readonly property alias beatTracker: beatTracker
+
+    property var _sfxCache: ({})
 
     function setVolume(newVolume: real): void {
         if (sink?.ready && sink?.audio) {
@@ -78,6 +83,10 @@ Singleton {
 
     function setAudioSource(newSource: PwNode): void {
         Pipewire.preferredDefaultAudioSource = newSource;
+    }
+
+    function getNodeDisplayName(node: PwNode): string {
+        return node?.properties?.["node.nick"] || node?.description || node?.name || qsTr("Unknown Device");
     }
 
     function cycleNextAudioOutput(): void {
@@ -174,8 +183,6 @@ Singleton {
         SoundEffect {}
     }
 
-    property var _sfxCache: ({})
-
     function playSoundSource(sourcePath: string, enabled: bool, volume: real): void {
         if (!GlobalConfig.audio.sounds.enabled || !enabled)
             return;
@@ -227,18 +234,38 @@ Singleton {
     }
 
     function refreshNodes(): void {
-        const newSinks = [];
-        const newSources = [];
         const newStreams = [];
         const newAppStreams = [];
         const seenApps = new Set();
+        const seenSinks = new Map();
+        const seenSources = new Map();
 
         for (const node of Pipewire.nodes.values) {
             if (!node.isStream) {
-                if (node.isSink)
-                    newSinks.push(node);
-                else if (node.audio)
-                    newSources.push(node);
+                if (node.isSink) {
+                    if (root.showInactiveDevices || !AudioBackend.isSinkInactive(node.name)) {
+                        if (!seenSinks.has(node.name)) {
+                            seenSinks.set(node.name, node);
+                        } else {
+                            const existing = seenSinks.get(node.name);
+                            if (node === Pipewire.defaultAudioSink || (existing !== Pipewire.defaultAudioSink && node.id > existing.id)) {
+                                seenSinks.set(node.name, node);
+                            }
+                        }
+                    }
+                }
+                else if (node.audio) {
+                    if (root.showInactiveDevices || !AudioBackend.isSourceInactive(node.name)) {
+                        if (!seenSources.has(node.name)) {
+                            seenSources.set(node.name, node);
+                        } else {
+                            const existing = seenSources.get(node.name);
+                            if (node === Pipewire.defaultAudioSource || (existing !== Pipewire.defaultAudioSource && node.id > existing.id)) {
+                                seenSources.set(node.name, node);
+                            }
+                        }
+                    }
+                }
             } else if (node.audio) {
                 newStreams.push(node);
 
@@ -255,16 +282,21 @@ Singleton {
         // Assign appStreams before streams so listeners of streamsChanged already
         // observe the deduplicated app list.
         root.appStreams = newAppStreams;
-        root.sinks = newSinks;
-        root.sources = newSources;
+        root.sinks = [...seenSinks.values()];
+        root.sources = [...seenSources.values()];
         root.streams = newStreams;
+    }
+
+    onShowInactiveDevicesChanged: {
+        AudioBackend.showInactiveDevices = showInactiveDevices;
+        refreshNodes();
     }
 
     onSinkChanged: {
         if (!sink?.ready)
             return;
 
-        const newSinkName = sink.description || sink.name || qsTr("Unknown Device");
+        const newSinkName = root.getNodeDisplayName(sink);
 
         if (previousSinkName && previousSinkName !== newSinkName && GlobalConfig.utilities.toasts.audioOutputChanged)
             Toaster.toast(qsTr("Audio output changed"), qsTr("Now using: %1").arg(newSinkName), "volume_up");
@@ -276,7 +308,7 @@ Singleton {
         if (!source?.ready)
             return;
 
-        const newSourceName = source.description || source.name || qsTr("Unknown Device");
+        const newSourceName = root.getNodeDisplayName(source);
 
         if (previousSourceName && previousSourceName !== newSourceName && GlobalConfig.utilities.toasts.audioInputChanged)
             Toaster.toast(qsTr("Audio input changed"), qsTr("Now using: %1").arg(newSourceName), "mic");
@@ -287,9 +319,10 @@ Singleton {
     // Populate immediately: Pipewire.nodes may already be filled by the time this
     // lazily-loaded singleton is created, so onValuesChanged would never fire.
     Component.onCompleted: {
+        AudioBackend.showInactiveDevices = root.showInactiveDevices;
         refreshNodes();
-        previousSinkName = sink?.description || sink?.name || qsTr("Unknown Device");
-        previousSourceName = source?.description || source?.name || qsTr("Unknown Device");
+        previousSinkName = root.getNodeDisplayName(sink);
+        previousSourceName = root.getNodeDisplayName(source);
 
         // CavaProvider is only registered when the plugin was built with
         // libcava available (see shell/plugin/CMakeLists.txt); create it
@@ -309,6 +342,14 @@ Singleton {
         }
 
         target: Pipewire.nodes
+    }
+
+    Connections {
+        function onDevicesChanged(): void {
+            root.refreshNodes();
+        }
+
+        target: AudioBackend
     }
 
     // Always track the current defaults so volume/mute bind even if the lists
