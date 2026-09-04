@@ -6,6 +6,7 @@ qml_module(caelestia-core
         circularbuffer.cpp
         requests.cpp
         toaster.cpp
+        translations.cpp
     LIBRARIES
         Qt::Gui
         Qt::Quick
@@ -16,6 +17,15 @@ qml_module(caelestia-core
         KF6::GuiAddons
         caelestia-util
 )
+
+# Bake the installed translations dir in so Translations can find catalogues
+# even when the shell is launched from outside its install tree.
+if(IS_ABSOLUTE "${INSTALL_QSCONFDIR}")
+    set(_CAELESTIA_QSCONFDIR "${INSTALL_QSCONFDIR}")
+else()
+    set(_CAELESTIA_QSCONFDIR "${CMAKE_INSTALL_PREFIX}/${INSTALL_QSCONFDIR}")
+endif()
+target_compile_definitions(caelestia-core PRIVATE CAELESTIA_TRANSLATIONS_DIR="${_CAELESTIA_QSCONFDIR}/translations")
 
 # Bake the shell version in so CUtils can expose it without spawning a process
 target_compile_definitions(caelestia-core PRIVATE CAELESTIA_VERSION="${DISPLAY_VERSION}")

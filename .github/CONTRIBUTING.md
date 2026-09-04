@@ -67,6 +67,17 @@ cmake -B build && cmake --build build   # Compile
 ./build/caelestia-install               # Run (use with care!)
 ```
 
+### For translation changes
+
+```bash
+scripts/update-translations.sh          # refresh every catalogue
+scripts/update-translations.sh es       # start a new one (Spanish here)
+```
+
+Translate `shell/translations/caelestia_<code>.ts`, rebuild the shell, then pick
+the language in Nexus -> Language & region. See
+[Translations](docs/translations.md) for the full guide.
+
 ## Code style (the short version)
 
 **QML:**
@@ -103,6 +114,7 @@ cmake -B build && cmake --build build   # Compile
 - [KWin port architecture](docs/kwin_port_architecture.md) - C++ plugin design and QML APIs
 - [Installer configuration](docs/installer_config.md) - theme.json and menu.json reference
 - [Lock screen architecture](docs/lockscreen_architecture.md) - lockscreen.qml design
+- [Translations](docs/translations.md) - i18n pipeline and how to add a language
 
 ## Stuck?
 

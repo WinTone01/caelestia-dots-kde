@@ -14,7 +14,7 @@ import qs.modules.nexus.common
 PageBase {
     id: root
 
-    title: "Advanced Colors"
+    title: qsTr("Advanced Colors")
     isSubPage: true
 
     property bool showAdvanced: false
@@ -150,7 +150,7 @@ PageBase {
         }
 
         SectionHeader {
-            text: "Konsole & Pywal Integrations"
+            text: qsTr("Konsole & Pywal Integrations")
         }
         ColumnLayout {
             Layout.fillWidth: true
@@ -159,22 +159,22 @@ PageBase {
             ToggleRow {
                 first: true
                 Layout.topMargin: Tokens.spacing.extraSmall / 2
-                text: "Disable Konsole Sync"
-                subtext: "Disable automatic Konsole theming"
+                text: qsTr("Disable Konsole Sync")
+                subtext: qsTr("Disable automatic Konsole theming")
                 checked: root.disableKonsole
                 onToggled: root.setOption("disable_konsole", checked ? "True" : "False")
             }
             ToggleRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2
-                text: "Konsole Blur"
-                subtext: "Enable background blur for Konsole"
+                text: qsTr("Konsole Blur")
+                subtext: qsTr("Enable background blur for Konsole")
                 checked: root.konsoleBlur
                 onToggled: root.setOption("konsole_blur", checked ? "True" : "False")
             }
             StepperRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2
-                label: "Konsole Opacity (Light)"
-                subtext: "Konsole background opacity in light mode"
+                label: qsTr("Konsole Opacity (Light)")
+                subtext: qsTr("Konsole background opacity in light mode")
                 value: root.konsoleOpacity
                 from: 0
                 to: 100
@@ -183,8 +183,8 @@ PageBase {
             }
             StepperRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2
-                label: "Konsole Opacity (Dark)"
-                subtext: "Konsole background opacity in dark mode"
+                label: qsTr("Konsole Opacity (Dark)")
+                subtext: qsTr("Konsole background opacity in dark mode")
                 value: root.konsoleOpacityDark
                 from: 0
                 to: 100
@@ -193,16 +193,16 @@ PageBase {
             }
             ToggleRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2
-                text: "Sync Pywal"
-                subtext: "Use pywal to theme other programs using Material You colors"
+                text: qsTr("Sync Pywal")
+                subtext: qsTr("Use pywal to theme other programs using Material You colors")
                 checked: root.pywal
                 onToggled: root.setOption("pywal", checked ? "True" : "False")
             }
             ToggleRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2
                 last: true
-                text: "Pywal & Konsole Light Mode"
-                subtext: "Force light/dark mode for pywal and/or Konsole"
+                text: qsTr("Pywal & Konsole Light Mode")
+                subtext: qsTr("Force light/dark mode for pywal and/or Konsole")
                 checked: root.pywalLight
                 onToggled: root.setOption("pywal_light", checked ? "True" : "False")
             }
@@ -212,14 +212,14 @@ PageBase {
         ToggleRow {
             first: true
             last: true
-            text: "Show advanced options"
-            subtext: "Engine behavior, color tuning and window decoration settings"
+            text: qsTr("Show advanced options")
+            subtext: qsTr("Engine behavior, color tuning and window decoration settings")
             checked: root.showAdvanced
             onToggled: root.showAdvanced = checked
         }
 
         SectionHeader {
-            text: "Engine & Behavior"
+            text: qsTr("Engine & Behavior")
             visible: root.showAdvanced
         }
         ColumnLayout {
@@ -229,30 +229,30 @@ PageBase {
 
             ToggleRow {
                 first: true
-                text: "Pause Mode"
-                subtext: "Disables wallpaper detection and automatic theming for Applications, not the Shell"
+                text: qsTr("Pause Mode")
+                subtext: qsTr("Disables wallpaper detection and automatic theming for Applications, not the Shell")
                 checked: root.pauseMode
                 onToggled: root.setOption("pause_mode", checked ? "True" : "False")
             }
             ToggleRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2
-                text: "Manual Fetch"
-                subtext: "Disables automatic color fetching"
+                text: qsTr("Manual Fetch")
+                subtext: qsTr("Disables automatic color fetching")
                 checked: root.manualFetch
                 onToggled: root.setOption("manual_fetch", checked ? "True" : "False")
             }
             ToggleRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2
                 last: true
-                text: "Only Apply Once After Change"
-                subtext: "Extract colors from screenshot once after changing plugin (useful for animated loops)"
+                text: qsTr("Only Apply Once After Change")
+                subtext: qsTr("Extract colors from screenshot once after changing plugin (useful for animated loops)")
                 checked: root.onceAfterChange
                 onToggled: root.setOption("once_after_change", checked ? "True" : "False")
             }
         }
 
         SectionHeader {
-            text: "Color Attributes"
+            text: qsTr("Color Attributes")
             visible: root.showAdvanced
         }
         ColumnLayout {
@@ -262,8 +262,8 @@ PageBase {
 
             StepperRow {
                 first: true
-                label: "Material Design Spec Version"
-                subtext: "The version of the material color specification to use"
+                label: qsTr("Material Design Spec Version")
+                subtext: qsTr("The version of the material color specification to use")
                 value: root.specVersion
                 from: 2021
                 to: 2025
@@ -272,8 +272,8 @@ PageBase {
             }
             StepperRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2
-                label: "Chroma Multiplier"
-                subtext: "Changes chroma (colorfulness) of theme"
+                label: qsTr("Chroma Multiplier")
+                subtext: qsTr("Changes chroma (colorfulness) of theme")
                 value: root.chromaMultiplier
                 from: 0.5
                 to: 10.0
@@ -282,8 +282,8 @@ PageBase {
             }
             StepperRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2
-                label: "Tone Multiplier"
-                subtext: "Changes tone (brightness) of theme"
+                label: qsTr("Tone Multiplier")
+                subtext: qsTr("Changes tone (brightness) of theme")
                 value: root.toneMultiplier
                 from: 0.5
                 to: 1.5
@@ -292,8 +292,8 @@ PageBase {
             }
             StepperRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2
-                label: "Contrast Level"
-                subtext: "Overall color contrast level"
+                label: qsTr("Contrast Level")
+                subtext: qsTr("Overall color contrast level")
                 value: root.contrastLevel
                 from: -1.0
                 to: 1.0
@@ -302,8 +302,8 @@ PageBase {
             }
             StepperRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2
-                label: "Frame Contrast"
-                subtext: "Frames and outlines contrast"
+                label: qsTr("Frame Contrast")
+                subtext: qsTr("Frames and outlines contrast")
                 value: root.frameContrast
                 from: 0.0
                 to: 1.0
@@ -312,8 +312,8 @@ PageBase {
             }
             StepperRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2
-                label: "Light Blend Multiplier"
-                subtext: "Amount of perceptible color for backgrounds in light mode"
+                label: qsTr("Light Blend Multiplier")
+                subtext: qsTr("Amount of perceptible color for backgrounds in light mode")
                 value: root.lightBlendMultiplier
                 from: 0.0
                 to: 4.0
@@ -323,8 +323,8 @@ PageBase {
             StepperRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2
                 last: true
-                label: "Dark Blend Multiplier"
-                subtext: "Amount of perceptible color for backgrounds in dark mode"
+                label: qsTr("Dark Blend Multiplier")
+                subtext: qsTr("Amount of perceptible color for backgrounds in dark mode")
                 value: root.darkBlendMultiplier
                 from: 0.0
                 to: 4.0
@@ -334,7 +334,7 @@ PageBase {
         }
 
         SectionHeader {
-            text: "Window Decorations (Requires Plugins)"
+            text: qsTr("Window Decorations (Requires Plugins)")
             visible: root.showAdvanced
         }
         ColumnLayout {
@@ -344,15 +344,15 @@ PageBase {
 
             ToggleRow {
                 first: true
-                text: "Titlebar Opacity Override"
-                subtext: "Override opacity values for titlebar"
+                text: qsTr("Titlebar Opacity Override")
+                subtext: qsTr("Override opacity values for titlebar")
                 checked: root.titlebarOpacityOverride
                 onToggled: root.setOption("titlebar_opacity_override", checked ? "True" : "False")
             }
             StepperRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2
-                label: "Titlebar Opacity (Light)"
-                subtext: "Requires Klassy or Sierra Breeze Enhanced"
+                label: qsTr("Titlebar Opacity (Light)")
+                subtext: qsTr("Requires Klassy or Sierra Breeze Enhanced")
                 value: root.titlebarOpacity
                 from: 0
                 to: 100
@@ -361,8 +361,8 @@ PageBase {
             }
             StepperRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2
-                label: "Titlebar Opacity (Dark)"
-                subtext: "Requires Klassy or Sierra Breeze Enhanced"
+                label: qsTr("Titlebar Opacity (Dark)")
+                subtext: qsTr("Requires Klassy or Sierra Breeze Enhanced")
                 value: root.titlebarOpacityDark
                 from: 0
                 to: 100
@@ -371,8 +371,8 @@ PageBase {
             }
             StepperRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2
-                label: "Toolbar Opacity (Light)"
-                subtext: "Requires Lightly Application Style"
+                label: qsTr("Toolbar Opacity (Light)")
+                subtext: qsTr("Requires Lightly Application Style")
                 value: root.toolbarOpacity
                 from: 0
                 to: 100
@@ -381,8 +381,8 @@ PageBase {
             }
             StepperRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2
-                label: "Toolbar Opacity (Dark)"
-                subtext: "Requires Lightly Application Style"
+                label: qsTr("Toolbar Opacity (Dark)")
+                subtext: qsTr("Requires Lightly Application Style")
                 value: root.toolbarOpacityDark
                 from: 0
                 to: 100
@@ -391,23 +391,23 @@ PageBase {
             }
             ToggleRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2
-                text: "Klassy Windeco Outline"
-                subtext: "Tint Klassy Window Decoration window outline (Reloads KWin)"
+                text: qsTr("Klassy Windeco Outline")
+                subtext: qsTr("Tint Klassy Window Decoration window outline (Reloads KWin)")
                 checked: root.klassyWindecoOutline
                 onToggled: root.setOption("klassy_windeco_outline", checked ? "True" : "False")
             }
             ToggleRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2
-                text: "KDE Rounded Corners Outline"
-                subtext: "Tint KDE Rounded Corners desktop effect window outline"
+                text: qsTr("KDE Rounded Corners Outline")
+                subtext: qsTr("Tint KDE Rounded Corners desktop effect window outline")
                 checked: root.kdeRoundedCornersEffectOutline
                 onToggled: root.setOption("kde_rounded_corners_effect_outline", checked ? "True" : "False")
             }
             ToggleRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2
                 last: true
-                text: "Sierra Breeze Buttons Color"
-                subtext: "Tint Sierra Breeze decoration buttons (Reloads KWin)"
+                text: qsTr("Sierra Breeze Buttons Color")
+                subtext: qsTr("Tint Sierra Breeze decoration buttons (Reloads KWin)")
                 checked: root.sierraBreezeButtonsColor
                 onToggled: root.setOption("sierra_breeze_buttons_color", checked ? "True" : "False")
             }

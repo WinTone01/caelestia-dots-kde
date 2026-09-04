@@ -151,7 +151,7 @@ PageBase {
                         anchors.leftMargin: Tokens.padding.medium
                         anchors.rightMargin: Tokens.padding.medium
                         verticalAlignment: TextInput.AlignVCenter
-                        placeholderText: "API Key..."
+                        placeholderText: qsTr("API Key...")
                         echoMode: TextInput.Password
                         passwordCharacter: "•"
                         onAccepted: root.saveToken(text)
@@ -536,7 +536,7 @@ PageBase {
                     IconTextButton {
                         anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
-                        text: "Save presence"
+                        text: qsTr("Save presence")
                         icon: "save"
                         type: TextButton.Filled
                         onClicked: {

@@ -217,12 +217,12 @@ PageBase {
                     spacing: Tokens.spacing.extraSmall
 
                     StyledText {
-                        text: "Advanced color settings"
+                        text: qsTr("Advanced color settings")
                         font: Tokens.font.title.small
                         color: Colours.palette.m3onSurface
                     }
                     StyledText {
-                        text: "Material You engine, terminal and window decoration options"
+                        text: qsTr("Material You engine, terminal and window decoration options")
                         font: Tokens.font.body.medium
                         color: Colours.palette.m3onSurfaceVariant
                     }

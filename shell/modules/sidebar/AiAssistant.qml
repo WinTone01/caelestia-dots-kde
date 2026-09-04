@@ -2901,7 +2901,7 @@ Item {
                                          spacing: Tokens.spacing.small
 
                                          Text {
-                                             text: "Thought Process"
+                                             text: qsTr("Thought Process")
                                              color: Colours.palette.m3onSurfaceVariant
                                              font: Tokens.font.body.small
                                          }
@@ -3456,7 +3456,7 @@ Item {
                              font: Tokens.font.icon.small
                          }
                          Text {
-                             text: "Clear All"
+                             text: qsTr("Clear All")
                              color: Colours.palette.m3onErrorContainer
                              font: Tokens.font.body.small
                          }
@@ -3491,7 +3491,7 @@ Item {
                              font: Tokens.font.icon.small
                          }
                          Text {
-                             text: "New Chat"
+                             text: qsTr("New Chat")
                              color: Colours.palette.m3onPrimaryContainer
                              font: Tokens.font.body.small
                          }

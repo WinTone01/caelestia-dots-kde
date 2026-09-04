@@ -229,6 +229,20 @@ fi
 
 cd "$SHELL_DIR" || exit 1
 
+# lrelease compiles shell/translations into the .qm catalogues the shell loads.
+# Checked here rather than with the other dependencies so it also covers a fresh
+# setup run; without it CMake just warns and the shell ships English only.
+if ! command -v lrelease >/dev/null 2>&1 && [[ ! -x /usr/lib/qt6/bin/lrelease ]]; then
+    info "Installing Qt Linguist tools for UI translations..."
+    if command -v pacman >/dev/null; then
+        sudo pacman -S --needed --noconfirm qt6-tools || warn "qt6-tools install failed; the shell will stay in English."
+    elif command -v dnf >/dev/null; then
+        sudo dnf install -y qt6-qttools-devel || warn "qt6-qttools-devel install failed; the shell will stay in English."
+    elif command -v apt-get >/dev/null; then
+        sudo apt-get install -y qt6-l10n-tools qt6-tools-dev || warn "Linguist tools install failed; the shell will stay in English."
+    fi
+fi
+
 info "Configuring CMake..."
 prepare_build_dir build
 cmake -G "$CMAKE_GENERATOR" -B build -DCMAKE_BUILD_TYPE=Release -DCAELESTIA_CACHE_DEPS=ON -DCMAKE_INSTALL_PREFIX="$HOME/.local" -DINSTALL_QSCONFDIR="$HOME/.config/quickshell/caelestia" -DINSTALL_LIBDIR="lib/caelestia" -DINSTALL_QMLDIR="lib/qt6/qml" || {

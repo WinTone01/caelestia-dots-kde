@@ -10,6 +10,12 @@ if(CAELESTIA_UNITY_BUILD)
     set(CMAKE_UNITY_BUILD_BATCH_SIZE 16)
 endif()
 
+# Normally inherited from the top level project; defaulted here so the plugin
+# can still be configured on its own.
+if(NOT DEFINED INSTALL_QSCONFDIR)
+    set(INSTALL_QSCONFDIR "etc/xdg/quickshell/caelestia" CACHE STRING "Quickshell config install dir")
+endif()
+
 find_package(Qt6 REQUIRED COMPONENTS ShaderTools Core Qml Gui Quick QuickControls2 Concurrent Sql Network DBus WaylandClient)
 find_package(KF6WindowSystem REQUIRED)
 find_package(KF6GuiAddons REQUIRED)
