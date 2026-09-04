@@ -182,6 +182,31 @@ void KWinActiveWindowBridge::sendToOutput(const QString &address, const QString 
         msg << action;
         QDBusConnection::sessionBus().call(msg, QDBus::NoBlock);
     });
+
+    // A window keeps its virtual desktop when it changes screen. With a desktop
+    // per output that is rarely what the other screen is showing, so a window
+    // dragged across arrives on the right monitor and is immediately invisible,
+    // sitting on a desktop that monitor is not currently displaying -- indis-
+    // tinguishable, to whoever dragged it, from the window having been lost.
+    // Put it on the desktop the target output actually shows.
+    //
+    // After the move rather than before: the shortcut acts on the active window,
+    // and sending the window to another desktop first would take it off screen
+    // and out of focus before the move could happen.
+    QTimer::singleShot(260, this, [this, address, outputName]() {
+        auto* wsState = KWinWorkspaceState::instance();
+        if (!wsState) {
+            return;
+        }
+        // Empty without the workspace-tracker effect, which is the only thing
+        // that can report a desktop per output. Nothing to correct then: without
+        // it there is a single current desktop and the window is already on the
+        // one being shown.
+        const int desktop = wsState->activeByOutput().value(outputName).toInt();
+        if (desktop > 0) {
+            setWindowDesktop(address, desktop);
+        }
+    });
 }
 
 QString KWinActiveWindowBridge::getOutputNameForGeometry(int x, int y, int w, int h) const {
