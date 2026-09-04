@@ -81,9 +81,19 @@ Two details are worth knowing before touching that setup:
   `.qm` would quietly ship the previous translation. The workflow recompiles them
   on the localization branch so the pair always moves together.
 
+The project lives at <https://crowdin.com/project/caelestia-kde>, and the README
+badge reports its progress.
+
 The repository needs two secrets for this, both from a Crowdin account with at
 least Manager rights on the project: `CROWDIN_PROJECT_ID` and
 `CROWDIN_PERSONAL_TOKEN`. The job is skipped on forks, where they do not exist.
+
+Create the token under Account Settings -> API with **Granular access**, limited
+to this project and to the scopes the synchronization needs. A Crowdin personal
+token otherwise carries its owner's permissions across every project they can
+reach, and this one lives in a repository whose write access is not the same set
+of people -- anyone who can add a workflow can read a secret. Scoping it keeps
+that reach to one project.
 
 Adding a language is done in Crowdin's own settings; the catalogue appears here
 on the next synchronization. Nothing about the local workflow changes -- a
