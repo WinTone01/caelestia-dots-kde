@@ -50,7 +50,12 @@ Item {
     /// edges. Those reported entry and exit, and paging moves the grid under the
     /// pointer, which counted as leaving -- so the second page never came while
     /// the drag was held perfectly still. A position cannot be confused that way.
-    readonly property real edgeBand: 60
+    /// How far in from a screen edge counts as resting against it. Wide enough
+    /// to be reachable without pressing the pointer into the very last pixels:
+    /// on a shared edge the pointer glides onto the next monitor rather than
+    /// stopping, so a narrow band leaves almost nothing to aim at. The dwell,
+    /// not the width, is what keeps passing through from paging.
+    readonly property real edgeBand: 140
     readonly property int edgeDirection: {
         if (!root.isDragging || Visibilities.dragAddress === "" || Visibilities.dragOriginScreen !== root.screen.name)
             return 0;
@@ -136,6 +141,15 @@ Item {
     }
     function syncPage() {
         if (typeof KWinWorkspaceState === "undefined") return;
+        // Never while a window is being dragged. The page a drag has reached is
+        // chosen by the drag itself, but activeWsId only catches up once the
+        // compositor has switched and the tracker's payload has come back over
+        // its socket -- and any activeWsId notification arriving before that
+        // still carries the desktop the drag started on. Acting on it snaps the
+        // view back to that page, so the drop then finds the window already
+        // where it is and does nothing: the card flies home and the drag looks
+        // like it was ignored.
+        if (root.isDragging) return;
         for (let i = 0; i < KWinWorkspaceState.workspaces.length; ++i) {
             const wId = KWinWorkspaceState.workspaces[i].index;
             if (wId === activeWsId) {
@@ -154,6 +168,9 @@ Item {
     onOpacityChanged: {
         if (opacity <= 0) {
             selectedIndex = -1;
+            // A card destroyed mid-drag never reports the drag ending, and a
+            // stuck flag would leave syncPage() disabled for good.
+            root.isDragging = false;
         } else {
             if (Visibilities.preOverviewActiveWindowAddress !== "") {
                 const targetAddress = Visibilities.preOverviewActiveWindowAddress;
@@ -258,6 +275,13 @@ Item {
         onCountChanged: Qt.callLater(root.syncPage)
         onCurrentIndexChanged: {
             if (root.ignoreNextSwitch) return;
+            // Not while a window is being dragged. Switching the compositor's
+            // desktop cancels the pointer grab the drag is riding on, so the
+            // drag ended the instant the first page turned and the window was
+            // dropped on the page it had just reached -- holding on could never
+            // carry it further. The view still pages; the desktop catches up
+            // once the drag is over.
+            if (root.isDragging) return;
             switchTimer.restart();
         }
 
@@ -321,6 +345,16 @@ Item {
             }
             DropArea {
                 anchors.fill: parent
+                // Accepted only when this page actually took the window in.
+                //
+                // Qt re-resolves which DropArea a drag is over on drag movement,
+                // not when the scene moves underneath it. Paging by holding the
+                // drag against an edge does exactly that -- the pages scroll
+                // while the pointer is deliberately still -- so the drag is
+                // still registered against the page it started on. Accepting
+                // there regardless reported the drop as handled, and the card's
+                // own release path, which goes by the page actually on screen,
+                // never ran: the workspace changed and the window stayed behind.
                 onDropped: drop => {
                     const sourceItem = drop.source;
                     if (sourceItem && sourceItem.clientAddress) {
@@ -335,8 +369,8 @@ Item {
                                     Hypr.dispatch(Hypr.usingLua ? `hl.dsp.movetoworkspace({ workspace = "${targetId}", window = "address:0x${addr}" })` : `movetoworkspace ${targetId},address:0x${addr}`);
                                 }
                             });
+                            drop.accept();
                         }
-                        drop.accept();
                     }
                 }
             }
@@ -456,6 +490,9 @@ Item {
                                     if (!active) {
                                         activeWin.dropTargetScale = 0;
                                         Visibilities.clearDrag();
+                                        // Held back for the length of the drag; the
+                                        // desktop follows the page the drag landed on.
+                                        switchTimer.restart();
 
                                         if (typeof KWinWorkspaceState === "undefined" || typeof KWinActiveWindowBridge === "undefined") return;
 
@@ -600,7 +637,14 @@ Item {
                                         // per window and a node feeds one consumer,
                                         // so holding on would leave the other one
                                         // drawing black.
-                                        active: root.opacity > 0 && Math.abs(page.index - listView.currentIndex) <= 1
+                                        // The neighbour rule is about pages that
+                                        // cannot be seen, so it must not apply to a
+                                        // card being carried: a drag held across two
+                                        // pages left its own page two away, and the
+                                        // card in the user's hand collapsed to an
+                                        // icon mid-gesture.
+                                        active: root.opacity > 0
+                                            && (dragHandler.active || Math.abs(page.index - listView.currentIndex) <= 1)
                                             && !(root.activeInfoClient && root.activeInfoClient.address === modelData.address)
                                             && Visibilities.streamClaim !== modelData.address
                                         address: modelData.address ?? ""
