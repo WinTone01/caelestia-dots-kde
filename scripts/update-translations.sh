@@ -75,4 +75,17 @@ for lang in "${LANGS[@]}"; do
         grep -E 'Found|Warning' || true
 done
 
-echo "[ OK ]  Catalogues updated. Edit them with Qt Linguist, then rebuild the shell."
+# The compiled catalogues are committed so that a build without Qt's Linguist
+# tools still ships every language. They are only useful if they keep up with
+# the sources, so recompile them here rather than leaving it to be remembered.
+if LRELEASE="$(find_tool lrelease)"; then
+    for lang in "${LANGS[@]}"; do
+        [[ -f "$TS_DIR/caelestia_$lang.ts" ]] || continue
+        echo "[INFO]  Compiling caelestia_$lang.qm..."
+        "$LRELEASE" -silent "$TS_DIR/caelestia_$lang.ts" -qm "$TS_DIR/caelestia_$lang.qm"
+    done
+else
+    echo "[WARN]  lrelease not found; the committed .qm catalogues are now behind their sources." >&2
+fi
+
+echo "[ OK ]  Catalogues updated. Edit them with Qt Linguist, then rerun this script to recompile."
