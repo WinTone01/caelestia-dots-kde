@@ -127,7 +127,7 @@ ColumnLayout {
                                 ? [...GlobalConfig.general.apps.terminal, `${Quickshell.shellDir}/assets/wrap_term_launch.sh`, ...model.entry.command]
                                 : model.entry.command;
                             Quickshell.execDetached({
-                                command: subCmd,
+                                command: Launch.wrap(subCmd),
                                 workingDirectory: model.entry.workingDirectory
                             });
                         }

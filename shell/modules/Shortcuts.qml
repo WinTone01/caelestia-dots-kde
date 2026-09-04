@@ -8,6 +8,7 @@ import qs.components.misc
 import qs.services
 import qs.modules.nexus
 import qs.modules.launcher.services
+import qs.utils
 
 Scope {
     id: root
@@ -275,27 +276,27 @@ Scope {
     CustomShortcut {
         name: "foot"
         description: "Launch Terminal"
-        onPressed: Quickshell.execDetached(["kstart", "--", "foot"])
+        onPressed: Launch.exec(["foot"])
     }
     CustomShortcut {
         name: "firefox"
         description: "Launch Browser"
-        onPressed: Quickshell.execDetached(["kstart", "--", "firefox"])
+        onPressed: Launch.exec(["firefox"])
     }
     CustomShortcut {
         name: "code"
         description: "Launch Editor"
-        onPressed: Quickshell.execDetached(["kstart", "--", "code"])
+        onPressed: Launch.exec(["code"])
     }
     CustomShortcut {
         name: "github-desktop"
         description: "Launch GitHub Desktop"
-        onPressed: Quickshell.execDetached(["kstart", "--", "github-desktop"])
+        onPressed: Launch.exec(["github-desktop"])
     }
     CustomShortcut {
         name: "nemo"
         description: "Launch File Manager"
-        onPressed: Quickshell.execDetached(["kstart", "--", "nemo"])
+        onPressed: Launch.exec(["nemo"])
     }
     CustomShortcut {
         name: "kcolorpicker"

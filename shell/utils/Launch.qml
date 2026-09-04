@@ -42,8 +42,12 @@ Singleton {
         if (command.length === 0)
             return command;
 
-        if (GlobalConfig.services.useSystemd && root.hasApp2Unit)
-            return ["app2unit", "--", ...command];
+        if (root.hasApp2Unit) {
+            const appName = command[0].split('/').pop();
+            if (root.hasSystemdCat)
+                return ["app2unit", "-a", appName, "--", "systemd-cat", "--", ...command];
+            return ["app2unit", "-a", appName, "--", ...command];
+        }
 
         if (root.hasSystemdCat)
             return ["systemd-cat", "--", ...command];

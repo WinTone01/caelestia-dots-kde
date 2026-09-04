@@ -61,6 +61,27 @@ KWin::LogicalOutput* WorkspaceTrackerEffect::findOutput(const QString& name)
     return nullptr;
 }
 
+void WorkspaceTrackerEffect::SendToOutput(const QString& uuid, const QString& output)
+{
+    KWin::LogicalOutput* target = findOutput(output);
+    if (!target) {
+        return;
+    }
+
+    const QUuid wanted(uuid);
+    if (wanted.isNull()) {
+        return;
+    }
+
+    const auto windows = KWin::effects->stackingOrder();
+    for (KWin::EffectWindow* window : windows) {
+        if (window && window->internalId() == wanted) {
+            KWin::effects->windowToScreen(window, target);
+            return;
+        }
+    }
+}
+
 void WorkspaceTrackerEffect::SetDesktop(const QString& output, int desktop)
 {
     if (desktop < 1) {
