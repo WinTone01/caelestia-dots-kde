@@ -638,6 +638,14 @@
     </message>
 </context>
 <context>
+    <name>AppBrowser</name>
+    <message>
+        <location filename="../modules/launcher/AppBrowser.qml" line="+202"/>
+        <source>No apps in this category</source>
+        <translation>Bu kategoride uygulama yok</translation>
+    </message>
+</context>
+<context>
     <name>AppInfo</name>
     <message>
         <location filename="../modules/nexus/pages/apps/AppInfo.qml" line="+32"/>
@@ -701,6 +709,14 @@
         <location filename="../components/controls/AppStreamRow.qml" line="+24"/>
         <source>Muted</source>
         <translation>Sessiz</translation>
+    </message>
+</context>
+<context>
+    <name>AppTile</name>
+    <message>
+        <location filename="../modules/launcher/items/AppTile.qml" line="+130"/>
+        <source>Matched by a regex in favouriteApps - edit the config file to change</source>
+        <translation>favouriteApps içindeki bir düzenli ifadeyle eşleşti - değiştirmek için yapılandırma dosyasını düzenleyin</translation>
     </message>
 </context>
 <context>
@@ -1113,7 +1129,7 @@
 <context>
     <name>Audio</name>
     <message>
-        <location filename="../modules/bar/popouts/Audio.qml" line="+80"/>
+        <location filename="../modules/bar/popouts/Audio.qml" line="+81"/>
         <source>Audio</source>
         <translation>Ses</translation>
     </message>
@@ -1128,13 +1144,13 @@
         <translation>Çıkış aygıtı yok</translation>
     </message>
     <message>
-        <location line="+153"/>
-        <location line="+41"/>
+        <location line="+159"/>
+        <location line="+39"/>
         <source>Muted</source>
         <translation>Sessiz</translation>
     </message>
     <message>
-        <location line="-29"/>
+        <location line="-27"/>
         <source>Input</source>
         <translation>Giriş</translation>
     </message>
@@ -1144,7 +1160,7 @@
         <translation>Giriş aygıtı yok</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+21"/>
         <source>Input volume</source>
         <translation>Giriş ses düzeyi</translation>
     </message>
@@ -1159,25 +1175,23 @@
         <translation>Ses çalan uygulama yok</translation>
     </message>
     <message>
-        <location filename="../services/Audio.qml" line="+115"/>
+        <location line="+138"/>
+        <location filename="../services/Audio.qml" line="+124"/>
         <source>Unknown</source>
         <translation>Bilinmiyor</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location filename="../services/Audio.qml" line="+2"/>
         <source>Unknown Application</source>
         <translation>Bilinmeyen Uygulama</translation>
     </message>
     <message>
-        <location line="+150"/>
-        <location line="+12"/>
-        <location line="+12"/>
-        <location line="+1"/>
+        <location line="-37"/>
         <source>Unknown Device</source>
         <translation>Bilinmeyen Aygıt</translation>
     </message>
     <message>
-        <location line="-22"/>
+        <location line="+213"/>
         <source>Audio output changed</source>
         <translation>Ses çıkışı değişti</translation>
     </message>
@@ -1196,7 +1210,7 @@
 <context>
     <name>AudioDeviceList</name>
     <message>
-        <location filename="../modules/nexus/common/AudioDeviceList.qml" line="+78"/>
+        <location filename="../modules/nexus/common/AudioDeviceList.qml" line="+88"/>
         <source>Unknown</source>
         <translation>Bilinmiyor</translation>
     </message>
@@ -1204,7 +1218,7 @@
 <context>
     <name>AudioPage</name>
     <message>
-        <location filename="../modules/nexus/pages/AudioPage.qml" line="+15"/>
+        <location filename="../modules/nexus/pages/AudioPage.qml" line="+17"/>
         <source>Audio</source>
         <translation>Ses</translation>
     </message>
@@ -1216,12 +1230,17 @@
     </message>
     <message>
         <location line="+9"/>
-        <location line="+30"/>
+        <location line="+36"/>
         <source>Muted</source>
         <translation>Sessiz</translation>
     </message>
     <message>
-        <location line="-20"/>
+        <location line="-30"/>
+        <source>Show Inactive Devices</source>
+        <translation>Etkin Olmayan Aygıtları Göster</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>No output devices</source>
         <translation>Çıkış aygıtı yok</translation>
     </message>
@@ -1238,6 +1257,16 @@
     </message>
     <message>
         <location line="+5"/>
+        <source>Device Profiles</source>
+        <translation>Aygıt Profilleri</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Unknown Device</source>
+        <translation>Bilinmeyen Aygıt</translation>
+    </message>
+    <message>
+        <location line="+20"/>
         <source>Apps</source>
         <translation>Uygulamalar</translation>
     </message>
@@ -1285,6 +1314,63 @@
         <location line="+1"/>
         <source>Choose apps that do not play notification sounds</source>
         <translation>Bildirim sesi çalmayacak uygulamaları seçin</translation>
+    </message>
+</context>
+<context>
+    <name>AudioPopout</name>
+    <message>
+        <location filename="../modules/bar/popouts/AudioPopout.qml" line="+36"/>
+        <source>Output device</source>
+        <translation>Çıkış aygıtı</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <location line="+19"/>
+        <source>Unknown</source>
+        <translation>Bilinmiyor</translation>
+    </message>
+    <message>
+        <location line="-13"/>
+        <source>Input device</source>
+        <translation>Giriş aygıtı</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Volume (%1)</source>
+        <translation>Ses düzeyi (%1)</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Muted</source>
+        <translation>Sessiz</translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>Open settings</source>
+        <translation>Ayarları aç</translation>
+    </message>
+</context>
+<context>
+    <name>BackgroundCenter</name>
+    <message>
+        <location filename="../modules/lock/BackgroundCenter.qml" line="+23"/>
+        <source>Good morning</source>
+        <translation>Günaydın</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Good afternoon</source>
+        <translation>İyi günler</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Good evening</source>
+        <translation>İyi akşamlar</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Good night</source>
+        <translation>İyi geceler</translation>
     </message>
 </context>
 <context>
@@ -2050,12 +2136,12 @@
         <translation> (%1 bağlı)</translation>
     </message>
     <message>
-        <location line="+46"/>
+        <location line="+54"/>
         <source>%1%</source>
         <translation>%1%</translation>
     </message>
     <message>
-        <location line="+47"/>
+        <location line="+59"/>
         <source>Open settings</source>
         <translation>Ayarları aç</translation>
     </message>
@@ -2309,6 +2395,89 @@
     </message>
 </context>
 <context>
+    <name>Categories</name>
+    <message>
+        <location filename="../modules/launcher/services/Categories.qml" line="+15"/>
+        <source>Favorites</source>
+        <translation>Sık Kullanılanlar</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>All Applications</source>
+        <translation>Tüm Uygulamalar</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Audio &amp; Video</source>
+        <translation>Ses ve Video</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Audio</source>
+        <translation>Ses</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Video</source>
+        <translation>Video</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Development</source>
+        <translation>Geliştirme</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Education</source>
+        <translation>Eğitim</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Games</source>
+        <translation>Oyunlar</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Graphics</source>
+        <translation>Grafik</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Network</source>
+        <translation>Ağ</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Office</source>
+        <translation>Ofis</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Science</source>
+        <translation>Bilim</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Settings</source>
+        <translation>Ayarlar</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>System</source>
+        <translation>Sistem</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Utilities</source>
+        <translation>Araçlar</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Other</source>
+        <translation>Diğer</translation>
+    </message>
+</context>
+<context>
     <name>ClipItem</name>
     <message>
         <location filename="../modules/launcher/items/ClipItem.qml" line="+33"/>
@@ -2482,7 +2651,7 @@
         <translation>Uçbirim</translation>
     </message>
     <message>
-        <location filename="../modules/launcher/Content.qml" line="+44"/>
+        <location filename="../modules/launcher/Content.qml" line="+45"/>
         <source>Clipboard history cleared</source>
         <translation>Pano geçmişi temizlendi</translation>
     </message>
@@ -2492,7 +2661,7 @@
         <translation>Pano geçmişi temizlenemedi</translation>
     </message>
     <message>
-        <location line="+69"/>
+        <location line="+70"/>
         <source>Log Out</source>
         <translation>Oturumu Kapat</translation>
     </message>
@@ -2517,7 +2686,7 @@
         <translation>Komutlar için &quot;%1&quot; yazın</translation>
     </message>
     <message>
-        <location line="+226"/>
+        <location line="+243"/>
         <source>Clear clipboard history?</source>
         <translation>Pano geçmişi temizlensin mi?</translation>
     </message>
@@ -2555,7 +2724,7 @@
 <context>
     <name>ContentList</name>
     <message>
-        <location filename="../modules/launcher/ContentList.qml" line="+189"/>
+        <location filename="../modules/launcher/ContentList.qml" line="+214"/>
         <source>Images</source>
         <translation>Görseller</translation>
     </message>
@@ -3199,7 +3368,7 @@
 <context>
     <name>DesktopContextMenu</name>
     <message>
-        <location filename="../modules/background/DesktopContextMenu.qml" line="+24"/>
+        <location filename="../modules/background/DesktopContextMenu.qml" line="+25"/>
         <source>Desktop Icons</source>
         <translation>Masaüstü Simgeleri</translation>
     </message>
@@ -3398,6 +3567,14 @@
     </message>
     <message>
         <location line="+24"/>
+        <source>Cancel</source>
+        <translation>İptal</translation>
+    </message>
+</context>
+<context>
+    <name>DialogRowButton</name>
+    <message>
+        <location filename="../modules/nexus/common/DialogRowButton.qml" line="+224"/>
         <source>Cancel</source>
         <translation>İptal</translation>
     </message>
@@ -4604,12 +4781,12 @@
         <translation>Kayıtlı sabit konum yok</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+17"/>
         <source>Search city or region</source>
         <translation>Şehir veya bölge arayın</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+73"/>
         <source>No matching locations</source>
         <translation>Eşleşen konum yok</translation>
     </message>
@@ -4758,6 +4935,16 @@
     </message>
     <message>
         <location line="+5"/>
+        <source>Browse apps when search is empty</source>
+        <translation>Arama boşken uygulamalara göz at</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show the categorized app grid in the launcher when the search field is empty</source>
+        <translation>Arama alanı boşken başlatıcıda kategorilere ayrılmış uygulama ızgarasını göster</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Show power menu</source>
         <translation>Güç menüsünü göster</translation>
     </message>
@@ -5217,42 +5404,17 @@
     </message>
 </context>
 <context>
-    <name>NavLocations</name>
+    <name>NavPane</name>
     <message>
-        <location filename="../modules/nexus/navpane/NavLocations.qml" line="+22"/>
-        <source>Personalization</source>
-        <translation>Kişiselleştirme</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Connectivity</source>
-        <translation>Bağlantı</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Controls</source>
-        <translation>Denetimler</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Caelestia</source>
-        <translation>Caelestia</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>System</source>
-        <translation>Sistem</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>AI Assistant</source>
-        <translation>Yapay Zekâ Asistanı</translation>
+        <location filename="../modules/nexus/NavPane.qml" line="+23"/>
+        <source>Search settings</source>
+        <translation>Ayarlarda ara</translation>
     </message>
 </context>
 <context>
     <name>Network</name>
     <message>
-        <location filename="../modules/bar/popouts/Network.qml" line="+33"/>
+        <location filename="../modules/bar/popouts/Network.qml" line="+32"/>
         <source>IP address</source>
         <translation>IP adresi</translation>
     </message>
@@ -5297,7 +5459,7 @@
         <translation>%1 ağ kullanılabilir</translation>
     </message>
     <message>
-        <location line="+108"/>
+        <location line="+126"/>
         <source>Rescan networks</source>
         <translation>Ağları yeniden tara</translation>
     </message>
@@ -5312,7 +5474,7 @@
         <translation>%1 profil kullanılabilir</translation>
     </message>
     <message>
-        <location line="+56"/>
+        <location line="+76"/>
         <source>No VPN profiles found</source>
         <translation>VPN profili bulunamadı</translation>
     </message>
@@ -5327,12 +5489,12 @@
         <translation>%1 aygıt kullanılabilir</translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+48"/>
         <source>Unknown</source>
         <translation>Bilinmiyor</translation>
     </message>
     <message>
-        <location line="+27"/>
+        <location line="+33"/>
         <source>Connection details</source>
         <translation>Bağlantı ayrıntıları</translation>
     </message>
@@ -5581,21 +5743,87 @@
     </message>
     <message>
         <location line="+8"/>
-        <source>VPN</source>
-        <translation>VPN</translation>
+        <source>VPN connections</source>
+        <translation>VPN bağlantıları</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+132"/>
+        <source>VPN providers</source>
+        <translation>VPN sağlayıcıları</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>WireGuard, WARP, NetBird, and Tailscale</source>
+        <translation>WireGuard, WARP, NetBird ve Tailscale</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>No VPN providers configured</source>
+        <translation>Yapılandırılmış VPN sağlayıcısı yok</translation>
+    </message>
+    <message>
+        <location line="+68"/>
+        <source>Tap to select</source>
+        <translation>Seçmek için dokunun</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Connecting...</source>
+        <translation>Bağlanılıyor...</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Disconnecting...</source>
+        <translation>Bağlantı kesiliyor...</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Authentication required</source>
+        <translation>Kimlik doğrulama gerekiyor</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>An error occurred</source>
+        <translation>Bir hata oluştu</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Selected</source>
+        <translation>Seçili</translation>
+    </message>
+    <message>
+        <location line="+47"/>
+        <source>Interface</source>
+        <translation>Arayüz</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Current Ping</source>
+        <translation>Anlık Gecikme</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>%1 ms</source>
+        <translation>%1 ms</translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <source>Add provider</source>
+        <translation>Sağlayıcı ekle</translation>
+    </message>
+    <message>
+        <location line="-348"/>
         <source>No VPN profiles found</source>
         <translation>VPN profili bulunamadı</translation>
     </message>
     <message>
         <location line="+80"/>
+        <location line="+145"/>
         <source>Connected</source>
         <translation>Bağlı</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-145"/>
         <source>Available</source>
         <translation>Kullanılabilir</translation>
     </message>
@@ -6923,7 +7151,7 @@
 <context>
     <name>PageRegistry</name>
     <message>
-        <location filename="../modules/nexus/PageRegistry.qml" line="+76"/>
+        <location filename="../modules/nexus/PageRegistry.qml" line="+23"/>
         <source>Main Page</source>
         <translation>Ana Sayfa</translation>
     </message>
@@ -7075,12 +7303,12 @@
     </message>
     <message>
         <location line="+38"/>
-        <location line="+327"/>
+        <location line="+335"/>
         <source>Installed</source>
         <translation>Kurulu</translation>
     </message>
     <message>
-        <location line="-318"/>
+        <location line="-326"/>
         <source>Store</source>
         <translation>Mağaza</translation>
     </message>
@@ -7095,12 +7323,12 @@
         <translation>Kabuk Eklentileri</translation>
     </message>
     <message>
-        <location line="+67"/>
+        <location line="+68"/>
         <source>User Installed</source>
         <translation>Kullanıcı Kurulumu</translation>
     </message>
     <message>
-        <location line="+100"/>
+        <location line="+101"/>
         <source>No plugins installed</source>
         <translation>Kurulu eklenti yok</translation>
     </message>
@@ -7115,7 +7343,7 @@
         <translation>Kullanılabilir Eklentiler</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+60"/>
         <source>Update</source>
         <translation>Güncelle</translation>
     </message>
@@ -7214,7 +7442,7 @@
         <translation>Askıya almadan önce oturumu kilitler</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+6"/>
         <source>Inhibit while audio</source>
         <translation>Ses çalarken engelle</translation>
     </message>
@@ -7222,6 +7450,16 @@
         <location line="+1"/>
         <source>Prevent idle actions while audio is playing</source>
         <translation>Ses çalarken boşta eylemlerini engeller</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Inhibit while charging</source>
+        <translation>Şarj olurken engelle</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Prevent idle actions while charging</source>
+        <translation>Şarj olurken boşta kalma eylemlerini engelle</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -7524,14 +7762,6 @@
         <location line="+2"/>
         <source>Connected • %1</source>
         <translation>Bağlı • %1</translation>
-    </message>
-</context>
-<context>
-    <name>SearchBar</name>
-    <message>
-        <location filename="../modules/nexus/navpane/SearchBar.qml" line="+56"/>
-        <source>Search settings</source>
-        <translation>Ayarlarda ara</translation>
     </message>
 </context>
 <context>
@@ -7852,12 +8082,12 @@
         <translation>Kısayollar</translation>
     </message>
     <message>
-        <location line="+129"/>
+        <location line="+107"/>
         <source>Search shortcuts</source>
         <translation>Kısayollarda ara</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+12"/>
         <source>Shell UI</source>
         <translation>Kabuk Arayüzü</translation>
     </message>
@@ -8084,6 +8314,11 @@
     </message>
     <message>
         <location line="+2"/>
+        <source>HOWDY ERROR: %1</source>
+        <translation>HOWDY HATASI: %1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>PW ERROR: %1</source>
         <translation>PAROLA HATASI: %1</translation>
     </message>
@@ -8108,6 +8343,11 @@
         <translation>En fazla parmak izi deneme sayısına ulaşıldı. Lütfen parola kullanın.</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>Maximum face unlock attempts reached. Please use password.</source>
+        <translation>Yüz ile kilit açma deneme sınırına ulaşıldı. Lütfen parola kullanın.</translation>
+    </message>
+    <message>
         <location line="+4"/>
         <source>Incorrect password. Please try again or use fingerprint.</source>
         <translation>Parola yanlış. Lütfen yeniden deneyin veya parmak izi kullanın.</translation>
@@ -8121,6 +8361,11 @@
         <location line="+3"/>
         <source>Fingerprint not recognized (%1/%2). Please try again or use password.</source>
         <translation>Parmak izi tanınmadı (%1/%2). Lütfen yeniden deneyin veya parola kullanın.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Face not recognized (%1/%2). Please try again or use password.</source>
+        <translation>Yüz tanınmadı (%1/%2). Lütfen tekrar deneyin veya parola kullanın.</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -9261,7 +9506,17 @@ Klavye düzeni: %1</translation>
 <context>
     <name>VPN</name>
     <message>
-        <location filename="../services/VPN.qml" line="+300"/>
+        <location filename="../services/VPN.qml" line="+272"/>
+        <source>VPN connection failed</source>
+        <translation>VPN bağlantısı başarısız oldu</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>VPN disconnection failed</source>
+        <translation>VPN bağlantısı kesilemedi</translation>
+    </message>
+    <message>
+        <location line="+250"/>
         <source>VPN connected</source>
         <translation>VPN bağlandı</translation>
     </message>
@@ -9295,6 +9550,17 @@ Klavye düzeni: %1</translation>
         <location line="+0"/>
         <source>VPN error</source>
         <translation>VPN hatası</translation>
+    </message>
+    <message>
+        <location line="+225"/>
+        <location line="+69"/>
+        <source>Could not start %1. Is it installed?</source>
+        <translation>%1 başlatılamadı. Kurulu mu?</translation>
+    </message>
+    <message>
+        <location line="-55"/>
+        <source>Could not connect to %1</source>
+        <translation>%1 bağlantısı kurulamadı</translation>
     </message>
 </context>
 <context>
@@ -9356,12 +9622,12 @@ Klavye düzeni: %1</translation>
         <translation>Duvar kâğıtlarını anında arayın, önizleyin ve uygulayın</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+22"/>
         <source>Search wallpapers...</source>
         <translation>Duvar kâğıdı ara...</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+39"/>
         <source>Found %1 wallpapers (page %2 of %3)</source>
         <translation>%1 duvar kâğıdı bulundu (sayfa %2 / %3)</translation>
     </message>
@@ -9544,12 +9810,12 @@ Klavye düzeni: %1</translation>
 <context>
     <name>WallpaperSelect</name>
     <message>
-        <location filename="../modules/nexus/pages/wallandstyle/WallpaperSelect.qml" line="+20"/>
+        <location filename="../modules/nexus/pages/wallandstyle/WallpaperSelect.qml" line="+116"/>
         <source>Select wallpaper</source>
         <translation>Duvar kâğıdı seç</translation>
     </message>
     <message>
-        <location line="+70"/>
+        <location line="+43"/>
         <source>Browse</source>
         <translation>Gözat</translation>
     </message>
@@ -9600,7 +9866,7 @@ Klavye düzeni: %1</translation>
         <translation>Yerel duvar kâğıtları</translation>
     </message>
     <message>
-        <location line="+160"/>
+        <location line="+101"/>
         <source>No local wallpapers found</source>
         <translation>Yerel duvar kâğıdı bulunamadı</translation>
     </message>
@@ -9656,12 +9922,12 @@ Klavye düzeni: %1</translation>
 <context>
     <name>Weather</name>
     <message>
-        <location filename="../services/Weather.qml" line="+24"/>
+        <location filename="../services/Weather.qml" line="+27"/>
         <source>No weather</source>
         <translation>Hava durumu yok</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+129"/>
         <source>Couldn&apos;t parse location results. Check your connection and try again.</source>
         <translation>Konum sonuçları ayrıştırılamadı. Bağlantınızı denetleyip yeniden deneyin.</translation>
     </message>
@@ -9669,6 +9935,11 @@ Klavye düzeni: %1</translation>
         <location line="+29"/>
         <source>Couldn&apos;t fetch locations. Check your connection and try again.</source>
         <translation>Konumlar alınamadı. Bağlantınızı denetleyip yeniden deneyin.</translation>
+    </message>
+    <message>
+        <location line="+86"/>
+        <source>Unknown City</source>
+        <translation>Bilinmeyen Şehir</translation>
     </message>
 </context>
 <context>
