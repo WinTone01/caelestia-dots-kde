@@ -9,6 +9,13 @@ on:
       - "crowdin.yml"
       - ".github/workflows/crowdin.yml"
   workflow_dispatch:
+    inputs:
+      seed_translations:
+        description: >-
+          Also upload the committed catalogues. Needed once, on the very first
+          run, and harmful afterwards -- see the workflow comments.
+        type: boolean
+        default: false
 
 concurrency:
   group: crowdin
@@ -49,7 +56,17 @@ jobs:
         uses: crowdin/github-action@v2
         with:
           upload_sources: true
-          upload_translations: false
+          # Off by default: translations are edited in Crowdin, and pushing the
+          # committed ones back on every run would let a stale local catalogue
+          # overwrite newer work there.
+          #
+          # It has to be on exactly once, though. Crowdin starts empty, so a
+          # first run that only uploads sources and then downloads would export
+          # every target file untranslated -- and open a pull request replacing
+          # a finished translation with a blank one. Seeding first means the
+          # download returns what is already here.
+          upload_translations: ${{ inputs.seed_translations == true }}
+          auto_approve_imported: ${{ inputs.seed_translations == true }}
           download_translations: true
           localization_branch_name: i18n/crowdin
           create_pull_request: true

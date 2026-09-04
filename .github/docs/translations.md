@@ -88,6 +88,18 @@ The repository needs two secrets for this, both from a Crowdin account with at
 least Manager rights on the project: `CROWDIN_PROJECT_ID` and
 `CROWDIN_PERSONAL_TOKEN`. The job is skipped on forks, where they do not exist.
 
+### First run
+
+Crowdin starts empty. A run that only uploads sources and then downloads would
+export every target file untranslated and open a pull request replacing the
+Turkish catalogue with a blank one, so the committed translations have to be
+seeded first: trigger the workflow by hand once with **Also upload the committed
+catalogues** enabled. Every run after that leaves it off, so translations edited
+in Crowdin are not overwritten by whatever happens to be committed here.
+
+`CROWDIN_PROJECT_ID` is the numeric project ID from Crowdin's project settings,
+not the `caelestia-kde` identifier that appears in the URL and the badge.
+
 Create the token under Account Settings -> API with **Granular access**, limited
 to this project and to the scopes the synchronization needs. A Crowdin personal
 token otherwise carries its owner's permissions across every project they can
