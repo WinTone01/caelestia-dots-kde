@@ -97,6 +97,21 @@ seeded first: trigger the workflow by hand once with **Also upload the committed
 catalogues** enabled. Every run after that leaves it off, so translations edited
 in Crowdin are not overwritten by whatever happens to be committed here.
 
+Delete the `i18n/crowdin` branch before seeding if one is already there. The
+branch is where the workflow accumulates downloaded translations, and one left
+over from an earlier run carries that run's files into the next pull request.
+
+Only languages someone has actually translated are exported
+(`skip_untranslated_files`). Without it Crowdin writes a file for every target
+language on the project, and a catalogue of nothing but untranslated entries
+still compiles and still appears in the language picker as a language that
+renders in English.
+
+Catalogues are named by the two-letter code, so Turkish is `caelestia_tr.ts`.
+Two variants of one language -- `pt-BR` and `pt-PT`, `zh-CN` and `zh-TW` --
+would both want the bare code; give them explicit names through
+`languages_mapping` in `crowdin.yml` if both are ever translated.
+
 `CROWDIN_PROJECT_ID` is the numeric project ID from Crowdin's project settings,
 not the `caelestia-kde` identifier that appears in the URL and the badge.
 

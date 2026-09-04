@@ -31,9 +31,19 @@ jobs:
       contents: write
       pull-requests: write
     steps:
+      - name: Create GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
+          token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 0
 
       - name: Install Qt Linguist Tools
@@ -68,6 +78,12 @@ jobs:
           upload_translations: ${{ inputs.seed_translations == true }}
           auto_approve_imported: ${{ inputs.seed_translations == true }}
           download_translations: true
+          # Crowdin exports a file for every target language on the project,
+          # including the ones at 0%. Left on, the first run added 26 catalogues
+          # of nothing but untranslated entries, each of which the build would
+          # compile and the language picker would then offer as a language that
+          # renders in English.
+          skip_untranslated_files: true
           localization_branch_name: i18n/crowdin
           create_pull_request: true
           pull_request_title: "i18n: new translations from Crowdin"
@@ -79,7 +95,12 @@ jobs:
           commit_message: "i18n: new translations from Crowdin"
           config: crowdin.yml
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Not secrets.GITHUB_TOKEN: a workflow cannot open a pull request
+          # with it unless the repository allows Actions to, and the first run
+          # failed on exactly that ("GitHub Actions is not permitted to create
+          # or approve pull requests"). The app token this repository already
+          # uses elsewhere is not subject to it.
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
 
