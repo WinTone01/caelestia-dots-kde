@@ -53,10 +53,52 @@ Catalogues are looked up in this order:
 4. Pick the language in Nexus -> Language & region -> Shell language. It appears
    automatically once the `.qm` file is installed.
 
-Qt's Linguist tools are needed to build catalogues. The installer and
+Qt's Linguist tools are needed to compile catalogues. The installer and
 `caelestia-update` pull them in automatically (`qt6-tools` on Arch,
 `qt6-qttools-devel` on Fedora, `qt6-l10n-tools` + `qt6-tools-dev` on Debian).
-Without them the build still succeeds, it just warns and ships English only.
+Without them the build installs the committed `caelestia_<code>.qm` files as
+they are, so every language still ships; with them the `.ts` files are
+recompiled and take precedence.
+
+## Translating on Crowdin
+
+Translators do not need a checkout. The project is synchronized with Crowdin, so
+a language can be worked on in the browser and arrives here as a pull request.
+
+`crowdin.yml` maps the catalogues; `.github/workflows/crowdin.yml` runs the
+synchronization on every push to `dev` that touches the shell sources, and can
+be triggered by hand.
+
+Two details are worth knowing before touching that setup:
+
+- **The source catalogue is generated, not committed.** Crowdin needs an English
+  `.ts` to slice into the target languages, but a file of several thousand empty
+  translations does not belong in the repository. The workflow rebuilds
+  `caelestia_en.ts` from the QML immediately before uploading and never commits
+  it.
+- **A Crowdin pull request carries `.ts` files only.** Since a build without
+  Linguist tools installs the committed `.qm` as-is, a `.ts` arriving without its
+  `.qm` would quietly ship the previous translation. The workflow recompiles them
+  on the localization branch so the pair always moves together.
+
+The project lives at <https://crowdin.com/project/caelestia-kde>, and the README
+badge reports its progress.
+
+The repository needs two secrets for this, both from a Crowdin account with at
+least Manager rights on the project: `CROWDIN_PROJECT_ID` and
+`CROWDIN_PERSONAL_TOKEN`. The job is skipped on forks, where they do not exist.
+
+Create the token under Account Settings -> API with **Granular access**, limited
+to this project and to the scopes the synchronization needs. A Crowdin personal
+token otherwise carries its owner's permissions across every project they can
+reach, and this one lives in a repository whose write access is not the same set
+of people -- anyone who can add a workflow can read a secret. Scoping it keeps
+that reach to one project.
+
+Adding a language is done in Crowdin's own settings; the catalogue appears here
+on the next synchronization. Nothing about the local workflow changes -- a
+language added by hand with `update-translations.sh` is picked up by Crowdin on
+the next upload just the same.
 
 ## Keeping catalogues current
 
