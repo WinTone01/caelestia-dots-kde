@@ -16,5 +16,8 @@ scripts/update-translations.sh          # update every catalogue here
 scripts/update-translations.sh es       # add Spanish
 ```
 
+Translations are also synchronized with Crowdin, so a language can be worked on
+in the browser instead; it arrives here as a pull request.
+
 See [../../.github/docs/translations.md](../../.github/docs/translations.md) for
 the full guide.
