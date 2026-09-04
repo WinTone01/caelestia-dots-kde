@@ -1,5 +1,6 @@
 pragma ComponentBehavior: Bound
 
+import "modules"
 import "modules/lock"
 import QtQml
 import Quickshell
@@ -10,6 +11,9 @@ ShellRoot {
     Component.onCompleted: {
         Qt.application.name = "caelestia-lockscreen";
     }
+
+    Fonts {}
+    GSFLoader {}
 
     // Match the shell's language (see shell/translations)
     Binding {
@@ -30,7 +34,7 @@ ShellRoot {
         LockBackgroundWindow {
             required property var modelData
 
-            screen: modelData
+            targetScreen: modelData
         }
     }
 }

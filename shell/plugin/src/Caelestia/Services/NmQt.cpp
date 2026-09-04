@@ -262,6 +262,8 @@ void NmQt::connectToNetwork(const QString& ssid, const QString& password,
                 emit connectingSsidChanged();
                 invokeCallback(callback, false, {}, r.error().message(), -1);
             } else {
+                m_connectingSsid.clear();
+                emit connectingSsidChanged();
                 invokeCallback(callback, true, "Connection activated");
             }
         });
@@ -343,6 +345,8 @@ void NmQt::connectToNetwork(const QString& ssid, const QString& password,
                         || errMsg.contains("802-11-wireless-security");
             invokeCallback(callback, false, {}, errMsg, -1, needsPw);
         } else {
+            m_connectingSsid.clear();
+            emit connectingSsidChanged();
             invokeCallback(callback, true, "Connection created and activated");
         }
     });

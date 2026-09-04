@@ -385,7 +385,7 @@ ColumnLayout {
 
                     anchors.centerIn: parent
                     text: qsTr("Password")
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Colours.palette.m3outline
                     font.pointSize: Tokens.font.mono.medium.pointSize * root.fontScale
                     opacity: passwordContainer.passwordBuffer ? 0 : 1
 

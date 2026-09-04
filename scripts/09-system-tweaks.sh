@@ -163,11 +163,24 @@ tweak_reload_kde() {
 tweak_default_scheme() {
     info "Setting default Caelestia color scheme..."
     if command -v caelestia >/dev/null 2>&1; then
+        # Only force the "dynamic" default when the user has not picked a scheme
+        # yet. This tweak also runs on every update, so it must not clobber a
+        # scheme the user chose.
+        STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/caelestia"
+        CURRENT=""
+        if [[ -s "$STATE_DIR/scheme.json" ]] && command -v python3 >/dev/null 2>&1; then
+            CURRENT="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("name", ""))' "$STATE_DIR/scheme.json" 2>/dev/null || true)"
+        fi
+        if [[ -n "$CURRENT" && "$CURRENT" != "dynamic" ]]; then
+            info "Keeping user-selected Caelestia color scheme ($CURRENT)."
+            ok "Default Caelestia color scheme kept."
+            return
+        fi
+
         # Dynamic derives colours from the wallpaper the CLI was last told about
         # (caelestia wallpaper). 04-deploy-kde.sh writes path.txt directly without
         # seeding the CLI, so seed it here first, then switch to dynamic - otherwise
         # `scheme set -n dynamic` fails silently and the default stays mocha.
-        STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/caelestia"
         WALLPAPER="$(cat "$STATE_DIR/wallpaper/path.txt" 2>/dev/null || true)"
         if [[ -n "$WALLPAPER" && -f "$WALLPAPER" ]]; then
             timeout 10s caelestia wallpaper -f "$WALLPAPER" >/dev/null 2>&1 || true
@@ -272,6 +285,31 @@ if old in text:
 }
 
 #
+# TWEAK: Link KDE user avatar to ~/.face and ~/.face.icon for Caelestia and SDDM
+#
+tweak_user_avatar_symlinks() {
+    if [[ -e "$HOME/.face.icon" || -L "$HOME/.face.icon" ]]; then
+        info "~/.face.icon already exists. Skipping avatar setup."
+        return 0
+    fi
+
+    info "Setting up user profile picture symlinks..."
+
+    local user_name="${USER:-$(id -un)}"
+    local account_icon="/var/lib/AccountsService/icons/$user_name"
+
+    if [[ -f "$account_icon" ]]; then
+        ln -sf "$account_icon" "$HOME/.face"
+        ln -sf "$account_icon" "$HOME/.face.icon"
+        info "Linked $account_icon -> $HOME/.face"
+        info "Linked $account_icon -> $HOME/.face.icon"
+        ok "User profile picture symlinks configured."
+    else
+        info "No AccountsService avatar found at $account_icon. Skipping."
+    fi
+}
+
+#
 #  ADD NEW TWEAKS ABOVE THIS LINE
 # To add a new tweak:
 #   1. Define a function: tweak_<name>() { ... }
@@ -295,6 +333,7 @@ tweak_remove_panels
 tweak_default_shell
 tweak_default_scheme
 tweak_patch_caelestia_cli
+tweak_user_avatar_symlinks
 tweak_reload_kde
 
 echo

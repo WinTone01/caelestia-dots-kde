@@ -101,21 +101,14 @@ fi
 
 if [[ "${CAELESTIA_SETUP_RUNNING:-0}" == "0" ]]; then
     info "Running standalone update mode... syncing submodules first."
-    
+
     if [[ -f "$BUNDLE_DIR/.gitmodules" ]]; then
         info "Initializing all submodules..."
         git submodule sync --recursive >/dev/null 2>&1 || true
+        # submodule update already checks out the exact commit the superproject
+        # pins. Do not force a hardcoded tag over it afterwards - that silently
+        # discarded any submodule bump.
         git submodule update --init --recursive --depth 1 --jobs "$(nproc 2>/dev/null || echo 1)" >/dev/null 2>&1 || die "Failed to initialize all submodules"
-
-        # Pin plasma-wallpaper-application to the tagged release.
-        WALLPAPER_DIR="$BUNDLE_DIR/src/plasma-wallpaper-application"
-        WALLPAPER_TAG="v1.2"
-        if [[ -e "$WALLPAPER_DIR/.git" ]]; then
-            info "Pinning plasma-wallpaper-application to tag $WALLPAPER_TAG..."
-            git -C "$WALLPAPER_DIR" fetch --tags --quiet 2>/dev/null || true
-            git -C "$WALLPAPER_DIR" checkout "tags/$WALLPAPER_TAG" --quiet 2>/dev/null || \
-                warn "Could not checkout tag $WALLPAPER_TAG for plasma-wallpaper-application; using current HEAD."
-        fi
     fi
 
     info "Installing Caelestia Services..."
@@ -168,7 +161,7 @@ if [[ "${CAELESTIA_SETUP_RUNNING:-0}" == "0" ]]; then
             caelestia_sudo apt-get update && caelestia_sudo apt-get install -y "${MISSING[@]}" || warn "apt install failed..."
         fi
     fi
-    
+
     if [[ "${CAELESTIA_SKIP_DEPLOY:-0}" == "0" ]]; then
         info "Configuring KDE Lock Screen to use Caelestia..."
         WALLPAPER_STAMP="${XDG_CACHE_HOME:-$HOME/.cache}/caelestia-kde/wallpaper-plugin-installed"
@@ -373,7 +366,7 @@ QML_MODULES=(
     Caelestia
     Caelestia/Components
     Caelestia/Config
-    Caelestia/Internal
+    Caelestia/Settings
     Caelestia/Models
     Caelestia/Services
     Caelestia/Blobs

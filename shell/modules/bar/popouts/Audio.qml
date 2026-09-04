@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import Quickshell.Services.Pipewire
 import Caelestia.Config
 import qs.components
@@ -150,7 +151,7 @@ ColumnLayout {
 
                         StyledText {
                             Layout.fillWidth: true
-                            text: Audio.sink ? (Audio.sink.description || Audio.sink.name) : qsTr("No output device")
+                            text: Audio.sink ? (Audio.sink.properties?.["node.nick"] || Audio.sink.description || Audio.sink.name) : qsTr("No output device")
                             elide: Text.ElideRight
                             font.pointSize: Tokens.font.title.small.pointSize * root.fontScale
                             font.weight: Font.Medium
@@ -185,7 +186,6 @@ ColumnLayout {
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: root._outputsOpen ? (outputColumn.implicitHeight + Tokens.spacing.extraSmall * root.scaleOffset) : 0
-                visible: root.hasOutputChoice
                 clip: true
 
                 Behavior on Layout.preferredHeight {
@@ -198,13 +198,18 @@ ColumnLayout {
                     width: parent.width
                     y: Tokens.spacing.extraSmall * root.scaleOffset
                     spacing: Tokens.spacing.extraSmall * root.scaleOffset
+                    opacity: root._outputsOpen ? 1.0 : 0.0
+
+                    Behavior on opacity {
+                        Anim {
+                            type: Anim.DefaultEffects
+                        }
+                    }
 
                     Repeater {
                         model: Audio.sinks
 
                         AudioDevice {
-                            required property PwNode modelData
-
                             active: Audio.sink?.id === modelData.id
                             onSelected: {
                                 Audio.setAudioSink(modelData);
@@ -220,7 +225,7 @@ ColumnLayout {
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: 28 * root.scaleOffset
-                visible: !!Audio.cava && root.hasStreams
+                visible: !!Audio.cava && root.hasStreams && (Audio.cava.values?.some(v => v > 0.01) ?? false)
                 radius: Tokens.rounding.small * root.scaleOffset
                 color: Colours.tPalette.m3surfaceContainerHigh
 
@@ -238,6 +243,8 @@ ColumnLayout {
                         model: 24
 
                         Item {
+                            required property int index
+
                             width: (barsRow.width - 23 * barsRow.spacing) / 24
                             height: barsRow.height
 
@@ -329,8 +336,6 @@ ColumnLayout {
             model: Audio.sources
 
             AudioDevice {
-                required property PwNode modelData
-
                 isInput: true
                 active: Audio.source?.id === modelData.id
                 onSelected: Audio.setAudioSource(modelData)
@@ -369,7 +374,9 @@ ColumnLayout {
         }
 
         Repeater {
-            model: Audio.appStreams
+            model: ScriptModel {
+                values: [...Audio.appStreams]
+            }
 
             AppStreamRow {
                 required property PwNode modelData
@@ -499,7 +506,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 0
                 elide: Text.ElideRight
-                text: device.modelData.description
+                text: device.modelData?.properties?.["node.nick"] || device.modelData?.description || device.modelData?.name || qsTr("Unknown")
                 color: device.active ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
                 font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
             }

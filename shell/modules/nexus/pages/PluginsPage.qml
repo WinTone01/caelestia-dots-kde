@@ -95,7 +95,7 @@ PageBase {
             Process {
                 id: restartProcess
 
-                command: ["bash", "-c", "nohup bash -c 'bash \"${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/caelestia/scripts/restart_shell.sh\"; sleep 1; caelestia shell nexus openPage 14 0' >/dev/null 2>&1 & disown"]
+                command: ["bash", "-c", "nohup bash -c 'bash \"${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/caelestia/scripts/restart_shell.sh\"; sleep 1; caelestia shell nexus openPage 15 0' >/dev/null 2>&1 & disown"]
             }
         }
     ]
@@ -199,6 +199,7 @@ PageBase {
                     required property string mediaurl
                     required property string authorName
                     required property string icon
+                    required property bool restart
 
                     Layout.fillWidth: true
                     visible: bundledDelegate.source === "bundled"
@@ -267,6 +268,7 @@ PageBase {
                     required property string mediaurl
                     required property string authorName
                     required property string icon
+                    required property bool restart
 
                     Layout.fillWidth: true
                     visible: userDelegate.source === "user"
@@ -290,8 +292,8 @@ PageBase {
 
                             StyledSwitch {
                                 checked: userDelegate.enabled
-                                onCheckedChanged: {
-                                    PluginLoader.setPluginEnabled(userDelegate.id || userDelegate.name, checked);
+                                onToggled: {
+                                    PluginLoader.setPluginEnabled(userDelegate.id || userDelegate.name, !userDelegate.enabled);
                                 }
                             }
 
@@ -411,8 +413,9 @@ PageBase {
                     required property string authorName
                     required property string icon
                     required property string type
-                    property string path: "plugins/" + pluginId
-                    property string mediaurl: ""
+                    required property bool restart
+                    required property string path
+                    required property string mediaurl
 
                     readonly property bool isInstalled: PluginStore.installedPluginIds.indexOf(storeDelegate.pluginId) !== -1
                     readonly property bool isUpdateAvailable: {
@@ -442,14 +445,19 @@ PageBase {
                     authorNameText: storeDelegate.authorName
                     iconText: root.resolveIconText(storeDelegate.icon)
                     iconImageUrl: root.resolveIconUrl(storeDelegate.icon, storeDelegate.path, true)
-                    mediaUrl: storeDelegate.mediaurl ? ("https://raw.githubusercontent.com/ladybug-me/caelestia-kde-plugins/" + root.storeBranch + "/" + storeDelegate.path + "/" + storeDelegate.mediaurl) : ""
+                    mediaUrl: {
+                        if (!storeDelegate.mediaurl) return "";
+                        if (storeDelegate.mediaurl.indexOf("http://") === 0 || storeDelegate.mediaurl.indexOf("https://") === 0 || storeDelegate.mediaurl.indexOf("file://") === 0) return storeDelegate.mediaurl;
+                        if (storeDelegate.mediaurl.indexOf("/") === 0) return "https://raw.githubusercontent.com/ladybug-me/caelestia-kde-plugins/" + root.storeBranch + storeDelegate.mediaurl;
+                        return "https://raw.githubusercontent.com/ladybug-me/caelestia-kde-plugins/" + root.storeBranch + "/" + storeDelegate.path + "/" + storeDelegate.mediaurl;
+                    }
 
                     actionComponent: Component {
                         TextButton {
                             text: storeDelegate.isUpdateAvailable ? qsTr("Update") : (storeDelegate.isInstalled ? qsTr("Installed") : qsTr("Install"))
                             enabled: (!storeDelegate.isInstalled || storeDelegate.isUpdateAvailable) && !PluginStore.installing
                             onClicked: {
-                                PluginStore.installPlugin(storeDelegate.pluginId, storeDelegate.path, root.storeBranch, storeDelegate.type);
+                                PluginStore.installPlugin(storeDelegate.pluginId, storeDelegate.path, root.storeBranch, storeDelegate.restart);
                             }
                         }
                     }

@@ -31,7 +31,15 @@ import qs.services
 import qs.utils
 
 ShellRoot {
+    id: root
+
     settings.watchFiles: false
+
+    Binding {
+        target: ShellState
+        property: "shellRoot"
+        value: root
+    }
 
     // Several QtCore.Settings {} elements throughout the codebase (BlurOffsets,
     // ContentWindow, UpdateChecker) rely on QCoreApplication's organization/app
@@ -67,6 +75,8 @@ ShellRoot {
     }
 
     Fonts {}
+    GSFLoader {}
+    ServiceLoader {}
 
     Background {}
     BadAppleOverlay {}

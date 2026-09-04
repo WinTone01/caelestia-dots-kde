@@ -1,6 +1,6 @@
 #pragma once
 
-#include "config.hpp"
+#include "rootnodes.hpp"
 
 #include <qquickattachedpropertypropagator.h>
 
@@ -76,7 +76,7 @@ public:
     [[nodiscard]] const WInfoConfig* winfo() const;
     [[nodiscard]] const UserPaths* paths() const;
 
-    [[nodiscard]] Q_INVOKABLE static GlobalConfig* forScreen(const QString& screen);
+    [[nodiscard]] Q_INVOKABLE static ConfigRoot* forScreen(const QString& screen);
 
     static Config* qmlAttachedProperties(QObject* object);
 
@@ -95,7 +95,7 @@ private:
 
     bool m_complete = false;
     QString m_screen;
-    GlobalConfig* m_config = nullptr;
+    ConfigRoot* m_config = nullptr;
 };
 
 } // namespace caelestia::config

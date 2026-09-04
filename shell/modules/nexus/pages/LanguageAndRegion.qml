@@ -169,76 +169,54 @@ PageBase {
                     }
                 }
 
-                StyledRect {
+                SearchBar {
+                    id: locationField
+
                     Layout.fillWidth: true
-                    radius: Tokens.rounding.full
-                    color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
-                    border.color: Colours.palette.m3outlineVariant
-                    implicitHeight: searchRow.implicitHeight + Tokens.padding.small * 2
+                    placeholderText: qsTr("Search city or region")
+                    font: Tokens.font.body.large
+                    bg.color: Colours.tPalette.m3surfaceContainerLowest
+                    bg.border.color: Colours.palette.m3outlineVariant
+                    searchIcon.fontStyle: Tokens.font.icon.medium
+                    searchIcon.anchors.leftMargin: Tokens.padding.largeIncreased
+                    clearIcon.font: Tokens.font.icon.medium
+                    clearIcon.padding: Tokens.padding.extraSmall
 
-                    RowLayout {
-                        id: searchRow
+                    text: Weather.locationSearchQuery
 
-                        anchors.fill: parent
-                        anchors.leftMargin: Tokens.padding.medium
-                        anchors.rightMargin: Tokens.padding.medium
-                        spacing: Tokens.spacing.small
-
-                        MaterialIcon {
-                            text: "search"
-                            color: Colours.palette.m3onSurfaceVariant
+                    onTextChanged: {
+                        root.highlightedLocationIdx = -1;
+                        Weather.queueLocationSearch(text);
+                        if (text.length === 0) {
+                            root.pendingLocation = null;
+                            Weather.locationSearchResults = [];
+                            Weather.locationSearchError = "";
                         }
+                    }
 
-                        StyledTextField {
-                            id: locationField
+                    Keys.onDownPressed: {
+                        if (Weather.locationSearchResults.length === 0)
+                            return;
 
-                            Layout.fillWidth: true
-                            placeholderText: qsTr("Search city or region")
-                            text: Weather.locationSearchQuery
+                        root.highlightedLocationIdx = Math.min(root.highlightedLocationIdx + 1, Weather.locationSearchResults.length - 1);
+                    }
 
-                            onTextChanged: {
-                                root.highlightedLocationIdx = -1;
-                                Weather.queueLocationSearch(text);
-                            }
+                    Keys.onUpPressed: {
+                        if (Weather.locationSearchResults.length === 0)
+                            return;
 
-                            Keys.onDownPressed: {
-                                if (Weather.locationSearchResults.length === 0)
-                                    return;
+                        if (root.highlightedLocationIdx < 0)
+                            root.highlightedLocationIdx = Weather.locationSearchResults.length - 1;
+                        else
+                            root.highlightedLocationIdx = Math.max(root.highlightedLocationIdx - 1, 0);
+                    }
 
-                                root.highlightedLocationIdx = Math.min(root.highlightedLocationIdx + 1, Weather.locationSearchResults.length - 1);
-                            }
+                    Keys.onReturnPressed: {
+                        if (Weather.locationSearchResults.length === 0)
+                            return;
 
-                            Keys.onUpPressed: {
-                                if (Weather.locationSearchResults.length === 0)
-                                    return;
-
-                                if (root.highlightedLocationIdx < 0)
-                                    root.highlightedLocationIdx = Weather.locationSearchResults.length - 1;
-                                else
-                                    root.highlightedLocationIdx = Math.max(root.highlightedLocationIdx - 1, 0);
-                            }
-
-                            Keys.onReturnPressed: {
-                                if (Weather.locationSearchResults.length === 0)
-                                    return;
-
-                                const idx = root.highlightedLocationIdx >= 0 ? root.highlightedLocationIdx : 0;
-                                root.selectLocationCandidate(Weather.locationSearchResults[idx]);
-                            }
-                        }
-
-                        IconButton {
-                            icon: "close"
-                            type: IconButton.Text
-                            disabled: locationField.text.length === 0
-
-                            onClicked: {
-                                locationField.text = "";
-                                root.pendingLocation = null;
-                                Weather.locationSearchResults = [];
-                                Weather.locationSearchError = "";
-                            }
-                        }
+                        const idx = root.highlightedLocationIdx >= 0 ? root.highlightedLocationIdx : 0;
+                        root.selectLocationCandidate(Weather.locationSearchResults[idx]);
                     }
                 }
 

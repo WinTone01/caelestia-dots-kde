@@ -98,7 +98,7 @@ PageBase {
                                     return qsTr("Connected • %1").arg(security);
                                 return security;
                             }
-                            color: saved.isActive ? Colours.palette.m3primary : Colours.palette.m3outline
+                            color: saved.isActive ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
                             font: Tokens.font.label.small
                             elide: Text.ElideRight
                         }

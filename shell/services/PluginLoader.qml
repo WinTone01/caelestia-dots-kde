@@ -81,6 +81,9 @@ Item {
             let itemId = item.id || item.name;
             if (itemId === name || item.name === name) {
                 av.setProperty(i, "enabled", enable);
+                if (item.restart === true || item.restart === "true") {
+                    PluginStore.restartRequired = true;
+                }
                 if (enable) {
                     loadPlugin(item);
                 } else {
@@ -137,7 +140,8 @@ Item {
                             meta.enabled = (disabled.indexOf(meta.id) === -1 && disabled.indexOf(meta.name) === -1);
                             meta.settings = meta.settings || [];
                             meta.mediaurl = meta.mediaurl || "";
-                            
+                            meta.restart = (meta.restart === "true" || meta.restart === true);
+
                             // Extract author information
                             meta.authorName = meta.author ? (meta.author.name || "") : "";
                             let aUrl = meta.author ? (meta.author.url || "") : "";
@@ -214,6 +218,7 @@ Item {
         meta.enabled = (disabled.indexOf(meta.id) === -1 && disabled.indexOf(meta.name) === -1);
         meta.settings = meta.settings || [];
         meta.mediaurl = meta.mediaurl || "";
+        meta.restart = (meta.restart === "true" || meta.restart === true);
 
         // Extract author information
         meta.authorName = meta.author ? (meta.author.name || "") : "";
@@ -256,6 +261,7 @@ Item {
                     meta.settings = meta.settings || [];
                     meta.mediaurl = meta.mediaurl || "";
                     meta.icon = meta.icon || "extension";
+                    meta.restart = (meta.restart === "true" || meta.restart === true);
 
                     // Extract author information
                     meta.authorName = meta.author ? (meta.author.name || "") : "";
@@ -269,6 +275,9 @@ Item {
                     console.log("addPluginToAvailable: adding", meta.id, "to available list. mediaurl:", meta.mediaurl);
                     CaelestiaApi.plugins.available.append(meta);
                     pluginsReloaded();
+                    if (meta.restart) {
+                        PluginStore.restartRequired = true;
+                    }
                     if (meta.enabled) {
                         pluginLoader.loadPlugin(meta);
                     }

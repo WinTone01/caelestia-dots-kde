@@ -285,14 +285,29 @@ QVariantList KWinWorkspaceState::workspaces() const {
     return list;
 }
 
-void KWinWorkspaceState::switchTo(const QString& id, const QString& output) {
-    QString targetUuid;
+QString KWinWorkspaceState::resolveDesktopUuid(const QString& id) const {
+    // Numeric ids select by position (Meta+N -> setDesktop(N)). Resolve those
+    // before names so a desktop custom-named "3" cannot shadow the actual
+    // third desktop.
+    const bool numeric = id.toInt() > 0;
     for (const auto& d : m_desktops) {
-        if (d.id == id || QString::number(d.position + 1) == id || d.name == id) {
-            targetUuid = d.id;
-            break;
+        if (d.id == id) {
+            return d.id;
+        }
+        if (numeric && QString::number(d.position + 1) == id) {
+            return d.id;
         }
     }
+    for (const auto& d : m_desktops) {
+        if (d.name == id) {
+            return d.id;
+        }
+    }
+    return QString();
+}
+
+void KWinWorkspaceState::switchTo(const QString& id, const QString& output) {
+    const QString targetUuid = resolveDesktopUuid(id);
 
     if (!targetUuid.isEmpty()) {
         // Naming the screen needs the workspace-tracker effect, which can target
@@ -354,13 +369,7 @@ void KWinWorkspaceState::createWorkspace(const QString& name) {
 }
 
 void KWinWorkspaceState::removeWorkspace(const QString& id) {
-    QString targetUuid = id;
-    for (const auto& d : m_desktops) {
-        if (d.id == id || QString::number(d.position + 1) == id || d.name == id) {
-            targetUuid = d.id;
-            break;
-        }
-    }
+    const QString targetUuid = resolveDesktopUuid(id);
 
     if (!targetUuid.isEmpty()) {
         QDBusMessage msg = QDBusMessage::createMethodCall("org.kde.KWin", "/VirtualDesktopManager", "org.kde.KWin.VirtualDesktopManager", "removeDesktop");

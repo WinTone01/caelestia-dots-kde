@@ -20,6 +20,7 @@ find_package(Qt6 REQUIRED COMPONENTS ShaderTools Core Qml Gui Quick QuickControl
 find_package(KF6WindowSystem REQUIRED)
 find_package(KF6GuiAddons REQUIRED)
 find_package(KF6NetworkManagerQt REQUIRED)
+find_package(KF6PulseAudioQt REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(Qalculate IMPORTED_TARGET libqalculate REQUIRED)
 pkg_check_modules(Pipewire IMPORTED_TARGET libpipewire-0.3 REQUIRED)
@@ -50,5 +51,9 @@ qt_standard_project_setup(REQUIRES 6.9)
 
 include(cmake/pch.cmake)
 include(cmake/qml-module.cmake)
+
+# Header only helpers
+add_library(caelestia-util INTERFACE)
+target_include_directories(caelestia-util INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 add_subdirectory(src/Caelestia)

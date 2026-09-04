@@ -123,6 +123,13 @@ PageBase {
 
         ToggleRow {
             first: true
+            text: qsTr("Browse apps when search is empty")
+            subtext: qsTr("Show the categorized app grid in the launcher when the search field is empty")
+            checked: Config.launcher.showBrowseOnEmpty
+            onToggled: GlobalConfig.launcher.showBrowseOnEmpty = checked
+        }
+
+        ToggleRow {
             text: qsTr("Show power menu")
             subtext: qsTr("Show the quick session controls (shutdown, sleep, logout) at the bottom")
             checked: Config.launcher.showPowerMenu
