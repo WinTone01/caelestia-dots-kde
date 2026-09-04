@@ -107,6 +107,13 @@ language on the project, and a catalogue of nothing but untranslated entries
 still compiles and still appears in the language picker as a language that
 renders in English.
 
+English must not be added as a target language on the project. It is the source,
+so there is nothing to translate into it: Crowdin lists it at 0% forever, and
+its export would be named `caelestia_en.ts` -- the generated source catalogue,
+which is ignored, so it would be quietly discarded on every run. If the project
+shows English (or English, United States) among the target languages, remove it
+under Settings -> Languages.
+
 Catalogues are named by the two-letter code, so Turkish is `caelestia_tr.ts`.
 Two variants of one language -- `pt-BR` and `pt-PT`, `zh-CN` and `zh-TW` --
 would both want the bare code; give them explicit names through
