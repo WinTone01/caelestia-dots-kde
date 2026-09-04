@@ -95,11 +95,11 @@ jobs:
           commit_message: "i18n: new translations from Crowdin"
           config: crowdin.yml
         env:
-          # Not secrets.GITHUB_TOKEN: a workflow cannot open a pull request
-          # with it unless the repository allows Actions to, and the first run
-          # failed on exactly that ("GitHub Actions is not permitted to create
-          # or approve pull requests"). The app token this repository already
-          # uses elsewhere is not subject to it.
+          # The caelestia-automation app token, as every workflow here that
+          # opens a pull request uses. Not secrets.GITHUB_TOKEN: a workflow
+          # cannot open a pull request with it unless the repository allows
+          # Actions to, and the first run failed on exactly that ("GitHub
+          # Actions is not permitted to create or approve pull requests").
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
@@ -115,10 +115,19 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Create GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          permission-contents: write
+
       - name: Checkout Localization Branch
         uses: actions/checkout@v4
         with:
           ref: i18n/crowdin
+          token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 0
         continue-on-error: true
         id: checkout
