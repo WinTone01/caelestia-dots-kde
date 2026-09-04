@@ -4336,7 +4336,12 @@
         <translation>Koyu kipte arka planlarda algılanabilir renk miktarı</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+10"/>
+        <source>Window Decorations (Requires Plugins)</source>
+        <translation>Pencere Dekorasyonları (Eklenti Gerektirir)</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Titlebar Opacity Override</source>
         <translation>Başlık Çubuğu Saydamlığını Geçersiz Kıl</translation>
     </message>
@@ -4388,7 +4393,12 @@
         <translation>Klassy pencere süslemesinin dış çizgisini renklendirir (KWin&apos;i yeniden yükler)</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+6"/>
+        <source>KDE Rounded Corners Outline</source>
+        <translation>KDE Yuvarlatılmış Köşeler Dış Çizgisi</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Tint KDE Rounded Corners desktop effect window outline</source>
         <translation>KDE Rounded Corners masaüstü efektinin pencere dış çizgisini renklendirir</translation>
     </message>

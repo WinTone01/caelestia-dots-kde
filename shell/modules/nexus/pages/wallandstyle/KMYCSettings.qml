@@ -334,7 +334,7 @@ PageBase {
         }
 
         SectionHeader {
-            text: "Window Decorations (Requires Plugins)"
+            text: qsTr("Window Decorations (Requires Plugins)")
             visible: root.showAdvanced
         }
         ColumnLayout {
@@ -398,7 +398,7 @@ PageBase {
             }
             ToggleRow {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2
-                text: "KDE Rounded Corners Outline"
+                text: qsTr("KDE Rounded Corners Outline")
                 subtext: qsTr("Tint KDE Rounded Corners desktop effect window outline")
                 checked: root.kdeRoundedCornersEffectOutline
                 onToggled: root.setOption("kde_rounded_corners_effect_outline", checked ? "True" : "False")
